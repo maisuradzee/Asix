@@ -1,0 +1,3340 @@
+{
+  "table_grants": [
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "asix_wallets",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_actions",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_game_state",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_rooms",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "anon",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "postgres",
+      "grantable": "YES",
+      "privilege": "UPDATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "DELETE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "INSERT"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "REFERENCES"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "SELECT"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRIGGER"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "TRUNCATE"
+    },
+    {
+      "table": "qcard_seats",
+      "schema": "public",
+      "grantee": "service_role",
+      "grantable": "NO",
+      "privilege": "UPDATE"
+    }
+  ],
+  "routine_grants": [
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_asix_heartbeat_bundle",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_asix_heartbeat_bundle",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_get_my_deal_history",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_get_my_deal_history",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_is_room_member",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_is_room_member",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_is_room_member",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_join_public_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_join_public_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_join_public_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_set_presence",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_set_presence",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_set_presence",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_submit_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_submit_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "service_role",
+      "routine": "qcard_submit_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "authenticated",
+      "routine": "qcard_submit_process_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "asix_internal",
+      "grantee": "postgres",
+      "routine": "qcard_submit_process_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_record_platform_commission_from_card_purchase",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_record_platform_commission_from_card_purchase",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_require_permanent_qcard_actor",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_require_permanent_qcard_actor",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_settle_platform_commission_after_deal",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_settle_platform_commission_after_deal",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_after_deal_settlement",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_after_deal_settlement",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_cashout_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_create_for_new_user",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_create_for_new_user",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_credit",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_credit",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_finish_bot_session",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_finish_bot_session",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_get_balance",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_get_transactions",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_settle_cashout",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_settle_cashout",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_settle_pending_cashouts",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_settle_pending_cashouts",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "asix_wallet_start_bot_session",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "asix_wallet_start_bot_session",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_action_preserve_actor_identity",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_action_preserve_actor_identity",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_add_contribution",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_add_contribution",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "routine": "qcard_allocate_side_pots",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "routine": "qcard_allocate_side_pots",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_allocate_side_pots",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_allocate_side_pots",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_allocate_side_pots",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_archive_before_new_deal",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_archive_before_new_deal",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_archive_completed_deal",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_archive_completed_deal",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_asix_heartbeat_bundle",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_asix_heartbeat_bundle",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "routine": "qcard_asix_stamp_turn_started",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "routine": "qcard_asix_stamp_turn_started",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_asix_stamp_turn_started",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_asix_stamp_turn_started",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_asix_stamp_turn_started",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_audit_growth_release",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_audit_growth_release",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_build_side_pots",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_build_side_pots",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "routine": "qcard_calculate_table_funds",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "routine": "qcard_calculate_table_funds",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_calculate_table_funds",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_calculate_table_funds",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_calculate_table_funds",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_call_due",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_call_due",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_call_payment",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_call_payment",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_card_beats",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_card_beats",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_clear_deal_history_on_logic_change",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_clear_deal_history_on_logic_change",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_create_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_create_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_create_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_get_asix_snapshot",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_get_asix_snapshot",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_get_my_deal_history",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_get_my_deal_history",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_guard_manual_start_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_guard_manual_start_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_guard_manual_start_state",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_guard_manual_start_state",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_is_room_member",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_is_room_member",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_is_room_member",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_join_permanent_table",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_join_permanent_table",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_join_public_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_join_public_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_join_public_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_join_room",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_join_room",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_join_room_with_wallet",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_ledger_preserve_user_identity",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_ledger_preserve_user_identity",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_list_public_rooms",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_preserve_ledger_action_reference",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_preserve_ledger_action_reference",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_preserve_ledger_before_room_delete",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_preserve_ledger_before_room_delete",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_prevent_account_delete_during_active_game",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_prevent_account_delete_during_active_game",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_process_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_process_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_process_disconnect_timeouts",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_process_disconnect_timeouts",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_process_turn_timeout",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_raise_plan",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_raise_plan",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_record_contribution",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_record_contribution",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_recover_pending_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_recover_pending_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_remove_permanent_player",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_room_preserve_host_identity",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_room_preserve_host_identity",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_server_heartbeat",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_server_heartbeat",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_set_entry_stack",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_set_presence",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_set_presence",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_set_presence",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_submit_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_submit_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_submit_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_submit_process_action",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_submit_process_action",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "routine": "qcard_touch_updated_at",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "routine": "qcard_touch_updated_at",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "routine": "qcard_touch_updated_at",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "routine": "qcard_touch_updated_at",
+      "grantable": "YES",
+      "privilege": "EXECUTE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "routine": "qcard_touch_updated_at",
+      "grantable": "NO",
+      "privilege": "EXECUTE"
+    }
+  ],
+  "sequence_grants": [
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "asix_platform_commission_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "asix_platform_commission_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "asix_platform_commission_ledger_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "asix_platform_commission_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "asix_wallet_transactions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "asix_wallet_transactions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "asix_wallet_transactions_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "asix_wallet_transactions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "qcard_actions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "qcard_actions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "qcard_actions_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "qcard_actions_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "qcard_deal_history_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "qcard_deal_history_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "qcard_deal_history_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "qcard_deal_history_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "qcard_deal_history_players_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "qcard_deal_history_players_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "qcard_deal_history_players_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "qcard_deal_history_players_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "anon",
+      "sequence": "qcard_money_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "authenticated",
+      "sequence": "qcard_money_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "postgres",
+      "sequence": "qcard_money_ledger_id_seq",
+      "grantable": "YES",
+      "privilege": "USAGE"
+    },
+    {
+      "schema": "public",
+      "grantee": "service_role",
+      "sequence": "qcard_money_ledger_id_seq",
+      "grantable": "NO",
+      "privilege": "USAGE"
+    }
+  ]
+}
