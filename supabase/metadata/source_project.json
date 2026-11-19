@@ -1,0 +1,53 @@
+{
+  "project_id": "kxcuvagipqiqisowtgys",
+  "region": "ap-south-1",
+  "database_version": "17.11.0.019",
+  "status": "ACTIVE_HEALTHY",
+  "installed_extensions": [
+    {
+      "name": "pg_stat_statements",
+      "schema": "extensions",
+      "default_version": "1.11",
+      "installed_version": "1.11",
+      "comment": "track planning and execution statistics of all SQL statements executed"
+    },
+    {
+      "name": "pgcrypto",
+      "schema": "extensions",
+      "default_version": "1.3",
+      "installed_version": "1.3",
+      "comment": "cryptographic functions"
+    },
+    {
+      "name": "plpgsql",
+      "schema": "pg_catalog",
+      "default_version": "1.0",
+      "installed_version": "1.0",
+      "comment": "PL/pgSQL procedural language"
+    },
+    {
+      "name": "supabase_vault",
+      "schema": "vault",
+      "default_version": "0.3.2",
+      "installed_version": "0.3.2",
+      "comment": "Supabase Vault Extension"
+    },
+    {
+      "name": "uuid-ossp",
+      "schema": "extensions",
+      "default_version": "1.1",
+      "installed_version": "1.1",
+      "comment": "generate universally unique identifiers (UUIDs)"
+    }
+  ],
+  "edge_functions": [
+    {
+      "slug": "super-worker",
+      "version": 25,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "entrypoint_path": "file:///tmp/user_fn_kxcuvagipqiqisowtgys_0181c284-657c-4590-9c67-a7eb79ccdd2e_25/source/index.ts",
+      "updated_at": "2026-11-14T23:59:57.110Z"
+    }
+  ]
+}
