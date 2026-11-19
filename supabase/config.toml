@@ -1,0 +1,4 @@
+project_id = "kxcuvagipqiqisowtgys"
+
+[functions.super-worker]
+verify_jwt = true
