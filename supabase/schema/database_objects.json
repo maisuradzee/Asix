@@ -1,0 +1,572 @@
+{
+  "views": [
+    {
+      "name": "qcard_ledger_reconciliation",
+      "schema": "public",
+      "definition": " SELECT COALESCE(l.reference_action_id, l.reference_action_id_snapshot) AS action_id,\n    l.room_id,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'card_purchase'::text)))::bigint AS card_sales_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'prize_allocation'::text)))::bigint AS initial_prize_allocation_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'growth_release'::text)))::bigint AS growth_released_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'growth_reserve'::text)))::bigint AS growth_reserve_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'platform_allocation'::text)))::bigint AS platform_allocation_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text]))))::bigint AS player_bets_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'prize_payout'::text)))::bigint AS main_prize_paid_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'side_pot_payout'::text)))::bigint AS side_pots_paid_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'uncalled_bet_refund'::text)))::bigint AS uncalled_refunds_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'unclaimed_prize'::text)))::bigint AS unclaimed_prize_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'round_remainder'::text)))::bigint AS round_remainder_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'refund'::text)))::bigint AS other_refunds_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'adjustment'::text)))::bigint AS adjustments_tetri,\n    ((((COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'card_purchase'::text)), (0)::numeric) - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['prize_payout'::text, 'growth_reserve'::text, 'platform_allocation'::text, 'unclaimed_prize'::text, 'round_remainder'::text]))), (0)::numeric)) - COALESCE(sum(l.amount_tetri) FILTER (WHERE ((l.entry_type = 'refund'::text) AND (o.entry_type = 'card_purchase'::text))), (0)::numeric)) +\n        CASE\n            WHEN (COALESCE(sum(l.amount_tetri) FILTER (WHERE ((l.entry_type = 'refund'::text) AND (o.entry_type = 'card_purchase'::text))), (0)::numeric) >= COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'card_purchase'::text)), (0)::numeric)) THEN COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['growth_reserve'::text, 'platform_allocation'::text]))), (0)::numeric)\n            ELSE (0)::numeric\n        END))::bigint AS card_fund_difference_tetri,\n    (((COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text]))), (0)::numeric) - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['side_pot_payout'::text, 'uncalled_bet_refund'::text]))), (0)::numeric)) - COALESCE(sum(l.amount_tetri) FILTER (WHERE ((l.entry_type = 'refund'::text) AND (o.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text])))), (0)::numeric)))::bigint AS betting_fund_difference_tetri,\n    ((COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'growth_release'::text)), (0)::numeric) + COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'growth_reserve'::text)), (0)::numeric)))::bigint AS growth_budget_accounted_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE ((l.entry_type = 'refund'::text) AND (o.entry_type = 'card_purchase'::text))))::bigint AS card_purchase_refunds_tetri,\n    (sum(l.amount_tetri) FILTER (WHERE ((l.entry_type = 'refund'::text) AND (o.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text])))))::bigint AS betting_refunds_tetri\n   FROM (qcard_money_ledger l\n     LEFT JOIN qcard_money_ledger o ON ((o.id = l.reversal_of_ledger_id)))\n  GROUP BY COALESCE(l.reference_action_id, l.reference_action_id_snapshot), l.room_id;"
+    },
+    {
+      "name": "qcard_seat_balance_reconciliation",
+      "schema": "public",
+      "definition": " SELECT s.room_id,\n    s.user_id,\n    s.display_name,\n    s.seat_no,\n    s.entry_stack_tetri,\n    s.stack_tetri AS actual_stack_tetri,\n    (\n        CASE\n            WHEN (s.entry_stack_tetri IS NULL) THEN NULL::numeric\n            ELSE ((((s.entry_stack_tetri)::numeric - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'card_purchase'::text)), (0)::numeric)) - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text]))), (0)::numeric)) + COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['prize_payout'::text, 'side_pot_payout'::text, 'uncalled_bet_refund'::text, 'refund'::text]))), (0)::numeric))\n        END)::bigint AS expected_stack_tetri,\n    (\n        CASE\n            WHEN (s.entry_stack_tetri IS NULL) THEN NULL::numeric\n            ELSE ((s.stack_tetri)::numeric - ((((s.entry_stack_tetri)::numeric - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = 'card_purchase'::text)), (0)::numeric)) - COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['manual_raise'::text, 'raise_call'::text]))), (0)::numeric)) + COALESCE(sum(l.amount_tetri) FILTER (WHERE (l.entry_type = ANY (ARRAY['prize_payout'::text, 'side_pot_payout'::text, 'uncalled_bet_refund'::text, 'refund'::text]))), (0)::numeric)))\n        END)::bigint AS difference_tetri,\n    count(l.id) AS ledger_entries\n   FROM (qcard_seats s\n     LEFT JOIN qcard_money_ledger l ON (((l.room_id = s.room_id) AND (COALESCE(l.user_id, l.user_id_snapshot) = s.user_id))))\n  GROUP BY s.room_id, s.user_id, s.display_name, s.seat_no, s.entry_stack_tetri, s.stack_tetri;"
+    }
+  ],
+  "indexes": [
+    {
+      "name": "asix_bot_sessions_pkey",
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_bot_sessions_pkey ON public.asix_bot_sessions USING btree (id)"
+    },
+    {
+      "name": "asix_bot_sessions_user_active_idx",
+      "table": "asix_bot_sessions",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_bot_sessions_user_active_idx ON public.asix_bot_sessions USING btree (user_id, status)"
+    },
+    {
+      "name": "asix_platform_commission_ledger_deal_id_player_user_id_key",
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_platform_commission_ledger_deal_id_player_user_id_key ON public.asix_platform_commission_ledger USING btree (deal_id, player_user_id)"
+    },
+    {
+      "name": "asix_platform_commission_ledger_pkey",
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_platform_commission_ledger_pkey ON public.asix_platform_commission_ledger USING btree (id)"
+    },
+    {
+      "name": "asix_platform_commission_ledger_player_user_id_idx",
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_platform_commission_ledger_player_user_id_idx ON public.asix_platform_commission_ledger USING btree (player_user_id)"
+    },
+    {
+      "name": "asix_platform_commission_ledger_recipient_user_id_idx",
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_platform_commission_ledger_recipient_user_id_idx ON public.asix_platform_commission_ledger USING btree (recipient_user_id)"
+    },
+    {
+      "name": "asix_platform_commission_ledger_room_id_idx",
+      "table": "asix_platform_commission_ledger",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_platform_commission_ledger_room_id_idx ON public.asix_platform_commission_ledger USING btree (room_id)"
+    },
+    {
+      "name": "asix_platform_commission_settings_pkey",
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_platform_commission_settings_pkey ON public.asix_platform_commission_settings USING btree (id)"
+    },
+    {
+      "name": "asix_platform_commission_settings_recipient_user_id_idx",
+      "table": "asix_platform_commission_settings",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_platform_commission_settings_recipient_user_id_idx ON public.asix_platform_commission_settings USING btree (recipient_user_id)"
+    },
+    {
+      "name": "asix_wallet_transactions_idempotency_key_key",
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_wallet_transactions_idempotency_key_key ON public.asix_wallet_transactions USING btree (idempotency_key)"
+    },
+    {
+      "name": "asix_wallet_transactions_pkey",
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_wallet_transactions_pkey ON public.asix_wallet_transactions USING btree (id)"
+    },
+    {
+      "name": "asix_wallet_transactions_room_id_idx",
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_wallet_transactions_room_id_idx ON public.asix_wallet_transactions USING btree (room_id)"
+    },
+    {
+      "name": "asix_wallet_transactions_user_id_idx",
+      "table": "asix_wallet_transactions",
+      "schema": "public",
+      "definition": "CREATE INDEX asix_wallet_transactions_user_id_idx ON public.asix_wallet_transactions USING btree (user_id)"
+    },
+    {
+      "name": "asix_wallets_pkey",
+      "table": "asix_wallets",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX asix_wallets_pkey ON public.asix_wallets USING btree (user_id)"
+    },
+    {
+      "name": "qcard_actions_actor_user_id_idx",
+      "table": "qcard_actions",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_actions_actor_user_id_idx ON public.qcard_actions USING btree (actor_user_id)"
+    },
+    {
+      "name": "qcard_actions_pkey",
+      "table": "qcard_actions",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_actions_pkey ON public.qcard_actions USING btree (id)"
+    },
+    {
+      "name": "qcard_actions_room_actor_pending_id_idx",
+      "table": "qcard_actions",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_actions_room_actor_pending_id_idx ON public.qcard_actions USING btree (room_id, actor_user_id, id) WHERE (status = ANY (ARRAY['pending'::text, 'processing'::text]))"
+    },
+    {
+      "name": "qcard_actions_room_pending_id_idx",
+      "table": "qcard_actions",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_actions_room_pending_id_idx ON public.qcard_actions USING btree (room_id, id) WHERE (status = ANY (ARRAY['pending'::text, 'processing'::text]))"
+    },
+    {
+      "name": "qcard_actions_room_status_id_idx",
+      "table": "qcard_actions",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_actions_room_status_id_idx ON public.qcard_actions USING btree (room_id, status, id)"
+    },
+    {
+      "name": "qcard_deal_history_pkey",
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_deal_history_pkey ON public.qcard_deal_history USING btree (id)"
+    },
+    {
+      "name": "qcard_deal_history_room_completed_idx",
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_deal_history_room_completed_idx ON public.qcard_deal_history USING btree (room_id, completed_at DESC)"
+    },
+    {
+      "name": "qcard_deal_history_room_id_deal_number_key",
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_deal_history_room_id_deal_number_key ON public.qcard_deal_history USING btree (room_id, deal_number)"
+    },
+    {
+      "name": "qcard_deal_history_winner_idx",
+      "table": "qcard_deal_history",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_deal_history_winner_idx ON public.qcard_deal_history USING btree (winner_user_id, completed_at DESC)"
+    },
+    {
+      "name": "qcard_deal_history_players_deal_history_id_seat_no_key",
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_deal_history_players_deal_history_id_seat_no_key ON public.qcard_deal_history_players USING btree (deal_history_id, seat_no)"
+    },
+    {
+      "name": "qcard_deal_history_players_pkey",
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_deal_history_players_pkey ON public.qcard_deal_history_players USING btree (id)"
+    },
+    {
+      "name": "qcard_deal_history_players_user_idx",
+      "table": "qcard_deal_history_players",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_deal_history_players_user_idx ON public.qcard_deal_history_players USING btree (user_id, deal_history_id)"
+    },
+    {
+      "name": "qcard_game_logic_version_pkey",
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_game_logic_version_pkey ON public.qcard_game_logic_version USING btree (singleton_id)"
+    },
+    {
+      "name": "qcard_game_state_pkey",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_game_state_pkey ON public.qcard_game_state USING btree (room_id)"
+    },
+    {
+      "name": "qcard_ledger_card_purchase_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_card_purchase_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id) WHERE ((entry_type = 'card_purchase'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_growth_release_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_growth_release_once_idx ON public.qcard_money_ledger USING btree (reference_action_id) WHERE ((entry_type = 'growth_release'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_growth_reserve_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_growth_reserve_once_idx ON public.qcard_money_ledger USING btree (reference_action_id) WHERE ((entry_type = 'growth_reserve'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_manual_raise_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_manual_raise_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id) WHERE ((entry_type = 'manual_raise'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_prize_payout_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_prize_payout_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id) WHERE ((entry_type = 'prize_payout'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_raise_call_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_raise_call_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id) WHERE ((entry_type = 'raise_call'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_side_pot_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_side_pot_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id, ((details ->> 'pot_index'::text))) WHERE ((entry_type = 'side_pot_payout'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_ledger_uncalled_refund_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_ledger_uncalled_refund_once_idx ON public.qcard_money_ledger USING btree (reference_action_id, user_id) WHERE ((entry_type = 'uncalled_bet_refund'::text) AND (reference_action_id IS NOT NULL))"
+    },
+    {
+      "name": "qcard_money_ledger_pkey",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_money_ledger_pkey ON public.qcard_money_ledger USING btree (id)"
+    },
+    {
+      "name": "qcard_money_ledger_reversal_once_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_money_ledger_reversal_once_idx ON public.qcard_money_ledger USING btree (reversal_of_ledger_id) WHERE (reversal_of_ledger_id IS NOT NULL)"
+    },
+    {
+      "name": "qcard_money_ledger_room_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_money_ledger_room_idx ON public.qcard_money_ledger USING btree (room_id, created_at)"
+    },
+    {
+      "name": "qcard_money_ledger_user_id_idx",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_money_ledger_user_id_idx ON public.qcard_money_ledger USING btree (user_id)"
+    },
+    {
+      "name": "qcard_private_hands_pkey",
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_private_hands_pkey ON public.qcard_private_hands USING btree (room_id, user_id)"
+    },
+    {
+      "name": "qcard_private_hands_user_id_idx",
+      "table": "qcard_private_hands",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_private_hands_user_id_idx ON public.qcard_private_hands USING btree (user_id)"
+    },
+    {
+      "name": "qcard_rooms_host_user_id_idx",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_rooms_host_user_id_idx ON public.qcard_rooms USING btree (host_user_id)"
+    },
+    {
+      "name": "qcard_rooms_live_directory_idx",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_rooms_live_directory_idx ON public.qcard_rooms USING btree (status, created_at DESC) WHERE (status = ANY (ARRAY['waiting'::text, 'playing'::text]))"
+    },
+    {
+      "name": "qcard_rooms_pkey",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_rooms_pkey ON public.qcard_rooms USING btree (id)"
+    },
+    {
+      "name": "qcard_rooms_room_code_key",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_rooms_room_code_key ON public.qcard_rooms USING btree (room_code)"
+    },
+    {
+      "name": "qcard_rooms_singleton_asix_permanent_idx",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_rooms_singleton_asix_permanent_idx ON public.qcard_rooms USING btree (name) WHERE (room_code = 'ASIX01'::text)"
+    },
+    {
+      "name": "qcard_seats_live_directory_idx",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_seats_live_directory_idx ON public.qcard_seats USING btree (room_id, is_connected, last_seen_at DESC) INCLUDE (wallet_entry_key)"
+    },
+    {
+      "name": "qcard_seats_pkey",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_seats_pkey ON public.qcard_seats USING btree (id)"
+    },
+    {
+      "name": "qcard_seats_room_id_seat_no_key",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_seats_room_id_seat_no_key ON public.qcard_seats USING btree (room_id, seat_no)"
+    },
+    {
+      "name": "qcard_seats_room_id_user_id_key",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE UNIQUE INDEX qcard_seats_room_id_user_id_key ON public.qcard_seats USING btree (room_id, user_id)"
+    },
+    {
+      "name": "qcard_seats_room_idx",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_seats_room_idx ON public.qcard_seats USING btree (room_id, seat_no)"
+    },
+    {
+      "name": "qcard_seats_user_id_idx",
+      "table": "qcard_seats",
+      "schema": "public",
+      "definition": "CREATE INDEX qcard_seats_user_id_idx ON public.qcard_seats USING btree (user_id)"
+    }
+  ],
+  "policies": [
+    {
+      "name": "asix_wallet_transactions_select_own",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "asix_wallet_transactions",
+      "using": "((user_id = ( SELECT auth.uid() AS uid)) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "asix_wallet_select_own",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "asix_wallets",
+      "using": "((user_id = ( SELECT auth.uid() AS uid)) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_actions_member_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_actions",
+      "using": "(asix_internal.qcard_is_room_member(room_id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_deal_history_deny_direct_api",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "table": "qcard_deal_history",
+      "using": "false",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE",
+      "with_check": "false"
+    },
+    {
+      "name": "qcard_deal_history_players_deny_direct_api",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "table": "qcard_deal_history_players",
+      "using": "false",
+      "schema": "public",
+      "command": "ALL",
+      "permissive": "PERMISSIVE",
+      "with_check": "false"
+    },
+    {
+      "name": "qcard_state_member_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_game_state",
+      "using": "(asix_internal.qcard_is_room_member(room_id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_ledger_member_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_money_ledger",
+      "using": "(asix_internal.qcard_is_room_member(room_id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_private_hand_self_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_private_hands",
+      "using": "((user_id = ( SELECT auth.uid() AS uid)) AND asix_internal.qcard_is_room_member(room_id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_rooms_member_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_rooms",
+      "using": "(asix_internal.qcard_is_room_member(id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    },
+    {
+      "name": "qcard_seats_member_read",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "qcard_seats",
+      "using": "(asix_internal.qcard_is_room_member(room_id) AND (COALESCE(((( SELECT auth.jwt() AS jwt) ->> 'is_anonymous'::text))::boolean, true) = false))",
+      "schema": "public",
+      "command": "SELECT",
+      "permissive": "PERMISSIVE",
+      "with_check": null
+    }
+  ],
+  "triggers": [
+    {
+      "name": "asix_require_permanent_qcard_actor",
+      "table": "qcard_actions",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER asix_require_permanent_qcard_actor BEFORE INSERT OR UPDATE OF status ON qcard_actions FOR EACH ROW EXECUTE FUNCTION asix_require_permanent_qcard_actor()"
+    },
+    {
+      "name": "qcard_action_preserve_actor_identity",
+      "table": "qcard_actions",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_action_preserve_actor_identity BEFORE UPDATE OF actor_user_id ON qcard_actions FOR EACH ROW WHEN (old.actor_user_id IS NOT NULL AND new.actor_user_id IS NULL) EXECUTE FUNCTION qcard_action_preserve_actor_identity()"
+    },
+    {
+      "name": "qcard_preserve_ledger_action_reference",
+      "table": "qcard_actions",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_preserve_ledger_action_reference BEFORE DELETE ON qcard_actions FOR EACH ROW EXECUTE FUNCTION qcard_preserve_ledger_action_reference()"
+    },
+    {
+      "name": "trg_qcard_clear_deal_history_on_logic_change",
+      "table": "qcard_game_logic_version",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER trg_qcard_clear_deal_history_on_logic_change BEFORE UPDATE OF logic_version ON qcard_game_logic_version FOR EACH ROW EXECUTE FUNCTION qcard_clear_deal_history_on_logic_change()"
+    },
+    {
+      "name": "asix_platform_commission_settlement_after_deal",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER asix_platform_commission_settlement_after_deal AFTER UPDATE OF state ON qcard_game_state FOR EACH ROW EXECUTE FUNCTION asix_settle_platform_commission_after_deal()"
+    },
+    {
+      "name": "asix_wallet_cashout_after_deal",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER asix_wallet_cashout_after_deal AFTER UPDATE OF state ON qcard_game_state FOR EACH ROW EXECUTE FUNCTION asix_wallet_after_deal_settlement()"
+    },
+    {
+      "name": "qcard_archive_before_new_deal",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_archive_before_new_deal BEFORE UPDATE OF state ON qcard_game_state FOR EACH ROW WHEN ((old.state ->> 'phase'::text) = 'playing'::text AND ((new.state ->> 'phase'::text) = ANY (ARRAY['finished'::text, 'cancelled'::text]))) EXECUTE FUNCTION qcard_archive_before_new_deal()"
+    },
+    {
+      "name": "qcard_asix_stamp_turn_started_trg",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_asix_stamp_turn_started_trg BEFORE UPDATE OF state ON qcard_game_state FOR EACH ROW EXECUTE FUNCTION qcard_asix_stamp_turn_started()"
+    },
+    {
+      "name": "qcard_audit_growth_release",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_audit_growth_release BEFORE UPDATE OF state ON qcard_game_state FOR EACH ROW WHEN (COALESCE((old.state ->> 'growth_added_tetri'::text)::bigint, 0::bigint) < COALESCE((new.state ->> 'growth_added_tetri'::text)::bigint, 0::bigint)) EXECUTE FUNCTION qcard_audit_growth_release()"
+    },
+    {
+      "name": "qcard_manual_start_state_guard",
+      "table": "qcard_game_state",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_manual_start_state_guard BEFORE UPDATE OF state ON qcard_game_state FOR EACH ROW EXECUTE FUNCTION qcard_guard_manual_start_state()"
+    },
+    {
+      "name": "asix_platform_commission_on_card_purchase",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER asix_platform_commission_on_card_purchase AFTER INSERT ON qcard_money_ledger FOR EACH ROW WHEN (new.entry_type = 'card_purchase'::text) EXECUTE FUNCTION asix_record_platform_commission_from_card_purchase()"
+    },
+    {
+      "name": "qcard_ledger_preserve_user_identity",
+      "table": "qcard_money_ledger",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_ledger_preserve_user_identity BEFORE UPDATE OF user_id ON qcard_money_ledger FOR EACH ROW WHEN (old.user_id IS NOT NULL AND new.user_id IS NULL) EXECUTE FUNCTION qcard_ledger_preserve_user_identity()"
+    },
+    {
+      "name": "qcard_manual_start_room_guard",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_manual_start_room_guard BEFORE UPDATE OF status ON qcard_rooms FOR EACH ROW EXECUTE FUNCTION qcard_guard_manual_start_room()"
+    },
+    {
+      "name": "qcard_preserve_ledger_before_room_delete",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_preserve_ledger_before_room_delete BEFORE DELETE ON qcard_rooms FOR EACH ROW EXECUTE FUNCTION qcard_preserve_ledger_before_room_delete()"
+    },
+    {
+      "name": "qcard_room_preserve_host_identity",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_room_preserve_host_identity BEFORE UPDATE OF host_user_id ON qcard_rooms FOR EACH ROW WHEN (old.host_user_id IS NOT NULL AND new.host_user_id IS NULL) EXECUTE FUNCTION qcard_room_preserve_host_identity()"
+    },
+    {
+      "name": "qcard_rooms_touch",
+      "table": "qcard_rooms",
+      "schema": "public",
+      "enabled": "O",
+      "definition": "CREATE TRIGGER qcard_rooms_touch BEFORE UPDATE ON qcard_rooms FOR EACH ROW EXECUTE FUNCTION qcard_touch_updated_at()"
+    }
+  ]
+}
