@@ -48,3 +48,7 @@ Open `frontend/AsixgameV153.html` in a browser. Online functionality requires th
 ## Deployment caution
 
 Do not apply `supabase/candidates/V157_ENTRY_FEE_5_PERCENT_NO_PRIZE_GROWTH.sql` to the live source project. It is a guarded staging candidate only. Restore and test against a disposable staging database first.
+
+## Upload verification
+
+See [docs/UPLOAD_AUDIT.md](docs/UPLOAD_AUDIT.md) for the fetched-back GitHub verification, security scan and remaining restore blockers.
