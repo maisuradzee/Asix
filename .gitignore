@@ -1,0 +1,9 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+supabase/.temp/
+supabase/.branches/
+node_modules/
+.DS_Store
+*.log
