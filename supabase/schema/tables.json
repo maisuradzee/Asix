@@ -1,0 +1,7253 @@
+[
+  {
+    "name": "auth.users",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "instance_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "aud",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "role",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "encrypted_password",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email_confirmed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "invited_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "confirmation_token",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "confirmation_sent_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "recovery_token",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "recovery_sent_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email_change_token_new",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email_change",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email_change_sent_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_sign_in_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "raw_app_meta_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "raw_user_meta_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "is_super_admin",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "phone",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable",
+          "unique"
+        ],
+        "default_value": "NULL::character varying"
+      },
+      {
+        "name": "phone_confirmed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "phone_change",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "''::character varying"
+      },
+      {
+        "name": "phone_change_token",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "''::character varying"
+      },
+      {
+        "name": "phone_change_sent_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "confirmed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "generated",
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "LEAST(email_confirmed_at, phone_confirmed_at)"
+      },
+      {
+        "name": "email_change_token_current",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "''::character varying"
+      },
+      {
+        "name": "email_change_confirm_status",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "0",
+        "check": "email_change_confirm_status >= 0 AND email_change_confirm_status <= 2"
+      },
+      {
+        "name": "banned_until",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "reauthentication_token",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "''::character varying"
+      },
+      {
+        "name": "reauthentication_sent_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "is_sso_user",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false",
+        "comment": "Auth: Set this column to true when the account comes from SSO. These accounts can have duplicate emails."
+      },
+      {
+        "name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "is_anonymous",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_recovery_code_sets_user_id_fkey",
+        "source_table": "auth.mfa_recovery_code_sets",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "identities_user_id_fkey",
+        "source_table": "auth.identities",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "sessions_user_id_fkey",
+        "source_table": "auth.sessions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "mfa_factors_user_id_fkey",
+        "source_table": "auth.mfa_factors",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "one_time_tokens_user_id_fkey",
+        "source_table": "auth.one_time_tokens",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "oauth_authorizations_user_id_fkey",
+        "source_table": "auth.oauth_authorizations",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "oauth_consents_user_id_fkey",
+        "source_table": "auth.oauth_consents",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "webauthn_credentials_user_id_fkey",
+        "source_table": "auth.webauthn_credentials",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "webauthn_challenges_user_id_fkey",
+        "source_table": "auth.webauthn_challenges",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "scim_users_user_id_fkey",
+        "source_table": "auth.scim_users",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_seats_user_id_fkey",
+        "source_table": "public.qcard_seats",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_private_hands_user_id_fkey",
+        "source_table": "public.qcard_private_hands",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_money_ledger_user_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_actions_actor_user_id_fkey",
+        "source_table": "public.qcard_actions",
+        "source_columns": [
+          "actor_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_rooms_host_user_id_fkey",
+        "source_table": "public.qcard_rooms",
+        "source_columns": [
+          "host_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_wallets_user_id_fkey",
+        "source_table": "public.asix_wallets",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_wallet_transactions_user_id_fkey",
+        "source_table": "public.asix_wallet_transactions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_settings_recipient_user_id_fkey",
+        "source_table": "public.asix_platform_commission_settings",
+        "source_columns": [
+          "recipient_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_ledger_recipient_user_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "recipient_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_ledger_player_user_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "player_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_bot_sessions_user_id_fkey",
+        "source_table": "public.asix_bot_sessions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.refresh_tokens",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "instance_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "nextval('auth.refresh_tokens_id_seq'::regclass)"
+      },
+      {
+        "name": "token",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "revoked",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "parent",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "session_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "refresh_tokens_session_id_fkey",
+        "source_table": "auth.refresh_tokens",
+        "source_columns": [
+          "session_id"
+        ],
+        "target_table": "auth.sessions",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.instances",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "uuid",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "raw_base_config",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "auth.audit_log_entries",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "instance_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "json",
+        "format": "json",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "ip_address",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::character varying"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "auth.schema_migrations",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "version",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "version"
+    ]
+  },
+  {
+    "name": "vault.secrets",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "description",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::text"
+      },
+      {
+        "name": "secret",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "key_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "nonce",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "vault._crypto_aead_det_noncegen()"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "CURRENT_TIMESTAMP"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "auth.identities",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "provider_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "identity_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "provider",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_sign_in_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "generated",
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "lower((identity_data ->> 'email'::text))",
+        "comment": "Auth: Email is a generated column that references the optional email property in the identity_data"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "identities_user_id_fkey",
+        "source_table": "auth.identities",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.sessions",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "factor_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "aal",
+        "data_type": "USER-DEFINED",
+        "format": "aal_level",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "enums": [
+          "aal1",
+          "aal2",
+          "aal3"
+        ]
+      },
+      {
+        "name": "not_after",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Auth: Not after is a nullable column that contains a timestamp after which the session should be regarded as expired."
+      },
+      {
+        "name": "refreshed_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_agent",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "ip",
+        "data_type": "inet",
+        "format": "inet",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "tag",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "oauth_client_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "refresh_token_hmac_key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Holds a HMAC-SHA256 key used to sign refresh tokens for this session."
+      },
+      {
+        "name": "refresh_token_counter",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Holds the ID (counter) of the last issued refresh token."
+      },
+      {
+        "name": "scopes",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(scopes) <= 4096"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_amr_claims_session_id_fkey",
+        "source_table": "auth.mfa_amr_claims",
+        "source_columns": [
+          "session_id"
+        ],
+        "target_table": "auth.sessions",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "sessions_oauth_client_id_fkey",
+        "source_table": "auth.sessions",
+        "source_columns": [
+          "oauth_client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "refresh_tokens_session_id_fkey",
+        "source_table": "auth.refresh_tokens",
+        "source_columns": [
+          "session_id"
+        ],
+        "target_table": "auth.sessions",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "sessions_user_id_fkey",
+        "source_table": "auth.sessions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.mfa_factors",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "friendly_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "factor_type",
+        "data_type": "USER-DEFINED",
+        "format": "factor_type",
+        "options": [
+          "updatable"
+        ],
+        "enums": [
+          "totp",
+          "webauthn",
+          "phone",
+          "recovery_code"
+        ]
+      },
+      {
+        "name": "status",
+        "data_type": "USER-DEFINED",
+        "format": "factor_status",
+        "options": [
+          "updatable"
+        ],
+        "enums": [
+          "unverified",
+          "verified"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "secret",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "phone",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_challenged_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "web_authn_credential",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "web_authn_aaguid",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_webauthn_challenge_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Stores the latest WebAuthn challenge data including attestation/assertion for customer verification"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_recovery_code_sets_mfa_factor_id_fkey",
+        "source_table": "auth.mfa_recovery_code_sets",
+        "source_columns": [
+          "mfa_factor_id"
+        ],
+        "target_table": "auth.mfa_factors",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "mfa_challenges_auth_factor_id_fkey",
+        "source_table": "auth.mfa_challenges",
+        "source_columns": [
+          "factor_id"
+        ],
+        "target_table": "auth.mfa_factors",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "mfa_factors_user_id_fkey",
+        "source_table": "auth.mfa_factors",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.mfa_challenges",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "factor_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "verified_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "ip_address",
+        "data_type": "inet",
+        "format": "inet",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "otp_code",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "web_authn_session_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_challenges_auth_factor_id_fkey",
+        "source_table": "auth.mfa_challenges",
+        "source_columns": [
+          "factor_id"
+        ],
+        "target_table": "auth.mfa_factors",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.mfa_amr_claims",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "session_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "authentication_method",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_amr_claims_session_id_fkey",
+        "source_table": "auth.mfa_amr_claims",
+        "source_columns": [
+          "session_id"
+        ],
+        "target_table": "auth.sessions",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.sso_providers",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "resource_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "resource_id = NULL::text OR char_length(resource_id) > 0",
+        "comment": "Auth: Uniquely identifies a SSO provider according to a user-chosen resource ID (case insensitive), useful in infrastructure as code."
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "disabled",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "scim_users_sso_provider_id_fkey",
+        "source_table": "auth.scim_users",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "saml_relay_states_sso_provider_id_fkey",
+        "source_table": "auth.saml_relay_states",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "scim_tokens_sso_provider_id_fkey",
+        "source_table": "auth.scim_tokens",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "sso_domains_sso_provider_id_fkey",
+        "source_table": "auth.sso_domains",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "saml_providers_sso_provider_id_fkey",
+        "source_table": "auth.saml_providers",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.sso_domains",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "sso_provider_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "domain",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(domain) > 0"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "sso_domains_sso_provider_id_fkey",
+        "source_table": "auth.sso_domains",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.saml_providers",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "sso_provider_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "entity_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable",
+          "unique"
+        ],
+        "check": "char_length(entity_id) > 0"
+      },
+      {
+        "name": "metadata_xml",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(metadata_xml) > 0"
+      },
+      {
+        "name": "metadata_url",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "metadata_url = NULL::text OR char_length(metadata_url) > 0"
+      },
+      {
+        "name": "attribute_mapping",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "name_id_format",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "dedicated_scope",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "saml_providers_sso_provider_id_fkey",
+        "source_table": "auth.saml_providers",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.saml_relay_states",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "sso_provider_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "request_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(request_id) > 0"
+      },
+      {
+        "name": "for_email",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "redirect_to",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "flow_state_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "saml_relay_states_flow_state_id_fkey",
+        "source_table": "auth.saml_relay_states",
+        "source_columns": [
+          "flow_state_id"
+        ],
+        "target_table": "auth.flow_state",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "saml_relay_states_sso_provider_id_fkey",
+        "source_table": "auth.saml_relay_states",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.flow_state",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "auth_code",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "code_challenge_method",
+        "data_type": "USER-DEFINED",
+        "format": "code_challenge_method",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "enums": [
+          "s256",
+          "plain"
+        ]
+      },
+      {
+        "name": "code_challenge",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "provider_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "provider_access_token",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "provider_refresh_token",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "authentication_method",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "auth_code_issued_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "invite_token",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "referrer",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "oauth_client_state_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "linking_target_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "email_optional",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "saml_relay_states_flow_state_id_fkey",
+        "source_table": "auth.saml_relay_states",
+        "source_columns": [
+          "flow_state_id"
+        ],
+        "target_table": "auth.flow_state",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.one_time_tokens",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "token_type",
+        "data_type": "USER-DEFINED",
+        "format": "one_time_token_type",
+        "options": [
+          "updatable"
+        ],
+        "enums": [
+          "confirmation_token",
+          "reauthentication_token",
+          "recovery_token",
+          "email_change_token_new",
+          "email_change_token_current",
+          "phone_change_token"
+        ]
+      },
+      {
+        "name": "token_hash",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(token_hash) > 0"
+      },
+      {
+        "name": "relates_to",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "link_token_hash",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "one_time_tokens_user_id_fkey",
+        "source_table": "auth.one_time_tokens",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.oauth_clients",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "client_secret_hash",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "registration_type",
+        "data_type": "USER-DEFINED",
+        "format": "oauth_registration_type",
+        "options": [
+          "updatable"
+        ],
+        "enums": [
+          "dynamic",
+          "manual"
+        ]
+      },
+      {
+        "name": "redirect_uris",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "grant_types",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "client_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(client_name) <= 1024"
+      },
+      {
+        "name": "client_uri",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(client_uri) <= 2048"
+      },
+      {
+        "name": "logo_uri",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(logo_uri) <= 2048"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "client_type",
+        "data_type": "USER-DEFINED",
+        "format": "oauth_client_type",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'confidential'::auth.oauth_client_type",
+        "enums": [
+          "public",
+          "confidential"
+        ]
+      },
+      {
+        "name": "token_endpoint_auth_method",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "token_endpoint_auth_method = ANY (ARRAY['client_secret_basic'::text, 'client_secret_post'::text, 'none'::text])"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "oauth_authorizations_client_id_fkey",
+        "source_table": "auth.oauth_authorizations",
+        "source_columns": [
+          "client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "sessions_oauth_client_id_fkey",
+        "source_table": "auth.sessions",
+        "source_columns": [
+          "oauth_client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "oauth_consents_client_id_fkey",
+        "source_table": "auth.oauth_consents",
+        "source_columns": [
+          "client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.oauth_authorizations",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "authorization_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "client_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "redirect_uri",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(redirect_uri) <= 2048"
+      },
+      {
+        "name": "scope",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(scope) <= 4096"
+      },
+      {
+        "name": "state",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(state) <= 4096"
+      },
+      {
+        "name": "resource",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(resource) <= 2048"
+      },
+      {
+        "name": "code_challenge",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(code_challenge) <= 128"
+      },
+      {
+        "name": "code_challenge_method",
+        "data_type": "USER-DEFINED",
+        "format": "code_challenge_method",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "enums": [
+          "s256",
+          "plain"
+        ]
+      },
+      {
+        "name": "response_type",
+        "data_type": "USER-DEFINED",
+        "format": "oauth_response_type",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'code'::auth.oauth_response_type",
+        "enums": [
+          "code"
+        ]
+      },
+      {
+        "name": "status",
+        "data_type": "USER-DEFINED",
+        "format": "oauth_authorization_status",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'pending'::auth.oauth_authorization_status",
+        "enums": [
+          "pending",
+          "approved",
+          "denied",
+          "expired"
+        ]
+      },
+      {
+        "name": "authorization_code",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable",
+          "unique"
+        ],
+        "check": "char_length(authorization_code) <= 255"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "(now() + '00:03:00'::interval)"
+      },
+      {
+        "name": "approved_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "nonce",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "char_length(nonce) <= 255"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "oauth_authorizations_client_id_fkey",
+        "source_table": "auth.oauth_authorizations",
+        "source_columns": [
+          "client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "oauth_authorizations_user_id_fkey",
+        "source_table": "auth.oauth_authorizations",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.oauth_consents",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "client_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "scopes",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(scopes) <= 2048"
+      },
+      {
+        "name": "granted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "revoked_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "oauth_consents_client_id_fkey",
+        "source_table": "auth.oauth_consents",
+        "source_columns": [
+          "client_id"
+        ],
+        "target_table": "auth.oauth_clients",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "oauth_consents_user_id_fkey",
+        "source_table": "auth.oauth_consents",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.oauth_client_states",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "provider_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "code_verifier",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "auth.custom_oauth_providers",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "provider_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "provider_type = ANY (ARRAY['oauth2'::text, 'oidc'::text])"
+      },
+      {
+        "name": "identifier",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable",
+          "unique"
+        ],
+        "check": "identifier ~ '^[a-z0-9][a-z0-9:-]{0,48}[a-z0-9]$'::text"
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(name) >= 1 AND char_length(name) <= 100"
+      },
+      {
+        "name": "client_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(client_id) >= 1 AND char_length(client_id) <= 512"
+      },
+      {
+        "name": "client_secret",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "acceptable_client_ids",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::text[]"
+      },
+      {
+        "name": "scopes",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::text[]"
+      },
+      {
+        "name": "pkce_enabled",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "true"
+      },
+      {
+        "name": "attribute_mapping",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "authorization_params",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "enabled",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "true"
+      },
+      {
+        "name": "email_optional",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "issuer",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "issuer IS NULL OR char_length(issuer) >= 1 AND char_length(issuer) <= 2048"
+      },
+      {
+        "name": "discovery_url",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "discovery_url IS NULL OR char_length(discovery_url) <= 2048"
+      },
+      {
+        "name": "skip_nonce_check",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "cached_discovery",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "discovery_cached_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "authorization_url",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "authorization_url IS NULL OR authorization_url ~~ 'https://%'::text"
+      },
+      {
+        "name": "token_url",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "token_url IS NULL OR token_url ~~ 'https://%'::text"
+      },
+      {
+        "name": "userinfo_url",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "userinfo_url IS NULL OR userinfo_url ~~ 'https://%'::text"
+      },
+      {
+        "name": "jwks_uri",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "jwks_uri IS NULL OR jwks_uri ~~ 'https://%'::text"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "custom_claims_allowlist",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::text[]"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "auth.webauthn_credentials",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "credential_id",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "public_key",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "attestation_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::text"
+      },
+      {
+        "name": "aaguid",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "sign_count",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "transports",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'[]'::jsonb"
+      },
+      {
+        "name": "backup_eligible",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "backed_up",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "friendly_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::text"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "last_used_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "webauthn_credentials_user_id_fkey",
+        "source_table": "auth.webauthn_credentials",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.webauthn_challenges",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "challenge_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "challenge_type = ANY (ARRAY['signup'::text, 'registration'::text, 'authentication'::text])"
+      },
+      {
+        "name": "session_data",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "webauthn_challenges_user_id_fkey",
+        "source_table": "auth.webauthn_challenges",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.scim_users",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "sso_provider_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "resource",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "generated",
+          "updatable"
+        ],
+        "default_value": "lower((resource ->> 'userName'::text))"
+      },
+      {
+        "name": "external_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "generated",
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "(resource ->> 'externalId'::text)"
+      },
+      {
+        "name": "active",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "generated",
+          "updatable"
+        ],
+        "default_value": "COALESCE(((resource ->> 'active'::text))::boolean, true)"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "scim_users_sso_provider_id_fkey",
+        "source_table": "auth.scim_users",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "scim_users_user_id_fkey",
+        "source_table": "auth.scim_users",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.scim_tokens",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "sso_provider_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "token_hash",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "token_hash ~ '^[0-9a-f]{64}$'::text"
+      },
+      {
+        "name": "prefix",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "revoked_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_used_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "scim_tokens_sso_provider_id_fkey",
+        "source_table": "auth.scim_tokens",
+        "source_columns": [
+          "sso_provider_id"
+        ],
+        "target_table": "auth.sso_providers",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.mfa_recovery_code_sets",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "mfa_factor_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "failed_verification_count",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0",
+        "check": "failed_verification_count >= 0"
+      },
+      {
+        "name": "verification_locked_until",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_recovery_code_sets_user_id_fkey",
+        "source_table": "auth.mfa_recovery_code_sets",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "mfa_recovery_codes_mfa_recovery_code_set_id_fkey",
+        "source_table": "auth.mfa_recovery_codes",
+        "source_columns": [
+          "mfa_recovery_code_set_id"
+        ],
+        "target_table": "auth.mfa_recovery_code_sets",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "mfa_recovery_code_sets_mfa_factor_id_fkey",
+        "source_table": "auth.mfa_recovery_code_sets",
+        "source_columns": [
+          "mfa_factor_id"
+        ],
+        "target_table": "auth.mfa_factors",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auth.mfa_recovery_codes",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "mfa_recovery_code_set_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "code_hash",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "consumed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "mfa_recovery_codes_mfa_recovery_code_set_id_fkey",
+        "source_table": "auth.mfa_recovery_codes",
+        "source_columns": [
+          "mfa_recovery_code_set_id"
+        ],
+        "target_table": "auth.mfa_recovery_code_sets",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.migrations",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "hash",
+        "data_type": "character varying",
+        "format": "varchar",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "executed_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "CURRENT_TIMESTAMP"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "storage.buckets",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Field is deprecated, use owner_id instead"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "public",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "avif_autodetection",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "file_size_limit",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "allowed_mime_types",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "type",
+        "data_type": "USER-DEFINED",
+        "format": "buckettype",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'STANDARD'::storage.buckettype",
+        "enums": [
+          "STANDARD",
+          "ANALYTICS",
+          "VECTOR"
+        ]
+      },
+      {
+        "name": "versioning_status",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'DISABLED'::text",
+        "check": "versioning_status = ANY (ARRAY['DISABLED'::text, 'ENABLED'::text, 'SUSPENDED'::text])"
+      },
+      {
+        "name": "lifecycle_configuration",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "lifecycle_configuration IS NULL OR jsonb_typeof(lifecycle_configuration) = 'object'::text AND lifecycle_configuration ? 'rules'::text AND\nCASE\n    WHEN jsonb_typeof(lifecycle_configuration -> 'rules'::text) = 'array'::text THEN jsonb_array_length(lifecycle_configuration -> 'rules'::text) >= 1 AND jsonb_array_length(lifecycle_configuration -> 'rules'::text) <= 1000\n    ELSE false\nEND"
+      },
+      {
+        "name": "lifecycle_configuration_generation",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "objects_bucketId_fkey",
+        "source_table": "storage.objects",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "s3_multipart_uploads_bucket_id_fkey",
+        "source_table": "storage.s3_multipart_uploads",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "s3_multipart_uploads_parts_bucket_id_fkey",
+        "source_table": "storage.s3_multipart_uploads_parts",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "bucket_lifecycle_states_bucket_id_fkey",
+        "source_table": "storage.bucket_lifecycle_states",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.objects",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "Field is deprecated, use owner_id instead"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "last_accessed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "metadata",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "path_tokens",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "generated",
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "string_to_array(name, '/'::text)"
+      },
+      {
+        "name": "version",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_metadata",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "archived_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "is_delete_marker",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "is_versioned",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "objects_bucketId_fkey",
+        "source_table": "storage.objects",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.s3_multipart_uploads",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "in_progress_size",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "upload_signature",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "version",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "user_metadata",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "metadata",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "s3_multipart_uploads_parts_upload_id_fkey",
+        "source_table": "storage.s3_multipart_uploads_parts",
+        "source_columns": [
+          "upload_id"
+        ],
+        "target_table": "storage.s3_multipart_uploads",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "s3_multipart_uploads_bucket_id_fkey",
+        "source_table": "storage.s3_multipart_uploads",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.s3_multipart_uploads_parts",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "upload_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "size",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "part_number",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "etag",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "owner_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "version",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "s3_multipart_uploads_parts_bucket_id_fkey",
+        "source_table": "storage.s3_multipart_uploads_parts",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "s3_multipart_uploads_parts_upload_id_fkey",
+        "source_table": "storage.s3_multipart_uploads_parts",
+        "source_columns": [
+          "upload_id"
+        ],
+        "target_table": "storage.s3_multipart_uploads",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.buckets_analytics",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "type",
+        "data_type": "USER-DEFINED",
+        "format": "buckettype",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'ANALYTICS'::storage.buckettype",
+        "enums": [
+          "STANDARD",
+          "ANALYTICS",
+          "VECTOR"
+        ]
+      },
+      {
+        "name": "format",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'ICEBERG'::text"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "deleted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "storage.buckets_vectors",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "type",
+        "data_type": "USER-DEFINED",
+        "format": "buckettype",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'VECTOR'::storage.buckettype",
+        "enums": [
+          "STANDARD",
+          "ANALYTICS",
+          "VECTOR"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "vector_indexes_bucket_id_fkey",
+        "source_table": "storage.vector_indexes",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets_vectors",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.vector_indexes",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "data_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "dimension",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "distance_metric",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "metadata_configuration",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "vector_indexes_bucket_id_fkey",
+        "source_table": "storage.vector_indexes",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets_vectors",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.bucket_lifecycle_states",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "generation",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "next_run_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "claim_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "claim_until",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "continuation",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "continuation IS NULL OR jsonb_typeof(continuation) = 'object'::text"
+      },
+      {
+        "name": "last_started_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_completed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_success_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "last_result",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "last_result IS NULL OR jsonb_typeof(last_result) = 'object'::text"
+      },
+      {
+        "name": "failure_count",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0",
+        "check": "failure_count >= 0"
+      },
+      {
+        "name": "last_error",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "bucket_id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "bucket_lifecycle_states_bucket_id_fkey",
+        "source_table": "storage.bucket_lifecycle_states",
+        "source_columns": [
+          "bucket_id"
+        ],
+        "target_table": "storage.buckets",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "storage.lifecycle_abandoned_artifacts",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "bucket_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "version",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "attempted_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "bucket_id",
+      "key"
+    ]
+  },
+  {
+    "name": "realtime.messages",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "realtime.schema_migrations",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "version",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "version"
+    ]
+  },
+  {
+    "name": "realtime.subscription",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "ALWAYS"
+      },
+      {
+        "name": "subscription_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "entity",
+        "data_type": "regclass",
+        "format": "regclass",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "filters",
+        "data_type": "ARRAY",
+        "format": "_user_defined_filter",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::realtime.user_defined_filter[]"
+      },
+      {
+        "name": "claims",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "claims_role",
+        "data_type": "regrole",
+        "format": "regrole",
+        "options": [
+          "generated",
+          "updatable"
+        ],
+        "default_value": "realtime.to_regrole((claims ->> 'role'::text))"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, now())"
+      },
+      {
+        "name": "action_filter",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "'*'::text",
+        "check": "action_filter = ANY (ARRAY['*'::text, 'INSERT'::text, 'UPDATE'::text, 'DELETE'::text])"
+      },
+      {
+        "name": "selected_columns",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ]
+  },
+  {
+    "name": "public.qcard_rooms",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "room_code",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'Q-CARD FRIENDS'::text"
+      },
+      {
+        "name": "host_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "status",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'waiting'::text",
+        "check": "status = ANY (ARRAY['waiting'::text, 'playing'::text, 'finished'::text, 'cancelled'::text])"
+      },
+      {
+        "name": "max_players",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "5",
+        "check": "max_players >= 2 AND max_players <= 5"
+      },
+      {
+        "name": "card_price",
+        "data_type": "numeric",
+        "format": "numeric",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0.10",
+        "check": "card_price >= 0.01 AND card_price <= 10.00 AND card_price = round(card_price, 2)"
+      },
+      {
+        "name": "cards_per_player",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "3",
+        "check": "cards_per_player >= 1 AND cards_per_player <= 5"
+      },
+      {
+        "name": "max_bet",
+        "data_type": "numeric",
+        "format": "numeric",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "20.00",
+        "check": "max_bet > 0::numeric"
+      },
+      {
+        "name": "prize_share",
+        "data_type": "numeric",
+        "format": "numeric",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0.95",
+        "check": "prize_share >= 0::numeric AND prize_share <= 1::numeric",
+        "comment": "Legacy compatibility metadata only. ASIX live prize starting percentage is selected by funded player count in qcard_process_action."
+      },
+      {
+        "name": "platform_share",
+        "data_type": "numeric",
+        "format": "numeric",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0.05",
+        "check": "platform_share >= 0::numeric AND platform_share <= 1::numeric",
+        "comment": "Legacy compatibility metadata only. ASIX live reserve is calculated as the unallocated remainder after the 97 percent four-cut target."
+      },
+      {
+        "name": "growth_steps",
+        "data_type": "ARRAY",
+        "format": "_numeric",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "ARRAY[100.00, 100.00, 100.00, 100.00]",
+        "check": "array_length(growth_steps, 1) = 4",
+        "comment": "Legacy compatibility metadata only. Stores the five-player reference targets; actual per-deal cumulative targets are in qcard_game_state.state.growth_weights."
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "growth_reserve_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "server_heartbeat_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "host_user_id_snapshot",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_game_state_room_id_fkey",
+        "source_table": "public.qcard_game_state",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_ledger_room_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_wallet_transactions_room_id_fkey",
+        "source_table": "public.asix_wallet_transactions",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_rooms_host_user_id_fkey",
+        "source_table": "public.qcard_rooms",
+        "source_columns": [
+          "host_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_money_ledger_room_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_actions_room_id_fkey",
+        "source_table": "public.qcard_actions",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_private_hands_room_id_fkey",
+        "source_table": "public.qcard_private_hands",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_seats_room_id_fkey",
+        "source_table": "public.qcard_seats",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_seats",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "display_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "char_length(display_name) >= 1 AND char_length(display_name) <= 32"
+      },
+      {
+        "name": "seat_no",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "check": "seat_no >= 1 AND seat_no <= 5"
+      },
+      {
+        "name": "is_ready",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "is_connected",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "true"
+      },
+      {
+        "name": "joined_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "last_seen_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "stack_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "stack_tetri IS NULL OR stack_tetri >= 0"
+      },
+      {
+        "name": "entry_stack_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "entry_stack_tetri IS NULL OR entry_stack_tetri >= 0"
+      },
+      {
+        "name": "entry_set_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "wallet_entry_key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "wallet_cashout_requested",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_seats_user_id_fkey",
+        "source_table": "public.qcard_seats",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_seats_room_id_fkey",
+        "source_table": "public.qcard_seats",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_game_state",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "version",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "state",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "jsonb_build_object('phase', 'waiting', 'dealer_seat', 1, 'current_turn_user_id', NULL::unknown, 'trump_suit', NULL::unknown, 'top_card', NULL::unknown, 'last_cutter_user_id', NULL::unknown, 'pot_tetri', 0, 'side_tetri', 0, 'played_cards', '[]'::jsonb, 'players', '[]'::jsonb, 'pending_raise_tetri', 0, 'raise_owner_user_id', NULL::unknown, 'raise_queue', '[]'::jsonb, 'successful_cuts', 0, 'pot_start_tetri', 0, 'growth_budget_tetri', 0, 'growth_added_tetri', 0, 'growth_weights', jsonb_build_array(12.00, 15.45, 24.75, 22.13), 'growth_reserve_tetri', 0, 'max_table_pool_tetri', 0, 'deck_remaining', 36, 'current_bet_tetri', 0, 'betting_contributions', '{}'::jsonb, 'round_contributions', '{}'::jsonb)"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "room_id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_game_state_room_id_fkey",
+        "source_table": "public.qcard_game_state",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_private_hands",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "hand",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'[]'::jsonb"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "room_id",
+      "user_id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_private_hands_room_id_fkey",
+        "source_table": "public.qcard_private_hands",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_private_hands_user_id_fkey",
+        "source_table": "public.qcard_private_hands",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_actions",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "ALWAYS"
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "actor_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "action_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "action_type = ANY (ARRAY['ready'::text, 'start'::text, 'redeal'::text, 'play_card'::text, 'fold'::text, 'raise'::text, 'call'::text, 'leave'::text, 'reconnect'::text, 'timeout_skip'::text])"
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "expected_version",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "status",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'pending'::text",
+        "check": "status = ANY (ARRAY['pending'::text, 'processing'::text, 'applied'::text, 'rejected'::text])"
+      },
+      {
+        "name": "result",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "processed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "actor_user_id_snapshot",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_money_ledger_reference_action_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "reference_action_id"
+        ],
+        "target_table": "public.qcard_actions",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_actions_room_id_fkey",
+        "source_table": "public.qcard_actions",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_actions_actor_user_id_fkey",
+        "source_table": "public.qcard_actions",
+        "source_columns": [
+          "actor_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_money_ledger",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "ALWAYS"
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "entry_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "entry_type = ANY (ARRAY['card_purchase'::text, 'prize_allocation'::text, 'platform_allocation'::text, 'manual_raise'::text, 'raise_call'::text, 'prize_payout'::text, 'round_remainder'::text, 'refund'::text, 'adjustment'::text, 'growth_reserve'::text, 'growth_release'::text, 'unclaimed_prize'::text, 'side_pot_payout'::text, 'uncalled_bet_refund'::text])"
+      },
+      {
+        "name": "amount_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "check": "amount_tetri >= 0"
+      },
+      {
+        "name": "reference_action_id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "details",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "reversal_of_ledger_id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id_snapshot",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "reference_action_id_snapshot",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_money_ledger_room_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_money_ledger_reversal_of_ledger_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "reversal_of_ledger_id"
+        ],
+        "target_table": "public.qcard_money_ledger",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_money_ledger_user_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "qcard_money_ledger_reference_action_id_fkey",
+        "source_table": "public.qcard_money_ledger",
+        "source_columns": [
+          "reference_action_id"
+        ],
+        "target_table": "public.qcard_actions",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_15",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_16",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "supabase_migrations.schema_migrations",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "version",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "statements",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "created_by",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "idempotency_key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "rollback",
+        "data_type": "ARRAY",
+        "format": "_text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "version"
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_17",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "public.qcard_deal_history",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "BY DEFAULT"
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "room_code",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "room_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "deal_number",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "host_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "started_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "completed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "final_phase",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "winner_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "winner_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "state_snapshot",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "room_settings",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_deal_history_players_deal_history_id_fkey",
+        "source_table": "public.qcard_deal_history_players",
+        "source_columns": [
+          "deal_history_id"
+        ],
+        "target_table": "public.qcard_deal_history",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.qcard_deal_history_players",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "BY DEFAULT"
+      },
+      {
+        "name": "deal_history_id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "display_name",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "seat_no",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "folded",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "all_in",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "cards_count",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0"
+      },
+      {
+        "name": "stack_tetri_after_deal",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "is_winner",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "qcard_deal_history_players_deal_history_id_fkey",
+        "source_table": "public.qcard_deal_history_players",
+        "source_columns": [
+          "deal_history_id"
+        ],
+        "target_table": "public.qcard_deal_history",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_18",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "public.asix_wallets",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "balance_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "0",
+        "check": "balance_tetri >= 0"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "user_id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "asix_wallets_user_id_fkey",
+        "source_table": "public.asix_wallets",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.asix_wallet_transactions",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "ALWAYS"
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "transaction_type",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "check": "transaction_type = ANY (ARRAY['credit'::text, 'table_buyin'::text, 'table_cashout'::text, 'adjustment'::text, 'platform_commission'::text])"
+      },
+      {
+        "name": "amount_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "check": "amount_tetri > 0"
+      },
+      {
+        "name": "balance_after_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "check": "balance_after_tetri >= 0"
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "idempotency_key",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable",
+          "unique"
+        ]
+      },
+      {
+        "name": "description",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::text"
+      },
+      {
+        "name": "metadata",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'{}'::jsonb"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "asix_wallet_transactions_user_id_fkey",
+        "source_table": "public.asix_wallet_transactions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_wallet_transactions_room_id_fkey",
+        "source_table": "public.asix_wallet_transactions",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_19",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "public.asix_platform_commission_settings",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "1",
+        "check": "id = 1"
+      },
+      {
+        "name": "recipient_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "fee_per_player_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "3",
+        "comment": "Deprecated legacy field; always zero. V147 uses commission_rate_bps instead."
+      },
+      {
+        "name": "currency",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'GEL'::text",
+        "check": "currency = 'GEL'::text"
+      },
+      {
+        "name": "enabled",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "commission_rate_bps",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "500",
+        "check": "commission_rate_bps >= 0 AND commission_rate_bps <= 10000",
+        "comment": "ASIX V147 commission rate in basis points; 500 = 5% of the whole deal Entry Fee."
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "asix_platform_commission_settings_recipient_user_id_fkey",
+        "source_table": "public.asix_platform_commission_settings",
+        "source_columns": [
+          "recipient_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.asix_platform_commission_ledger",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "identity",
+          "updatable"
+        ],
+        "identity_generation": "ALWAYS"
+      },
+      {
+        "name": "deal_id",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "room_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "recipient_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "player_user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "amount_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "check": "amount_tetri >= 0"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "commission_rate_bps",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "commission_rate_bps IS NULL OR commission_rate_bps >= 0 AND commission_rate_bps <= 10000"
+      },
+      {
+        "name": "gross_table_entry_fee_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "gross_table_entry_fee_tetri IS NULL OR gross_table_entry_fee_tetri >= 0"
+      },
+      {
+        "name": "table_commission_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "check": "table_commission_tetri IS NULL OR table_commission_tetri >= 0"
+      },
+      {
+        "name": "settled_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "When the pending V147 commission was credited after successful deal completion."
+      },
+      {
+        "name": "cancelled_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "comment": "When pending V147 commission was voided because the deal was cancelled/refunded."
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "asix_platform_commission_ledger_recipient_user_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "recipient_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_ledger_player_user_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "player_user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      },
+      {
+        "name": "asix_platform_commission_ledger_room_id_fkey",
+        "source_table": "public.asix_platform_commission_ledger",
+        "source_columns": [
+          "room_id"
+        ],
+        "target_table": "public.qcard_rooms",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "public.asix_bot_sessions",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "user_id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "buyin_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "updatable"
+        ],
+        "check": "buyin_tetri > 0"
+      },
+      {
+        "name": "status",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "'active'::text",
+        "check": "status = ANY (ARRAY['active'::text, 'cashed_out'::text])"
+      },
+      {
+        "name": "created_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      },
+      {
+        "name": "cashed_out_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "cashout_tetri",
+        "data_type": "bigint",
+        "format": "int8",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id"
+    ],
+    "foreign_key_constraints": [
+      {
+        "name": "asix_bot_sessions_user_id_fkey",
+        "source_table": "public.asix_bot_sessions",
+        "source_columns": [
+          "user_id"
+        ],
+        "target_table": "auth.users",
+        "target_columns": [
+          "id"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_20",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  },
+  {
+    "name": "public.qcard_game_logic_version",
+    "rls_enabled": true,
+    "columns": [
+      {
+        "name": "singleton_id",
+        "data_type": "smallint",
+        "format": "int2",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "1",
+        "check": "singleton_id = 1"
+      },
+      {
+        "name": "logic_version",
+        "data_type": "integer",
+        "format": "int4",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "change_note",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "''::text"
+      },
+      {
+        "name": "changed_at",
+        "data_type": "timestamp with time zone",
+        "format": "timestamptz",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "now()"
+      }
+    ],
+    "primary_keys": [
+      "singleton_id"
+    ]
+  },
+  {
+    "name": "realtime.messages_2026_11_21",
+    "rls_enabled": false,
+    "columns": [
+      {
+        "name": "topic",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "extension",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "updatable"
+        ]
+      },
+      {
+        "name": "payload",
+        "data_type": "jsonb",
+        "format": "jsonb",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "event",
+        "data_type": "text",
+        "format": "text",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "private",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "nullable",
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "updated_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "inserted_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "timezone('utc'::text, clock_timestamp())"
+      },
+      {
+        "name": "id",
+        "data_type": "uuid",
+        "format": "uuid",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "gen_random_uuid()"
+      },
+      {
+        "name": "binary_payload",
+        "data_type": "bytea",
+        "format": "bytea",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      },
+      {
+        "name": "skip_broadcast",
+        "data_type": "boolean",
+        "format": "bool",
+        "options": [
+          "updatable"
+        ],
+        "default_value": "false"
+      },
+      {
+        "name": "expires_at",
+        "data_type": "timestamp without time zone",
+        "format": "timestamp",
+        "options": [
+          "nullable",
+          "updatable"
+        ]
+      }
+    ],
+    "primary_keys": [
+      "id",
+      "inserted_at"
+    ]
+  }
+]
