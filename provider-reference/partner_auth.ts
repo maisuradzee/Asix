@@ -146,7 +146,7 @@ export async function verifyPartnerRequest(
   const nonce = request.headers.get("x-asix-nonce") || "";
   const signatureText = request.headers.get("x-asix-signature") || "";
 
-  if (!keyId || !timestamp || !nonce || !signatureText) {
+  if (!keyId || keyId.length > 128 || !timestamp || !nonce || !signatureText) {
     return { ok: false, error: "SIGNATURE_HEADERS_MISSING" };
   }
 
@@ -179,6 +179,9 @@ export async function verifyPartnerRequest(
   const bodyBuffer = await readBodyBounded(request, maxBodyBytes);
   if (bodyBuffer === null) return { ok: false, error: "BODY_TOO_LARGE" };
 
+  if (signatureText.length !== 44) {
+    return { ok: false, error: "SIGNATURE_INVALID" };
+  }
   const signature = decodeBase64(signatureText);
   if (!signature || signature.byteLength !== 32) {
     return { ok: false, error: "SIGNATURE_INVALID" };
