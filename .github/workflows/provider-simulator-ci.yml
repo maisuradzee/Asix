@@ -49,6 +49,8 @@ jobs:
           provider-reference/resilience_test.ts
           provider-reference/provider_gateway.ts
           provider-reference/provider_gateway_test.ts
+          provider-reference/partner_http_adapter.ts
+          provider-reference/partner_http_adapter_test.ts
 
       - name: Run all provider reference tests
         run: >-
@@ -62,3 +64,4 @@ jobs:
           provider-reference/launch_service_test.ts
           provider-reference/resilience_test.ts
           provider-reference/provider_gateway_test.ts
+          provider-reference/partner_http_adapter_test.ts
