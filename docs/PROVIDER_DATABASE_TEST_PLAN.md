@@ -121,3 +121,14 @@ This validates the draft SQL and those specific concurrent paths on vanilla Post
 - A deliberately stale worker ID is rejected; the actual lease owner can still persist the response.
 - Wallet financial identity fields are immutable; status/response metadata changes only through approved functions.
 - Completed/voided rounds, wallet attempt evidence and signed commercial contract versions cannot be updated or deleted.
+
+
+## L. Read-only status-query lease recovery
+
+- If a wallet DISPATCH lease expires, its transaction becomes UNKNOWN and a read-only status query is queued. The original debit/credit dispatch is never resent automatically.
+- If a WALLET_STATUS_QUERY lease expires, the query event returns to RETRY after bounded backoff; worker ID, lease token and lease expiry are cleared.
+- A subsequent claim receives a fresh, one-time lease token.
+- If the event has reached max_attempts, it moves to DEAD_LETTER, clears the stale lease data and is no longer claimable.
+- Status-query lease recovery does not change the wallet transaction state or create a BET/WIN/REFUND transaction.
+- Response persistence requires the exact worker ID, one-time lease token and unexpired lease. Stale workers/tokens are rejected.
+- CI test marker: \`PROVIDER_STATUS_QUERY_LEASE_RECOVERY_PASSED\`.
