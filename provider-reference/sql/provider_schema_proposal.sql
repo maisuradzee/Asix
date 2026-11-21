@@ -538,8 +538,8 @@ BEGIN
      OR p_partner_session_ref IS NULL OR pg_catalog.length(p_partner_session_ref) NOT BETWEEN 1 AND 200
      OR p_game_code IS NULL OR pg_catalog.length(p_game_code) NOT BETWEEN 1 AND 80
      OR p_jurisdiction IS NULL OR pg_catalog.length(p_jurisdiction) NOT BETWEEN 2 AND 8
-     OR p_jurisdiction !~ '^[A-Z0-9_-]+'
-     OR p_currency IS NULL OR p_currency !~ '^[A-Z]{3}'
+     OR p_jurisdiction ~ '[^A-Z0-9_-]'
+     OR p_currency IS NULL OR pg_catalog.length(p_currency) <> 3 OR p_currency ~ '[^A-Z]'
      OR p_currency_exponent IS NULL OR p_currency_exponent NOT BETWEEN 0 AND 6
      OR p_locale IS NULL OR pg_catalog.length(p_locale) NOT BETWEEN 2 AND 35
      OR p_policy_version IS NULL OR p_policy_version < 1
@@ -1375,7 +1375,6 @@ BEGIN
 END
 $rls$;
 
-GRANT EXECUTE ON FUNCTION provider_internal.create_launch_session(uuid, text, text, text, text, text, smallint, text, integer, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.consume_partner_nonce(uuid, text, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.create_launch_session(uuid, text, text, text, text, text, smallint, text, integer, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provider_runtime;
@@ -1400,6 +1399,3 @@ ALTER DEFAULT PRIVILEGES FOR ROLE provider_owner IN SCHEMA provider_internal
 -- 4. Execute SET ROLE provider_runtime after connecting.
 -- 5. Restrict network access and rotate credentials independently.
 -- Never commit LOGIN passwords or database URLs.
-
-     OR p_currency IS NULL OR p_currency !~ '^[A-Z]{3}
-
