@@ -53,6 +53,8 @@ jobs:
           provider-reference/partner_http_adapter_test.ts
           provider-reference/postgres_repository.ts
           provider-reference/postgres_repository_test.ts
+          provider-reference/postgres_gateway_adapters.ts
+          provider-reference/postgres_gateway_adapters_test.ts
 
       - name: Run all provider reference tests
         run: >-
@@ -68,6 +70,7 @@ jobs:
           provider-reference/provider_gateway_test.ts
           provider-reference/partner_http_adapter_test.ts
           provider-reference/postgres_repository_test.ts
+          provider-reference/postgres_gateway_adapters_test.ts
 
   provider-database-sql:
     runs-on: ubuntu-latest
