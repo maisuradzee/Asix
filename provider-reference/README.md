@@ -30,3 +30,10 @@ The simulator is local-only and in-memory. It exercises idempotency, delayed sta
 - `resilience_test.ts`: partner isolation, open/half-open/closed transitions and backoff tests.
 
 The launch-token store and circuit state coordination must be implemented with durable shared infrastructure before multi-replica production use. Current tests use in-memory stores and do not prove distributed atomicity.
+
+## Provider gateway handler
+
+- `provider_gateway.ts`: server-to-server signed Launch endpoint handler that combines HMAC verification, partner rate limiting, policy-gated Launch Service and sanitized responses.
+- `provider_gateway_test.ts`: valid signed launch, invalid signature, rate limit, malformed JSON and unknown route tests.
+
+The handler has dependency-injected key, nonce, launch-token and rate-limit stores. Production use requires durable shared implementations, request metrics, network-level controls and deployment behind the approved provider API hostname. It is not attached to a Supabase Edge Function or public endpoint.
