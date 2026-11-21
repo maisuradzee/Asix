@@ -9,6 +9,7 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider Data Model v1.0](PROVIDER_DATA_MODEL_v1.0.md)
 - [Provider Database Provisioning Runbook](PROVIDER_DATABASE_PROVISIONING_RUNBOOK.md)
 - [Provider Database Test Plan](PROVIDER_DATABASE_TEST_PLAN.md)
+- [V154 Restore Readiness Assessment](V154_RESTORE_READINESS_ASSESSMENT.md)
 - [Existing ASIX Compatibility Map](EXISTING_ASIX_COMPATIBILITY_MAP_v1.0.md)
 - [ST8 Aggregator Reference and API Direction](ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
 
@@ -47,6 +48,7 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Partner authentication tests](../provider-reference/partner_auth_test.ts)
 - [Partner API OpenAPI contract](../provider-reference/openapi/provider-api.yaml)
 - [Test-only in-memory repository](../provider-reference/testing/in_memory_repository.ts)
+- [V154 private schema/roles exporter](../scripts/export_asix_v154_baseline.ps1)
 - [Provider SQL schema proposal — design only](../provider-reference/sql/provider_schema_proposal.sql)
 - [Disposable PostgreSQL smoke tests](../provider-reference/sql/provider_schema_smoke_tests.sql)
 - [Disposable PostgreSQL concurrency fixture](../provider-reference/sql/provider_schema_concurrency_fixture.sql)
