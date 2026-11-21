@@ -66,6 +66,9 @@ function assertDateRange(start: string, end: string): void {
 
 function validateContract(contract: SettlementContract): void {
   if (!contract.contractId || !contract.contractVersion ||
+      !["REVENUE_SHARE", "FIXED_FEE", "HYBRID"].includes(contract.feeModel) ||
+      !["FLOOR", "HALF_UP"].includes(contract.roundingMode) ||
+      !["FLOOR_AT_ZERO", "CARRY_FORWARD"].includes(contract.negativeGgrPolicy) ||
       !/^[A-Z]{3}$/.test(contract.currency) ||
       !Array.isArray(contract.allowedComponentCodes) ||
       contract.allowedComponentCodes.length === 0 ||
@@ -83,7 +86,7 @@ function validateContract(contract: SettlementContract): void {
     throw new Error("INVALID_FIXED_FEE_CONTRACT");
   }
   if (contract.feeModel === "HYBRID" &&
-      contract.revenueShareBps <= 0 && contract.fixedFeeMinor <= 0n) {
+      (contract.revenueShareBps <= 0 || contract.fixedFeeMinor <= 0n)) {
     throw new Error("INVALID_HYBRID_CONTRACT");
   }
 }
