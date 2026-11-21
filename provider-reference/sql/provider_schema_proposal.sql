@@ -537,6 +537,7 @@ DECLARE
   v_config provider_internal.partner_game_configs%ROWTYPE;
   v_original provider_internal.wallet_transactions%ROWTYPE;
   v_refunded numeric;
+  v_open_exposure numeric;
   v_new_id uuid;
 BEGIN
   IF p_idempotency_key IS NULL OR pg_catalog.length(p_idempotency_key) NOT BETWEEN 1 AND 200
@@ -597,6 +598,23 @@ BEGIN
   IF p_operation = 'BET' AND
      (p_amount_minor < v_config.min_bet_minor OR p_amount_minor > v_config.max_bet_minor) THEN
     RAISE EXCEPTION 'BET_OUTSIDE_PARTNER_LIMITS' USING ERRCODE = '22003';
+  END IF;
+
+  IF p_operation = 'BET' THEN
+    SELECT COALESCE(pg_catalog.sum(w.amount_minor), 0)
+      INTO v_open_exposure
+    FROM provider_internal.wallet_transactions AS w
+    JOIN provider_internal.rounds AS r
+      ON r.id = w.round_id AND r.partner_id = w.partner_id
+    WHERE w.partner_id = p_partner_id
+      AND w.session_id = p_session_id
+      AND w.operation = 'BET'
+      AND w.status IN ('CREATED','DISPATCHING','PENDING','UNKNOWN','CONFIRMED')
+      AND r.status = 'OPEN';
+
+    IF v_open_exposure + p_amount_minor > v_config.max_open_exposure_minor THEN
+      RAISE EXCEPTION 'PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED' USING ERRCODE = '22003';
+    END IF;
   END IF;
   IF p_operation = 'WIN' AND p_amount_minor > v_config.max_win_minor THEN
     RAISE EXCEPTION 'WIN_OUTSIDE_PARTNER_LIMITS' USING ERRCODE = '22003';
@@ -816,7 +834,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, i
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
 
-ALTER ROLE provider_runtime SET search_path = pg_catalog, provider_internal;
+ALTER ROLE provider_runtime SET search_path = 'pg_catalog, provider_internal';
 ALTER DEFAULT PRIVILEGES FOR ROLE provider_owner IN SCHEMA provider_internal
   REVOKE ALL ON TABLES FROM PUBLIC, anon, authenticated, service_role, provider_runtime;
 ALTER DEFAULT PRIVILEGES FOR ROLE provider_owner IN SCHEMA provider_internal
