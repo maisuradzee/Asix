@@ -129,6 +129,7 @@ export async function buildPartnerCanonicalPayload(
   const digest = await sha256Hex(body);
   return [
     request.method.toUpperCase(),
+    url.host.toLowerCase(),
     url.pathname + url.search,
     timestamp,
     nonce,
