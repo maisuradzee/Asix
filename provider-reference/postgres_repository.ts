@@ -14,6 +14,16 @@ export interface ProviderPgExecutor {
   ): Promise<PgQueryResult<T>>;
 }
 
+export interface PartnerKeyMetadata extends Record<string, unknown> {
+  partner_id: string;
+  partner_code: string;
+  key_id: string;
+  auth_profile: "ASIX_HMAC_SHA256_V1" | "ECDSA_P256_SHA256_PAYLOAD_V1" | "MTLS" | "OAUTH2_JWT";
+  protocol_version: string;
+  secret_reference: string | null;
+  public_key_reference: string | null;
+}
+
 export interface NonceConsumption {
   partnerId: string;
   keyId: string;
@@ -139,6 +149,24 @@ function validateCurrency(currency: string, exponent: number): void {
 
 export class ProviderPostgresRepository {
   constructor(private readonly db: ProviderPgExecutor) {}
+
+  async resolvePartnerKey(
+    partnerCode: string,
+    keyId: string,
+  ): Promise<PartnerKeyMetadata | null> {
+    if (!partnerCode || partnerCode.length > 64 || !/^[a-z0-9][a-z0-9_-]{1,63}$/.test(partnerCode) ||
+        !keyId || keyId.length > 128) {
+      throw new ProviderDatabaseError("INVALID_PARTNER_KEY_LOOKUP");
+    }
+    const result = await this.db.query<PartnerKeyMetadata>(
+      "SELECT * FROM provider_internal.resolve_partner_key($1::text,$2::text)",
+      [partnerCode, keyId],
+    );
+    if (result.rows.length > 1) {
+      throw new ProviderDatabaseError("NON_UNIQUE_PARTNER_KEY_RESULT");
+    }
+    return result.rows[0] ?? null;
+  }
 
   async consumePartnerNonce(input: NonceConsumption): Promise<boolean> {
     validateHash(input.nonceHash, "nonce");
