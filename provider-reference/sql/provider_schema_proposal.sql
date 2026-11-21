@@ -843,6 +843,7 @@ $function$;
 -- Replayed persistence of the same attempt is idempotent by attempt_number.
 CREATE OR REPLACE FUNCTION provider_internal.record_wallet_partner_response(
   p_partner_id uuid,
+  p_worker_id uuid,
   p_transaction_id uuid,
   p_attempt_kind text,
   p_generation integer,
@@ -871,7 +872,7 @@ DECLARE
   v_updated integer;
   v_now timestamptz := pg_catalog.clock_timestamp();
 BEGIN
-  IF p_partner_id IS NULL OR p_transaction_id IS NULL
+  IF p_partner_id IS NULL OR p_worker_id IS NULL OR p_transaction_id IS NULL
      OR p_attempt_kind IS NULL OR p_attempt_kind NOT IN ('DISPATCH','STATUS_QUERY')
      OR p_generation IS NULL OR p_generation < 0
      OR p_attempt_number IS NULL OR p_attempt_number < 1
@@ -990,6 +991,8 @@ BEGIN
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_DISPATCH'
       AND o.generation = 0
+      AND o.lease_owner = p_worker_id
+      AND o.lease_until > v_now
       AND o.state = 'LEASED';
     GET DIAGNOSTICS v_updated = ROW_COUNT;
     IF v_updated <> 1 THEN
@@ -1001,6 +1004,8 @@ BEGIN
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_STATUS_QUERY'
       AND o.generation = p_generation
+      AND o.lease_owner = p_worker_id
+      AND o.lease_until > v_now
       AND o.state = 'LEASED';
     GET DIAGNOSTICS v_updated = ROW_COUNT;
     IF v_updated <> 1 THEN
@@ -1169,7 +1174,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provi
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
-GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.get_wallet_transaction_status(uuid, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
 
