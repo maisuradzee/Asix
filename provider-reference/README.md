@@ -45,3 +45,8 @@ The handler has dependency-injected key, nonce, launch-token and rate-limit stor
 - `partner_auth_ecdsa_test.ts`: DER signature parsing, POST body, GET query, tamper and size-limit tests.
 
 These profiles are not interchangeable. Choose a profile only from the partner's current signed technical specification. The ECDSA reference intentionally does not invent timestamp/nonce headers absent from the partner contract; replay prevention remains an application-level idempotency and token-lifecycle requirement where the protocol provides no signed freshness fields.
+
+## ST8 reference
+
+- [ST8 Aggregator Reference and API Direction](../docs/ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
+- The reviewed public ST8 document is an Operator API; it is not assumed to be a provider/developer onboarding API for ASIX.
