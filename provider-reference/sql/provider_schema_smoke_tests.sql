@@ -128,6 +128,10 @@ DECLARE
   v_first boolean;
   v_second boolean;
   v_launch_count integer;
+  v_key_count integer;
+  v_resolved_partner_id uuid;
+  v_auth_profile text;
+  v_secret_reference text;
   v_launch_status text;
   v_new_session_id uuid;
   v_reissued_session_id uuid;
@@ -136,6 +140,22 @@ DECLARE
   v_old_token_count integer;
   v_new_token_count integer;
 BEGIN
+  SELECT q.partner_id, q.auth_profile, q.secret_reference
+    INTO v_resolved_partner_id, v_auth_profile, v_secret_reference
+  FROM provider_internal.resolve_partner_key('ci-operator'::text, 'ci-key-1'::text) AS q;
+
+  IF v_resolved_partner_id <> '00000000-0000-4000-8000-000000000101'::uuid
+     OR v_auth_profile <> 'ASIX_HMAC_SHA256_V1'
+     OR v_secret_reference <> 'kms://ci/partner-key' THEN
+    RAISE EXCEPTION 'PARTNER_KEY_METADATA_RESOLUTION_FAILED';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_key_count
+  FROM provider_internal.resolve_partner_key('ci-operator'::text, 'missing-key'::text);
+  IF v_key_count <> 0 THEN
+    RAISE EXCEPTION 'UNKNOWN_PARTNER_KEY_WAS_RESOLVED';
+  END IF;
+
   v_first := provider_internal.consume_partner_nonce(
     '00000000-0000-4000-8000-000000000101'::uuid,
     'ci-key-1',
