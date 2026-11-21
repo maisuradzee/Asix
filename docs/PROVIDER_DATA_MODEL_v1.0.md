@@ -4,7 +4,7 @@
 
 ## 1. Design decision
 
-Create a separate PostgreSQL schema named `provider` for B2B operator integration. Do not add partner-domain objects into the existing Q-CARD game tables unless a later reviewed mapping proves it is necessary.
+Create a separate, non-Data-API PostgreSQL schema named `provider_internal` for B2B operator integration. Do not add partner-domain objects into the existing Q-CARD game tables unless a later reviewed mapping proves it is necessary.
 
 Existing consumer-domain objects remain separate:
 - `asix_wallets`
@@ -21,25 +21,25 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 
 | Entity | Key fields | Purpose |
 |---|---|---|
-| `provider.partners` | id, code, status, jurisdiction | Tenant/partner identity |
-| `provider.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
-| `provider.partner_game_config` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
-| `provider.launch_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
-| `provider.launch_tokens` | token_hash, partner_id, player_ref, session_ref, game_id, currency, expiry | One-use launch authority |
-| `provider.sessions` | partner/session/player/game/status | B2B game session context |
-| `provider.rounds` | session_id, round_no, rules_hash, game_version, result_hash | Round identity and immutable result reference |
-| `provider.wallet_transactions` | partner_id, idempotency_key, request_hash, operation, amount, currency, state | Durable partner-wallet workflow |
-| `provider.wallet_attempts` | transaction_id, attempt_no, request/response hashes, timestamps, result | External dispatch evidence |
-| `provider.outbox` | event_id, transaction_id, lease, attempts, next_attempt_at | Durable delivery |
-| `provider.ledger_accounts` | code, account_type, currency | Contract-specific chart of accounts |
-| `provider.ledger_journals` | partner_id, source_ref, journal_type, currency, status | Double-entry journal |
-| `provider.ledger_entries` | journal_id, account_id, direction, amount_minor | Debit/credit lines |
-| `provider.reconciliation_runs` | partner_id, period, status, report_ref | Reconciliation batch |
-| `provider.reconciliation_items` | run_id, asix_tx_id, partner_ref, match_state, difference | Itemized mismatch evidence |
-| `provider.approval_requests` | type, target, reason, evidence, state | Human approval queue |
-| `provider.approval_decisions` | request_id, approver, decision, timestamp | Immutable decision history |
-| `provider.audit_events` | actor, action, target, correlation_id, payload_hash | Audit trail |
-| `provider.incidents` | partner_id, severity, state, opened/closed | Per-partner incident lifecycle |
+| `provider_internal.partners` | id, code, status, jurisdiction | Tenant/partner identity |
+| `provider_internal.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
+| `provider_internal.partner_game_config` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
+| `provider_internal.launch_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
+| `provider_internal.launch_tokens` | token_hash, partner_id, player_ref, session_ref, game_id, currency, expiry | One-use launch authority |
+| `provider_internal.sessions` | partner/session/player/game/status | B2B game session context |
+| `provider_internal.rounds` | session_id, round_no, rules_hash, game_version, result_hash | Round identity and immutable result reference |
+| `provider_internal.wallet_transactions` | partner_id, idempotency_key, request_hash, operation, amount, currency, state | Durable partner-wallet workflow |
+| `provider_internal.wallet_attempts` | transaction_id, attempt_no, request/response hashes, timestamps, result | External dispatch evidence |
+| `provider_internal.outbox` | event_id, transaction_id, lease, attempts, next_attempt_at | Durable delivery |
+| `provider_internal.ledger_accounts` | code, account_type, currency | Contract-specific chart of accounts |
+| `provider_internal.ledger_journals` | partner_id, source_ref, journal_type, currency, status | Double-entry journal |
+| `provider_internal.ledger_entries` | journal_id, account_id, direction, amount_minor | Debit/credit lines |
+| `provider_internal.reconciliation_runs` | partner_id, period, status, report_ref | Reconciliation batch |
+| `provider_internal.reconciliation_items` | run_id, asix_tx_id, partner_ref, match_state, difference | Itemized mismatch evidence |
+| `provider_internal.approval_requests` | type, target, reason, evidence, state | Human approval queue |
+| `provider_internal.approval_decisions` | request_id, approver, decision, timestamp | Immutable decision history |
+| `provider_internal.audit_events` | actor, action, target, correlation_id, payload_hash | Audit trail |
+| `provider_internal.incidents` | partner_id, severity, state, opened/closed | Per-partner incident lifecycle |
 
 ## 3. Required uniqueness and integrity constraints
 
@@ -61,9 +61,9 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 
 - Derive partner identity from verified credentials/signature, never from an untrusted request body.
 - All partner-owned records include partner_id, directly or through a foreign-key parent.
-- Partner database access should occur through narrowly scoped server-side functions/service roles.
+- Partner database access should occur through narrowly scoped server-side functions and a dedicated provider_runtime database role; never grant the runtime direct table access or reuse service_role.
 - Do not give partner clients direct table access.
-- RLS is defense in depth, not the only tenant boundary.
+- RLS is enabled and FORCEd on every provider table as defense in depth; the partner API also enforces tenant scope before calling database functions.
 - Cross-tenant queries are prohibited unless an audited internal reporting role has an explicit purpose.
 
 ## 5. Data classification and retention
