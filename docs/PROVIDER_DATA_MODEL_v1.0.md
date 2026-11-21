@@ -22,7 +22,7 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 | Entity | Key fields | Purpose |
 |---|---|---|
 | `provider.partners` | id, code, status, jurisdiction | Tenant/partner identity |
-| `provider.partner_keys` | partner_id, key_id, secret_ref, valid_from/to, revoked_at | Key metadata; secret material stays in a secrets manager |
+| `provider.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
 | `provider.partner_game_config` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
 | `provider.launch_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
 | `provider.launch_tokens` | token_hash, partner_id, player_ref, session_ref, game_id, currency, expiry | One-use launch authority |
