@@ -73,6 +73,8 @@ Do not copy auth.uid() policies onto Provider tables: casino partner identities 
 10. Record migration ID, schema diff, test output, advisor results and rollback/forward-repair plan.
 11. Only after a separate release gate should production deployment be considered.
 
+Current CI evidence: the draft schema and smoke suite pass in a disposable PostgreSQL 17 container, and concurrent Bet-exposure plus Refund-cap races pass with two simultaneous database clients. This is not a substitute for the same checks on an isolated restored V154 Supabase staging project.
+
 ## 8. Rollback and recovery
 
 Do not drop provider tables or erase transactions after Provider has accepted live traffic. Production rollback disables new partner launches, isolates affected routes, preserves transaction and ledger evidence, resolves UNKNOWN operations and deploys a forward-fix. Schema rollback is allowed only when empty/test-only and backed by a verified restore.
