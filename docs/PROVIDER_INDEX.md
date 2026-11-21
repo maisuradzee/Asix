@@ -27,6 +27,8 @@ This directory describes the planned B2B provider layer. None of these documents
 ## Reference implementation
 - [Provider reference contracts and simulator](../provider-reference/README.md)
 - [Wallet Orchestrator reference state machine](../provider-reference/wallet_orchestrator.ts)
+- [Provider ledger journal builder](../provider-reference/ledger.ts)
+- [Provider settlement calculator](../provider-reference/settlement_engine.ts)
 - [Wallet Orchestrator tests](../provider-reference/wallet_orchestrator_test.ts)
 - [Partner HMAC authentication reference](../provider-reference/partner_auth.ts)
 - [Partner authentication tests](../provider-reference/partner_auth_test.ts)
