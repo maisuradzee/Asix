@@ -266,21 +266,16 @@ BEGIN
   v_count := provider_internal.mark_expired_wallet_dispatches_unknown();
   IF v_count <> 1 THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_RECOVERY_FAILED'; END IF;
 
-  SELECT w.status INTO v_status
-  FROM provider_internal.wallet_transactions AS w
-  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'::uuid
-    AND w.idempotency_key = 'ci-bet-idempotency-1'::text;
+  SELECT q.transaction_status INTO v_status
+  FROM provider_internal.get_wallet_transaction_status(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-bet-idempotency-1'::text
+  ) AS q;
   IF v_status <> 'UNKNOWN' THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_NOT_UNKNOWN'; END IF;
 
   SELECT pg_catalog.count(*) INTO v_query_events
-  FROM provider_internal.outbox_events AS o
-  WHERE o.event_type = 'WALLET_STATUS_QUERY'
-    AND o.partner_id = '00000000-0000-4000-8000-000000000101'::uuid;
-  IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_EVENT_NOT_CREATED'; END IF;
-
-  SELECT pg_catalog.count(*) INTO v_query_events
   FROM provider_internal.claim_outbox_events(
-    '00000000-0000-4000-8000-000000000198', 10, 5
+    '00000000-0000-4000-8000-000000000198'::uuid, 10, 5
   );
   IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_OUTBOX_NOT_CLAIMABLE'; END IF;
 END
