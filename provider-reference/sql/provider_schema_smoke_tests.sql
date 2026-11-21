@@ -262,6 +262,7 @@ DECLARE
   v_count integer;
   v_status text;
   v_query_events integer;
+  v_was_recorded boolean;
 BEGIN
   v_count := provider_internal.mark_expired_wallet_dispatches_unknown();
   IF v_count <> 1 THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_RECOVERY_FAILED'; END IF;
@@ -278,16 +279,81 @@ BEGIN
     '00000000-0000-4000-8000-000000000198'::uuid, 10, 5
   );
   IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_OUTBOX_NOT_CLAIMABLE'; END IF;
+
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 1, 1,
+    pg_catalog.decode(pg_catalog.repeat('d1', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d2', 32), 'hex'),
+    'PENDING'::text, 'PENDING'::text, NULL::text,
+    pg_catalog.clock_timestamp() + interval '100 milliseconds'
+  ) AS r;
+  IF v_status <> 'PENDING' OR NOT v_was_recorded THEN
+    RAISE EXCEPTION 'PENDING_WALLET_RESPONSE_NOT_RECORDED';
+  END IF;
+
+  -- Replaying the same persistence attempt is idempotent.
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 1, 1,
+    pg_catalog.decode(pg_catalog.repeat('d1', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d2', 32), 'hex'),
+    'PENDING'::text, 'PENDING'::text, NULL::text,
+    pg_catalog.clock_timestamp() + interval '100 milliseconds'
+  ) AS r;
+  IF v_status <> 'PENDING' OR v_was_recorded THEN
+    RAISE EXCEPTION 'WALLET_RESPONSE_REPLAY_WAS_NOT_IDEMPOTENT';
+  END IF;
+
+  PERFORM pg_catalog.pg_sleep(0.2);
+  SELECT pg_catalog.count(*) INTO v_query_events
+  FROM provider_internal.claim_outbox_events(
+    '00000000-0000-4000-8000-000000000197'::uuid, 10, 5
+  );
+  IF v_query_events <> 1 THEN RAISE EXCEPTION 'NEXT_STATUS_QUERY_NOT_SCHEDULED'; END IF;
+
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 2, 2,
+    pg_catalog.decode(pg_catalog.repeat('d3', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d4', 32), 'hex'),
+    'CONFIRMED'::text, 'OK'::text, 'ci-partner-bet-ref'::text, NULL::timestamptz
+  ) AS r;
+  IF v_status <> 'CONFIRMED' OR NOT v_was_recorded THEN
+    RAISE EXCEPTION 'CONFIRMED_WALLET_RESPONSE_NOT_RECORDED';
+  END IF;
 END
 $recovery$;
 
 RESET ROLE;
 
--- Simulate the confirmed partner wallet response before testing refund lineage.
-UPDATE provider_internal.wallet_transactions
-SET status = 'CONFIRMED'
-WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
-  AND idempotency_key = 'ci-bet-idempotency-1'::text;
 
 UPDATE provider_internal.rounds
 SET status = 'COMPLETED', completed_at = pg_catalog.clock_timestamp()
