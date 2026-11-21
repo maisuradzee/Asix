@@ -123,3 +123,5 @@ The concurrency assertions used separate database clients:
 2. Two 300-minor-unit REFUND requests raced against a 500-minor-unit confirmed original Bet; one succeeded and one was rejected because the combined amount would exceed the original debit.
 
 This validates the draft SQL and those specific concurrent paths on vanilla PostgreSQL 17. It does not prove compatibility with the restored ASIX V154 Supabase project, the Supabase Data API configuration, production throughput or every possible isolation/replica failure.
+
+- Wallet response persistence: DISPATCHING → PENDING/UNKNOWN → read-only STATUS_QUERY → CONFIRMED/DECLINED, including idempotent replay of the same response attempt and a bounded status-query generation limit.
