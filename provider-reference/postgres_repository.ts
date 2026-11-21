@@ -73,7 +73,7 @@ export interface WalletPartnerResponseResult {
   wasRecorded: boolean;
 }
 
-export interface WalletTransactionStatus {
+export interface WalletTransactionStatus extends Record<string, unknown> {
   transaction_id: string;
   transaction_status: string;
   operation: "BET" | "WIN" | "REFUND";
