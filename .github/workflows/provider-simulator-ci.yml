@@ -55,6 +55,9 @@ jobs:
           provider-reference/postgres_repository_test.ts
           provider-reference/postgres_gateway_adapters.ts
           provider-reference/postgres_gateway_adapters_test.ts
+          provider-reference/postgres_provider_gateway_test.ts
+          provider-reference/postgres_provider_gateway.ts
+          provider-reference/postgres_provider_gateway_test.ts
 
       - name: Run all provider reference tests
         run: >-
