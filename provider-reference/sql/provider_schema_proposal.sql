@@ -538,6 +538,7 @@ DECLARE
   v_original provider_internal.wallet_transactions%ROWTYPE;
   v_refunded numeric;
   v_open_exposure numeric;
+  v_round_payout numeric;
   v_new_id uuid;
 BEGIN
   IF p_idempotency_key IS NULL OR pg_catalog.length(p_idempotency_key) NOT BETWEEN 1 AND 200
@@ -577,12 +578,24 @@ BEGIN
     RAISE EXCEPTION 'SESSION_OR_CURRENCY_INVALID' USING ERRCODE = '23514';
   END IF;
 
-  IF p_round_id IS NOT NULL AND NOT EXISTS (
+  IF p_operation IN ('BET','WIN') AND p_round_id IS NULL THEN
+    RAISE EXCEPTION 'BET_AND_WIN_REQUIRE_ROUND' USING ERRCODE = '22023';
+  END IF;
+
+  IF p_operation = 'BET' AND NOT EXISTS (
     SELECT 1 FROM provider_internal.rounds AS r
     WHERE r.id = p_round_id AND r.partner_id = p_partner_id
       AND r.session_id = p_session_id AND r.status = 'OPEN'
   ) THEN
-    RAISE EXCEPTION 'ROUND_NOT_OPEN_FOR_PARTNER_SESSION' USING ERRCODE = '23514';
+    RAISE EXCEPTION 'BET_REQUIRES_OPEN_ROUND' USING ERRCODE = '23514';
+  END IF;
+
+  IF p_operation = 'WIN' AND NOT EXISTS (
+    SELECT 1 FROM provider_internal.rounds AS r
+    WHERE r.id = p_round_id AND r.partner_id = p_partner_id
+      AND r.session_id = p_session_id AND r.status = 'COMPLETED'
+  ) THEN
+    RAISE EXCEPTION 'WIN_REQUIRES_COMPLETED_ROUND' USING ERRCODE = '23514';
   END IF;
 
   SELECT c.* INTO v_config
@@ -604,10 +617,14 @@ BEGIN
     SELECT COALESCE(pg_catalog.sum(w.amount_minor), 0)
       INTO v_open_exposure
     FROM provider_internal.wallet_transactions AS w
+    JOIN provider_internal.sessions AS s
+      ON s.id = w.session_id AND s.partner_id = w.partner_id
     JOIN provider_internal.rounds AS r
       ON r.id = w.round_id AND r.partner_id = w.partner_id
     WHERE w.partner_id = p_partner_id
-      AND w.session_id = p_session_id
+      AND s.game_code = v_session.game_code
+      AND s.jurisdiction = v_session.jurisdiction
+      AND s.currency = p_currency
       AND w.operation = 'BET'
       AND w.status IN ('CREATED','DISPATCHING','PENDING','UNKNOWN','CONFIRMED')
       AND r.status = 'OPEN';
@@ -616,8 +633,18 @@ BEGIN
       RAISE EXCEPTION 'PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED' USING ERRCODE = '22003';
     END IF;
   END IF;
-  IF p_operation = 'WIN' AND p_amount_minor > v_config.max_win_minor THEN
-    RAISE EXCEPTION 'WIN_OUTSIDE_PARTNER_LIMITS' USING ERRCODE = '22003';
+  IF p_operation = 'WIN' THEN
+    SELECT COALESCE(pg_catalog.sum(w.amount_minor), 0)
+      INTO v_round_payout
+    FROM provider_internal.wallet_transactions AS w
+    WHERE w.partner_id = p_partner_id
+      AND w.round_id = p_round_id
+      AND w.operation = 'WIN'
+      AND w.status IN ('CREATED','DISPATCHING','PENDING','UNKNOWN','CONFIRMED','RECONCILED');
+
+    IF v_round_payout + p_amount_minor > v_config.max_win_minor THEN
+      RAISE EXCEPTION 'ROUND_WIN_LIMIT_EXCEEDED' USING ERRCODE = '22003';
+    END IF;
   END IF;
 
   IF p_operation = 'REFUND' THEN
@@ -627,8 +654,10 @@ BEGIN
     SELECT w.* INTO v_original
     FROM provider_internal.wallet_transactions AS w
     WHERE w.id = p_original_transaction_id AND w.partner_id = p_partner_id
-      AND w.session_id = p_session_id AND w.operation = 'BET'
-      AND w.currency = p_currency AND w.status IN ('CONFIRMED','RECONCILED')
+      AND w.session_id = p_session_id
+      AND w.round_id IS NOT DISTINCT FROM p_round_id
+      AND w.operation = 'BET' AND w.currency = p_currency
+      AND w.status IN ('CONFIRMED','RECONCILED')
     FOR UPDATE;
     IF NOT FOUND THEN
       RAISE EXCEPTION 'ORIGINAL_CONFIRMED_BET_NOT_FOUND' USING ERRCODE = '23503';
