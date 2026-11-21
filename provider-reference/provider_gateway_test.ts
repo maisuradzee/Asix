@@ -84,6 +84,7 @@ async function signedRequest(body: unknown, nonce: string): Promise<Request> {
   const base64 = btoa(String.fromCharCode(...signature));
   const headers = new Headers(request.headers);
   headers.set("x-asix-partner-code", "partner-1");
+  headers.set("x-asix-partner-code", "partner-1");
   headers.set("x-asix-key-id", "key-1");
   headers.set("x-asix-timestamp", timestamp);
   headers.set("x-asix-nonce", nonce);
@@ -145,6 +146,7 @@ Deno.test("malformed JSON is rejected after signed nonce is validated", async ()
   const text = "{bad json";
   const request = new Request("https://gateway.asix.example.invalid/provider/v1/launches", {
     method: "POST",
+    headers: { "x-asix-partner-code": "partner-1" },
     body: text,
   });
   const timestamp = String(nowSec);
