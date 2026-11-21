@@ -275,6 +275,21 @@ export class ProviderPostgresRepository {
     return count;
   }
 
+  async recoverExpiredStatusQueryLeases(backoffSeconds = 5): Promise<number> {
+    if (!Number.isInteger(backoffSeconds) || backoffSeconds < 1 || backoffSeconds > 300) {
+      throw new ProviderDatabaseError("INVALID_STATUS_QUERY_BACKOFF");
+    }
+    const result = await this.db.query<{ recovered_count: number }>(
+      "SELECT provider_internal.recover_expired_wallet_status_query_leases($1::integer) AS recovered_count",
+      [backoffSeconds],
+    );
+    const count = result.rows[0]?.recovered_count;
+    if (!Number.isInteger(count) || count < 0) {
+      throw new ProviderDatabaseError("INVALID_STATUS_QUERY_RECOVERY_RESPONSE");
+    }
+    return count;
+  }
+
   async postLedgerJournal(journalId: string, journalHash: Uint8Array): Promise<boolean> {
     validateHash(journalHash, "journal");
     if (!journalId) throw new ProviderDatabaseError("INVALID_JOURNAL_ID");
