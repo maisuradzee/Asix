@@ -49,10 +49,32 @@ BEGIN
     RAISE EXCEPTION 'DISPATCH_OUTBOX_NOT_CLAIMED_FOR_RESPONSE_TEST';
   END IF;
 
+  -- A stale/different worker cannot persist a response for this lease.
+  BEGIN
+    PERFORM * FROM provider_internal.record_wallet_partner_response(
+      '00000000-0000-4000-8000-000000000301'::uuid,
+      '00000000-0000-4000-8000-000000000195'::uuid,
+      v_transaction_id,
+      'DISPATCH'::text,
+      0,
+      1,
+      v_request_hash,
+      pg_catalog.decode(pg_catalog.repeat('e1', 32), 'hex'),
+      'CONFIRMED'::text,
+      'OK'::text,
+      'ci-concurrent-bet-partner-ref'::text,
+      NULL::timestamptz
+    );
+    RAISE EXCEPTION 'STALE_WORKER_RESPONSE_WAS_ACCEPTED';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    NULL;
+  END;
+
   SELECT r.transaction_status, r.status_query_generation, r.was_recorded
     INTO v_transaction_status, v_generation, v_was_recorded
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000301'::uuid,
+    '00000000-0000-4000-8000-000000000196'::uuid,
     v_transaction_id,
     'DISPATCH'::text,
     0,
@@ -75,6 +97,7 @@ BEGIN
     INTO v_transaction_status, v_generation, v_was_recorded
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000301'::uuid,
+    '00000000-0000-4000-8000-000000000196'::uuid,
     v_transaction_id,
     'DISPATCH'::text,
     0,
