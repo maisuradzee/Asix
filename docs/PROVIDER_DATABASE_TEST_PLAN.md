@@ -1,6 +1,6 @@
 # ASIX Provider Database Test Plan v1.0
 
-Target: isolated restored V154 staging only. The SQL proposal has not been applied and these tests have not been executed against a database.
+Target: disposable PostgreSQL 17 CI container for current automated smoke checks; full acceptance still requires isolated restored V154 Supabase staging. The SQL proposal has not been applied to the live ASIX database.
 
 ## A. Environment and compatibility
 - Restore the exact V154 baseline into an isolated database.
@@ -100,3 +100,12 @@ Expected result: no duplicate financial effect, no cross-partner access, no fabr
 - Load/concurrency tests demonstrate stable row locking, indexes and outbox throughput.
 - Restore/forward-repair plan tested.
 - Independent security review approves schema and routines.
+
+
+## K. Current CI execution evidence (21 November 2026)
+
+The current CI workflow uses two separate jobs:
+- Provider reference Deno job: 73 tests passed, 0 failed.
+- Provider database SQL job: design proposal applied successfully to disposable PostgreSQL 17; smoke suite ended with `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
+
+This validates draft SQL against vanilla PostgreSQL 17 and the specific smoke assertions. It does not prove V154 upgrade compatibility, Supabase Data API exposure settings, production load, or a successful restore of the historical ASIX database.
