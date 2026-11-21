@@ -34,9 +34,12 @@ jobs:
           provider-reference/wallet_orchestrator_test.ts
           provider-reference/simulator/server.ts
           provider-reference/simulator/server_test.ts
+          provider-reference/partner_auth.ts
+          provider-reference/partner_auth_test.ts
 
       - name: Run provider reference and simulator tests
         run: >-
           deno test
           provider-reference/wallet_orchestrator_test.ts
           provider-reference/simulator/server_test.ts
+          provider-reference/partner_auth_test.ts
