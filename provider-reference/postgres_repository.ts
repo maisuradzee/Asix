@@ -55,6 +55,7 @@ export interface WalletTransactionCreated {
 export interface WalletPartnerResponseInput {
   partnerId: string;
   workerId: string;
+  leaseToken: string;
   transactionId: string;
   attemptKind: "DISPATCH" | "STATUS_QUERY";
   generation: number;
@@ -92,6 +93,7 @@ export interface ClaimedOutboxEvent {
   payload: Record<string, unknown>;
   attempts: number;
   lease_until: string;
+  lease_token: string;
 }
 
 export class ProviderDatabaseError extends Error {
@@ -196,7 +198,7 @@ export class ProviderPostgresRepository {
   async recordWalletPartnerResponse(input: WalletPartnerResponseInput): Promise<WalletPartnerResponseResult> {
     validateHash(input.requestHash, "request");
     validateHash(input.responseHash, "response");
-    if (!input.partnerId || !input.workerId || !input.transactionId ||
+    if (!input.partnerId || !input.workerId || !input.leaseToken || !input.transactionId ||
         (input.attemptKind !== "DISPATCH" && input.attemptKind !== "STATUS_QUERY") ||
         !Number.isInteger(input.generation) || input.generation < 0 ||
         !Number.isInteger(input.attemptNumber) || input.attemptNumber < 1 ||
@@ -216,10 +218,11 @@ export class ProviderPostgresRepository {
       status_query_generation: number;
       was_recorded: boolean;
     }>(
-      "SELECT * FROM provider_internal.record_wallet_partner_response($1::uuid,$2::uuid,$3::uuid,$4::text,$5::integer,$6::integer,$7::bytea,$8::bytea,$9::text,$10::text,$11::text,$12::timestamptz)",
+      "SELECT * FROM provider_internal.record_wallet_partner_response($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5::text,$6::integer,$7::integer,$8::bytea,$9::bytea,$10::text,$11::text,$12::text,$13::timestamptz)",
       [
         input.partnerId,
         input.workerId,
+        input.leaseToken,
         input.transactionId,
         input.attemptKind,
         input.generation,
