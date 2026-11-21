@@ -293,6 +293,22 @@ UPDATE provider_internal.rounds
 SET status = 'COMPLETED', completed_at = pg_catalog.clock_timestamp()
 WHERE id = '00000000-0000-4000-8000-000000000105'::uuid;
 
+-- Simulate partner suspension, closed session and disabled game config after
+-- the confirmed Bet. New Bets must stop; already incurred Win/Refund duties
+-- must remain processable.
+UPDATE provider_internal.partners
+SET status = 'SUSPENDED'
+WHERE id = '00000000-0000-4000-8000-000000000101'::uuid;
+
+UPDATE provider_internal.sessions
+SET status = 'COMPLETED', closed_at = pg_catalog.clock_timestamp()
+WHERE id = '00000000-0000-4000-8000-000000000104'::uuid;
+
+UPDATE provider_internal.partner_game_configs
+SET enabled = false
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND game_code = 'ASIX_CI_GAME';
+
 SET ROLE provider_runtime;
 DO $refund_and_win$
 DECLARE
@@ -300,6 +316,21 @@ DECLARE
   v_refund uuid;
   v_created boolean;
 BEGIN
+  -- Partner suspension and session closure prohibit new Bets.
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      NULL::uuid,
+      'ci-new-bet-after-suspension'::text,
+      pg_catalog.decode(pg_catalog.repeat('71', 32), 'hex'),
+      'BET'::text, 100::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+    );
+    RAISE EXCEPTION 'SUSPENDED_PARTNER_ACCEPTED_NEW_BET';
+  EXCEPTION WHEN SQLSTATE '42501' THEN
+    NULL;
+  END;
+
   SELECT q.transaction_id INTO v_original
   FROM provider_internal.get_wallet_transaction_status(
     '00000000-0000-4000-8000-000000000101'::uuid,
