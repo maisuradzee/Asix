@@ -262,6 +262,7 @@ DECLARE
   v_count integer;
   v_status text;
   v_query_events integer;
+  v_lease_token uuid;
   v_was_recorded boolean;
 BEGIN
   v_count := provider_internal.mark_expired_wallet_dispatches_unknown();
@@ -274,10 +275,11 @@ BEGIN
   ) AS q;
   IF v_status <> 'UNKNOWN' THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_NOT_UNKNOWN'; END IF;
 
-  SELECT pg_catalog.count(*) INTO v_query_events
+  SELECT pg_catalog.count(*), (pg_catalog.array_agg(e.lease_token))[1]
+    INTO v_query_events, v_lease_token
   FROM provider_internal.claim_outbox_events(
     '00000000-0000-4000-8000-000000000198'::uuid, 10, 5
-  );
+  ) AS e;
   IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_OUTBOX_NOT_CLAIMABLE'; END IF;
 
   SELECT r.transaction_status, r.was_recorded
@@ -285,6 +287,7 @@ BEGIN
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000101'::uuid,
     '00000000-0000-4000-8000-000000000198'::uuid,
+    v_lease_token,
     (
       SELECT q.transaction_id
       FROM provider_internal.get_wallet_transaction_status(
@@ -308,6 +311,7 @@ BEGIN
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000101'::uuid,
     '00000000-0000-4000-8000-000000000198'::uuid,
+    v_lease_token,
     (
       SELECT q.transaction_id
       FROM provider_internal.get_wallet_transaction_status(
@@ -326,10 +330,11 @@ BEGIN
   END IF;
 
   PERFORM pg_catalog.pg_sleep(0.2);
-  SELECT pg_catalog.count(*) INTO v_query_events
+  SELECT pg_catalog.count(*), (pg_catalog.array_agg(e.lease_token))[1]
+    INTO v_query_events, v_lease_token
   FROM provider_internal.claim_outbox_events(
     '00000000-0000-4000-8000-000000000197'::uuid, 10, 5
-  );
+  ) AS e;
   IF v_query_events <> 1 THEN RAISE EXCEPTION 'NEXT_STATUS_QUERY_NOT_SCHEDULED'; END IF;
 
   SELECT r.transaction_status, r.was_recorded
@@ -337,6 +342,7 @@ BEGIN
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000101'::uuid,
     '00000000-0000-4000-8000-000000000197'::uuid,
+    v_lease_token,
     (
       SELECT q.transaction_id
       FROM provider_internal.get_wallet_transaction_status(
