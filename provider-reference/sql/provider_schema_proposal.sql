@@ -796,6 +796,32 @@ BEGIN
 END
 $function$;
 
+-- Partner-scoped read path: runtime can read only the minimum transaction
+-- status context; no direct SELECT grant is needed on wallet_transactions.
+CREATE OR REPLACE FUNCTION provider_internal.get_wallet_transaction_status(
+  p_partner_id uuid,
+  p_idempotency_key text
+)
+RETURNS TABLE (
+  transaction_id uuid,
+  transaction_status text,
+  operation text,
+  amount_minor bigint,
+  currency text,
+  partner_transaction_ref text
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+  SELECT w.id, w.status, w.operation, w.amount_minor, w.currency, w.partner_transaction_ref
+  FROM provider_internal.wallet_transactions AS w
+  JOIN provider_internal.partners AS p ON p.id = w.partner_id
+  WHERE w.partner_id = p_partner_id
+    AND w.idempotency_key = p_idempotency_key
+    AND p.status = 'ACTIVE'
+$function$;
+
 CREATE OR REPLACE FUNCTION provider_internal.post_ledger_journal(p_journal_id uuid, p_journal_hash bytea)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $function$
@@ -861,6 +887,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provi
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.get_wallet_transaction_status(uuid, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
 
 ALTER ROLE provider_runtime SET search_path = 'pg_catalog, provider_internal';
