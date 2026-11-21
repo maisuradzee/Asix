@@ -210,6 +210,27 @@ Deno.test("partner-scoped wallet status returns null when no record exists", asy
   assertEquals(db.calls[0].parameters, ["partner-1", "idem-1"]);
 });
 
+Deno.test("expired read-only status-query leases use bounded recovery backoff", async () => {
+  const db = new MockPg();
+  db.responder = () => [{ recovered_count: 2 }];
+  const repo = new ProviderPostgresRepository(db);
+  const recovered = await repo.recoverExpiredStatusQueryLeases(15);
+  assertEquals(recovered, 2);
+  assertEquals(db.calls[0].sql.includes("recover_expired_wallet_status_query_leases"), true);
+  assertEquals(db.calls[0].parameters, [15]);
+});
+
+Deno.test("status-query recovery rejects unbounded backoff before database access", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.recoverExpiredStatusQueryLeases(301),
+    ProviderDatabaseError,
+    "INVALID_STATUS_QUERY_BACKOFF",
+  );
+  assertEquals(db.calls.length, 0);
+});
+
 Deno.test("invalid hashes and currency are rejected before database access", async () => {
   const db = new MockPg();
   const repo = new ProviderPostgresRepository(db);
