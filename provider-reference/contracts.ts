@@ -36,6 +36,8 @@ export interface WalletCommand extends CorrelationContext {
   partnerPlayerRef: string;
   partnerSessionRef: string;
   roundId: string;
+  originalTransactionId?: string;
+  originalPartnerTransactionRef?: string;
   amountMinor: MinorUnits;
   currency: IsoCurrencyCode;
   currencyExponent: number;
