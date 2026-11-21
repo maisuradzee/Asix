@@ -22,6 +22,7 @@ export interface NonceConsumption {
 }
 
 export interface LaunchClaimsRow {
+  [key: string]: unknown;
   partner_id: string;
   session_id: string;
   partner_player_ref: string;
@@ -52,6 +53,7 @@ export interface WalletTransactionCreated {
 }
 
 export interface ClaimedOutboxEvent {
+  [key: string]: unknown;
   id: string;
   partner_id: string;
   wallet_transaction_id: string;
