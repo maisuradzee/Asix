@@ -56,10 +56,18 @@ export interface StoredLaunchToken {
   consumedAt?: string;
 }
 
+export class PartnerSessionConflictError extends Error {
+  constructor() {
+    super("PARTNER_SESSION_ALREADY_LAUNCHED");
+    this.name = "PartnerSessionConflictError";
+  }
+}
+
 export interface LaunchTokenStore {
   /**
    * Must be durable. Enforce unique token_hash and unique
-   * (partner_code, partner_session_ref) if partner contract requires it.
+   * (partner_code, partner_session_ref) for active/issued sessions.
+   * Duplicate session references throw PartnerSessionConflictError.
    */
   create(record: StoredLaunchToken): Promise<void>;
 
@@ -218,7 +226,15 @@ export class ProviderLaunchService {
     };
 
     const tokenHash = await hashToken(token);
-    await this.tokens.create({ tokenHash, claims });
+    try {
+      await this.tokens.create({ tokenHash, claims });
+    } catch (error) {
+      if (error instanceof PartnerSessionConflictError ||
+          (error instanceof Error && error.message === "PARTNER_SESSION_ALREADY_LAUNCHED")) {
+        throw new LaunchRejectedError("PARTNER_SESSION_ALREADY_LAUNCHED");
+      }
+      throw error;
+    }
 
     const launchUrl = new URL(base.toString());
     launchUrl.searchParams.set("session_id", sessionId);
