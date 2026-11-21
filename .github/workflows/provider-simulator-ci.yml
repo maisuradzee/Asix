@@ -124,9 +124,13 @@ jobs:
           set -e
           docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
             SET ROLE provider_runtime;
-            SELECT session_id::text || '|' || session_status || '|' || token_issued::text
+            SELECT launch_id::text || '|' || session_id::text || '|' || session_status || '|' || token_issued::text
             FROM provider_internal.create_launch_session(
               '00000000-0000-4000-8000-000000000301'::uuid,
+              'ci-concurrency-key'::text,
+              'provider-v1'::text,
+              '00000000-0000-4000-8000-000000000401'::uuid,
+              '00000000-0000-4000-8000-000000000411'::uuid,
               'ci-launch-player'::text,
               'ci-concurrent-launch-session'::text,
               'ASIX_CI_LAUNCH'::text,
@@ -134,7 +138,7 @@ jobs:
               'GEL'::text,
               2::smallint,
               'en-GB'::text,
-              1::integer,
+              'policy-1'::text,
               decode(repeat('d1', 32), 'hex'),
               clock_timestamp() + interval '2 minutes'
             );
@@ -143,9 +147,13 @@ jobs:
 
           docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
             SET ROLE provider_runtime;
-            SELECT session_id::text || '|' || session_status || '|' || token_issued::text
+            SELECT launch_id::text || '|' || session_id::text || '|' || session_status || '|' || token_issued::text
             FROM provider_internal.create_launch_session(
               '00000000-0000-4000-8000-000000000301'::uuid,
+              'ci-concurrency-key'::text,
+              'provider-v1'::text,
+              '00000000-0000-4000-8000-000000000402'::uuid,
+              '00000000-0000-4000-8000-000000000412'::uuid,
               'ci-launch-player'::text,
               'ci-concurrent-launch-session'::text,
               'ASIX_CI_LAUNCH'::text,
@@ -153,7 +161,7 @@ jobs:
               'GEL'::text,
               2::smallint,
               'en-GB'::text,
-              1::integer,
+              'policy-1'::text,
               decode(repeat('d2', 32), 'hex'),
               clock_timestamp() + interval '2 minutes'
             );
@@ -163,9 +171,11 @@ jobs:
           wait "$LAUNCH_A_PID"
           wait "$LAUNCH_B_PID"
 
-          SESSION_A="$(cut -d '|' -f 1 /tmp/provider-launch-a.log)"
-          SESSION_B="$(cut -d '|' -f 1 /tmp/provider-launch-b.log)"
-          if [ -z "$SESSION_A" ] || [ "$SESSION_A" != "$SESSION_B" ]; then
+          LAUNCH_A="$(cut -d '|' -f 1 /tmp/provider-launch-a.log)"
+          LAUNCH_B="$(cut -d '|' -f 1 /tmp/provider-launch-b.log)"
+          SESSION_A="$(cut -d '|' -f 2 /tmp/provider-launch-a.log)"
+          SESSION_B="$(cut -d '|' -f 2 /tmp/provider-launch-b.log)"
+          if [ -z "$SESSION_A" ] || [ "$SESSION_A" != "$SESSION_B" ] || [ -z "$LAUNCH_A" ] || [ -z "$LAUNCH_B" ]; then
             cat /tmp/provider-launch-a.log /tmp/provider-launch-b.log
             echo "Concurrent launch retries created different sessions."
             exit 1
