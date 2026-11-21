@@ -1,4 +1,4 @@
-# ASIX Provider Database Test Plan v1.0
+# ASIX Provider Database Test Plan v1.1
 
 Target: disposable PostgreSQL 17 CI container for current automated smoke checks; full acceptance still requires isolated restored V154 Supabase staging. The SQL proposal has not been applied to the live ASIX database.
 
@@ -110,14 +110,19 @@ Expected result: no duplicate financial effect, no cross-partner access, no fabr
 
 ## K. Current CI execution evidence (21 November 2026)
 
-Verified GitHub Actions run 255 uses two isolated jobs:
-- Deno reference suite: 76 passed, 0 failed.
+Verified GitHub Actions run #309 uses two isolated jobs:
+- Deno reference suite: 80 passed, 0 failed.
 - PostgreSQL 17 service container: schema proposal applied successfully, followed by smoke tests that emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
+- Concurrent Launch check emitted `PROVIDER_CONCURRENT_LAUNCH_IDEMPOTENCY_PASSED`.
 - Concurrent financial checks emitted `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
 
 The concurrency assertions used separate database clients:
 1. Two 1,000-minor-unit BET requests raced against a 1,500-minor-unit partner/game/jurisdiction/currency open-exposure cap; one succeeded and one was rejected by the cap.
 2. Two 300-minor-unit REFUND requests raced against a 500-minor-unit confirmed original Bet; one succeeded and one was rejected because the combined amount would exceed the original debit.
+
+
+
+The concurrent Launch assertion used two independent PostgreSQL clients issuing create_launch_session for the same partner/session reference with different token hashes. Both calls returned the same session ID; the database retained exactly one session, one unconsumed/unrevoked token and one superseded token. This verifies the shared partner/session advisory lock and retry semantics on the disposable PostgreSQL 17 service.
 
 This validates the draft SQL and those specific concurrent paths on vanilla PostgreSQL 17. It does not prove compatibility with the restored ASIX V154 Supabase project, the Supabase Data API configuration, production throughput or every possible isolation/replica failure.
 
