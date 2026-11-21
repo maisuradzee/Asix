@@ -191,3 +191,68 @@ Deno.test("hung partner request times out to UNKNOWN without retry", async () =>
   assertEquals(record.lastErrorCode, "PARTNER_REQUEST_TIMEOUT");
   assertEquals(dispatches, 1);
 });
+
+
+Deno.test("refund commands require original ASIX and partner transaction references", async () => {
+  const repo = new InMemoryWalletTransactionRepository();
+  const service = new WalletOrchestrator(repo, () => makeAdapter());
+  await assertRejects(
+    () => service.execute(command({
+      transactionId: "tx-refund-invalid",
+      idempotencyKey: "idem-refund-invalid",
+      operation: "REFUND",
+    }), "worker-refund"),
+    Error,
+    "INVALID_WALLET_COMMAND",
+  );
+});
+
+Deno.test("confirmed refund carries original debit references into adapter", async () => {
+  const repo = new InMemoryWalletTransactionRepository();
+  let observedOriginalId = "";
+  let observedOriginalPartnerRef = "";
+  const adapter = makeAdapter({
+    refund: async (cmd) => {
+      observedOriginalId = cmd.originalTransactionId ?? "";
+      observedOriginalPartnerRef = cmd.originalPartnerTransactionRef ?? "";
+      return result(cmd, "CONFIRMED");
+    },
+  });
+  const service = new WalletOrchestrator(repo, () => adapter);
+  const refundCommand = command({
+    transactionId: "tx-refund-002",
+    idempotencyKey: "idem-refund-002",
+    operation: "REFUND",
+    originalTransactionId: "tx-bet-original",
+    originalPartnerTransactionRef: "operator-bet-original",
+  });
+  const record = await service.execute(refundCommand, "worker-refund");
+  assertEquals(record.state, "CONFIRMED");
+  assertEquals(observedOriginalId, "tx-bet-original");
+  assertEquals(observedOriginalPartnerRef, "operator-bet-original");
+});
+
+Deno.test("status query cannot replace an existing partner transaction reference", async () => {
+  const repo = new InMemoryWalletTransactionRepository();
+  const original = command();
+  const adapter = makeAdapter({
+    debitBet: async (cmd) => ({ ...result(cmd, "PENDING"), partnerTransactionRef: "partner-tx-original" }),
+    getTransactionStatus: async (query) => {
+      const cmd = command({
+        transactionId: query.transactionId,
+        idempotencyKey: query.idempotencyKey,
+        partnerCode: query.partnerCode,
+        correlationId: query.correlationId,
+        adapterVersion: query.adapterVersion,
+        protocolVersion: query.protocolVersion,
+      });
+      return { ...result(cmd, "CONFIRMED"), partnerTransactionRef: "partner-tx-unexpected" };
+    },
+  });
+  const service = new WalletOrchestrator(repo, () => adapter);
+  const sent = await service.execute(original, "worker-a");
+  assertEquals(sent.state, "PENDING");
+  const resolved = await service.resolveUnknown(original.transactionId);
+  assertEquals(resolved.state, "PENDING");
+  assertEquals(resolved.lastErrorCode, "PARTNER_RESPONSE_REFERENCE_MISMATCH");
+});
