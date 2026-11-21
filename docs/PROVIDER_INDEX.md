@@ -13,9 +13,18 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Partner UAT Test Matrix v1.0](PARTNER_UAT_TEST_MATRIX_v1.0.md)
 - [Provider Autopilot Policy v1.0](PROVIDER_AUTOPILOT_POLICY_v1.0.md)
 - [Stage 2 Build Plan](PROVIDER_STAGE2_BUILD_PLAN.md)
+- [Threat Model](PROVIDER_THREAT_MODEL_v1.0.md)
+- [SLO and Observability](PROVIDER_SLO_AND_OBSERVABILITY_v1.0.md)
+- [Incident and Recovery Runbooks](PROVIDER_RUNBOOKS_v1.0.md)
+- [Partner Onboarding](PROVIDER_PARTNER_ONBOARDING_v1.0.md)
+- [Commercial and Settlement Model](PROVIDER_COMMERCIAL_SETTLEMENT_MODEL_v1.0.md)
+- [Game Release and Certification](PROVIDER_GAME_RELEASE_AND_CERTIFICATION_v1.0.md)
 
 ## Reference implementation
 - [Provider reference contracts and simulator](../provider-reference/README.md)
+- [Wallet Orchestrator reference state machine](../provider-reference/wallet_orchestrator.ts)
+- [Wallet Orchestrator tests](../provider-reference/wallet_orchestrator_test.ts)
+- [Test-only in-memory repository](../provider-reference/testing/in_memory_repository.ts)
 - [Local mock operator wallet simulator guide](../provider-reference/simulator/README.md)
 - [Simulator server](../provider-reference/simulator/server.ts)
 - [Simulator tests](../provider-reference/simulator/server_test.ts)
