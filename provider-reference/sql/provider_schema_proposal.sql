@@ -230,6 +230,7 @@ CREATE TABLE provider_internal.outbox_events (
   max_attempts integer NOT NULL DEFAULT 10 CHECK (max_attempts > 0),
   available_at timestamptz NOT NULL DEFAULT pg_catalog.clock_timestamp(),
   lease_owner uuid,
+  lease_token uuid,
   lease_until timestamptz,
   last_error_code text,
   created_at timestamptz NOT NULL DEFAULT pg_catalog.clock_timestamp(),
@@ -828,7 +829,7 @@ BEGIN
       END IF;
     END IF;
     UPDATE provider_internal.outbox_events AS o
-    SET state = 'LEASED', lease_owner = p_worker_id,
+    SET state = 'LEASED', lease_owner = p_worker_id, lease_token = pg_catalog.gen_random_uuid(),
         lease_until = pg_catalog.clock_timestamp() + pg_catalog.make_interval(secs => p_lease_seconds),
         attempts = o.attempts + 1
     WHERE o.id = v_event.id;
@@ -844,6 +845,7 @@ $function$;
 CREATE OR REPLACE FUNCTION provider_internal.record_wallet_partner_response(
   p_partner_id uuid,
   p_worker_id uuid,
+  p_lease_token uuid,
   p_transaction_id uuid,
   p_attempt_kind text,
   p_generation integer,
@@ -872,7 +874,7 @@ DECLARE
   v_updated integer;
   v_now timestamptz := pg_catalog.clock_timestamp();
 BEGIN
-  IF p_partner_id IS NULL OR p_worker_id IS NULL OR p_transaction_id IS NULL
+  IF p_partner_id IS NULL OR p_worker_id IS NULL OR p_lease_token IS NULL OR p_transaction_id IS NULL
      OR p_attempt_kind IS NULL OR p_attempt_kind NOT IN ('DISPATCH','STATUS_QUERY')
      OR p_generation IS NULL OR p_generation < 0
      OR p_attempt_number IS NULL OR p_attempt_number < 1
@@ -987,11 +989,12 @@ BEGIN
 
   IF p_attempt_kind = 'DISPATCH' THEN
     UPDATE provider_internal.outbox_events AS o
-    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_until = NULL
+    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_token = NULL, lease_until = NULL
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_DISPATCH'
       AND o.generation = 0
       AND o.lease_owner = p_worker_id
+      AND o.lease_token = p_lease_token
       AND o.lease_until > v_now
       AND o.state = 'LEASED';
     GET DIAGNOSTICS v_updated = ROW_COUNT;
@@ -1015,7 +1018,7 @@ BEGIN
 
   IF v_final_status IN ('CONFIRMED','DECLINED','EXCEPTION') THEN
     UPDATE provider_internal.outbox_events AS o
-    SET state = 'SUPERSEDED', lease_owner = NULL, lease_until = NULL
+    SET state = 'SUPERSEDED', lease_owner = NULL, lease_token = NULL, lease_until = NULL
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_STATUS_QUERY'
       AND o.state IN ('READY','RETRY','LEASED');
@@ -1064,7 +1067,7 @@ BEGIN
     WHERE id = v_tx.id AND partner_id = v_tx.partner_id AND status = 'DISPATCHING';
 
     UPDATE provider_internal.outbox_events
-    SET state = 'SUPERSEDED', lease_owner = NULL, lease_until = NULL
+    SET state = 'SUPERSEDED', lease_owner = NULL, lease_token = NULL, lease_until = NULL
     WHERE wallet_transaction_id = v_tx.id AND event_type = 'WALLET_DISPATCH' AND state = 'LEASED';
 
     INSERT INTO provider_internal.outbox_events(
@@ -1174,7 +1177,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provi
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
-GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.get_wallet_transaction_status(uuid, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
 
