@@ -22,3 +22,8 @@ The role LOGIN password and database URL must be provisioned separately through 
 - Latest verified CI run: 73 Deno tests passed, 0 failed, and SQL smoke test emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
 - The smoke run exercises role/schema grants, RLS FORCE, nonce uniqueness, one-use Launch Token, wallet idempotency, open exposure, dispatch lease expiry/UNKNOWN status-query queue, refund lineage/cap, cumulative win cap, balanced Ledger posting and posted journal/entry immutability.
 - This is not a restore of the ASIX V154 project and does not establish Supabase-specific Data API configuration, current V154 compatibility, production throughput or migration readiness.
+
+
+- `provider_schema_concurrency_fixture.sql`: disposable data fixture for parallel Bet-exposure and Refund-cap checks.
+- The CI then launches two independent PostgreSQL clients at the same time for each pair. Exactly one of two 1,000-minor-unit Bets must be accepted with a 1,500 exposure cap, and exactly one of two 300-unit Refunds must be accepted against a 500-unit original Bet.
+- Latest verified CI markers: `PROVIDER_DATABASE_SMOKE_TESTS_PASSED` and `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
