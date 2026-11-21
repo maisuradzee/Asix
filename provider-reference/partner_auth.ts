@@ -75,6 +75,42 @@ export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return toHex(new Uint8Array(digest));
 }
 
+async function readBodyBounded(request: Request, maxBodyBytes: number): Promise<Uint8Array | null> {
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null && /^[0-9]+$/.test(declaredLength)) {
+    if (Number(declaredLength) > maxBodyBytes) return null;
+  }
+
+  const stream = request.clone().body;
+  if (!stream) return new Uint8Array(0);
+
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  try {
+    while (true) {
+      const item = await reader.read();
+      if (item.done) break;
+      total += item.value.byteLength;
+      if (total > maxBodyBytes) {
+        await reader.cancel();
+        return null;
+      }
+      chunks.push(item.value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const output = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return output;
+}
+
 /**
  * Canonical signed payload:
  * METHOD\nPATH_AND_QUERY\nTIMESTAMP_SECONDS\nNONCE\nSHA256_BODY_HEX
@@ -136,14 +172,12 @@ export async function verifyPartnerRequest(
     return { ok: false, error: "NONCE_INVALID" };
   }
 
-  const bodyBuffer = new Uint8Array(await request.clone().arrayBuffer());
   const maxBodyBytes = options.maxBodyBytes ?? 512 * 1024;
   if (!Number.isInteger(maxBodyBytes) || maxBodyBytes < 1 || maxBodyBytes > 2 * 1024 * 1024) {
     throw new Error("INVALID_BODY_LIMIT_CONFIGURATION");
   }
-  if (bodyBuffer.byteLength > maxBodyBytes) {
-    return { ok: false, error: "BODY_TOO_LARGE" };
-  }
+  const bodyBuffer = await readBodyBounded(request, maxBodyBytes);
+  if (bodyBuffer === null) return { ok: false, error: "BODY_TOO_LARGE" };
 
   const signature = decodeBase64(signatureText);
   if (!signature || signature.byteLength !== 32) {
