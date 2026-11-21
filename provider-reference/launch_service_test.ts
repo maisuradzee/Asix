@@ -15,6 +15,11 @@ class MemoryLaunchStore implements LaunchTokenStore {
 
   async create(record: StoredLaunchToken): Promise<void> {
     if (this.rows.has(record.tokenHash)) throw new Error("TOKEN_HASH_CONFLICT");
+    const duplicateSession = [...this.rows.values()].some((row) =>
+      row.claims.partnerCode === record.claims.partnerCode &&
+      row.claims.partnerSessionRef === record.claims.partnerSessionRef
+    );
+    if (duplicateSession) throw new Error("PARTNER_SESSION_ALREADY_LAUNCHED");
     this.rows.set(record.tokenHash, record);
   }
 
@@ -141,4 +146,17 @@ Deno.test("inactive partner and invalid launch base URL are rejected", async () 
     LaunchRejectedError,
     "INVALID_TRUSTED_LAUNCH_BASE_URL",
   );
+});
+
+
+Deno.test("duplicate partner session reference cannot create a second launch", async () => {
+  const store = new MemoryLaunchStore();
+  const service = new ProviderLaunchService(resolver, store);
+  await service.issueLaunch(partner, input);
+  await assertRejects(
+    () => service.issueLaunch(partner, input),
+    LaunchRejectedError,
+    "PARTNER_SESSION_ALREADY_LAUNCHED",
+  );
+  assertEquals(store.rows.size, 1);
 });
