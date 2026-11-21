@@ -15,3 +15,10 @@ Once V154 has been restored into isolated staging and the schema reviewed:
 6. Re-run existing ASIX Q-CARD and wallet smoke tests before any production decision.
 
 The role LOGIN password and database URL must be provisioned separately through the approved secret process, never embedded here.
+
+## Disposable PostgreSQL CI
+
+- `provider_schema_smoke_tests.sql` runs in the dedicated `provider-database-sql` CI job against a disposable `postgres:17` container only.
+- Latest verified CI run: 73 Deno tests passed, 0 failed, and SQL smoke test emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
+- The smoke run exercises role/schema grants, RLS FORCE, nonce uniqueness, one-use Launch Token, wallet idempotency, open exposure, dispatch lease expiry/UNKNOWN status-query queue, refund lineage/cap, cumulative win cap, balanced Ledger posting and posted journal/entry immutability.
+- This is not a restore of the ASIX V154 project and does not establish Supabase-specific Data API configuration, current V154 compatibility, production throughput or migration readiness.
