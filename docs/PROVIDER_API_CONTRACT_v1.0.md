@@ -100,7 +100,7 @@ Required fields:
 - `currency`: ISO 4217 code.
 - `currency_exponent`: resolved from a maintained currency registry, not trusted from client input.
 - `created_at`.
-- `request_hash`.
+- `request_hash` — canonical fingerprint generated internally by ASIX, not trusted from the partner/client.
 
 GEL uses tetri as its minor unit (100 tetri = 1 GEL). Do not assume every partner currency has two decimal places. All calculations use integer minor units or exact decimal arithmetic.
 
