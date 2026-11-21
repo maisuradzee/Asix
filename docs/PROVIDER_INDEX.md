@@ -51,6 +51,7 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider SQL schema proposal — design only](../provider-reference/sql/provider_schema_proposal.sql)
 - [Disposable PostgreSQL smoke tests](../provider-reference/sql/provider_schema_smoke_tests.sql)
 - [Disposable PostgreSQL concurrency fixture](../provider-reference/sql/provider_schema_concurrency_fixture.sql)
+- [Wallet response persistence SQL smoke test](../provider-reference/sql/provider_schema_wallet_response_tests.sql)
 - [PostgreSQL repository port](../provider-reference/postgres_repository.ts)
 - [PostgreSQL repository tests](../provider-reference/postgres_repository_test.ts)
 - [Local mock operator wallet simulator guide](../provider-reference/simulator/README.md)
