@@ -139,9 +139,10 @@ Deno.test("same idempotency key with a different request hash is rejected", asyn
 Deno.test("expired dispatch lease becomes UNKNOWN and is never automatically resent", async () => {
   const repo = new InMemoryWalletTransactionRepository();
   const now = new Date("2026-11-21T00:00:00.000Z");
+  const afterLeaseExpiry = new Date("2026-11-21T00:00:02.000Z");
   const service = new WalletOrchestrator(repo, () => makeAdapter({
     debitBet: async () => new Promise<WalletResult>(() => {}),
-  }), () => now, 1_000);
+  }), () => afterLeaseExpiry, 1_000);
 
   // Insert and claim through the repository to simulate a worker crash after dispatch.
   const cmd = command();
