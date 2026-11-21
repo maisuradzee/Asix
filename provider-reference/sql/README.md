@@ -30,3 +30,6 @@ The role LOGIN password and database URL must be provisioned separately through 
 
 - `provider_schema_wallet_response_tests.sql`: verifies dispatch-response persistence, PENDING status-query scheduling, idempotent response replay and eventual CONFIRMED resolution.
 - The response persistence routine writes an immutable attempt record, updates the current wallet state, closes the current outbox lease and schedules a bounded next status query when the partner returns PENDING/UNKNOWN.
+
+- `provider_schema_wallet_response_tests.sql`: tests DISPATCHING → UNKNOWN → PENDING → CONFIRMED response persistence, bounded status-query scheduling and idempotent replay of the same response attempt.
+- Proposal guards also freeze completed/voided round history, financial identity fields on wallet transactions, wallet attempt evidence, contract versions and posted ledger history.
