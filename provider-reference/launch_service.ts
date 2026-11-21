@@ -69,7 +69,7 @@ export interface LaunchTokenStore {
    * (partner_code, partner_session_ref) for active/issued sessions.
    * Duplicate session references throw PartnerSessionConflictError.
    */
-  create(record: StoredLaunchToken): Promise<void>;
+  create(record: StoredLaunchToken): Promise<LaunchClaims | void>;
 
   /**
    * Must atomically mark consumed and return claims only once when
@@ -226,8 +226,9 @@ export class ProviderLaunchService {
     };
 
     const tokenHash = await hashToken(token);
+    let persistedClaims: LaunchClaims | void;
     try {
-      await this.tokens.create({ tokenHash, claims });
+      persistedClaims = await this.tokens.create({ tokenHash, claims });
     } catch (error) {
       if (error instanceof PartnerSessionConflictError ||
           (error instanceof Error && error.message === "PARTNER_SESSION_ALREADY_LAUNCHED")) {
@@ -236,17 +237,20 @@ export class ProviderLaunchService {
       throw error;
     }
 
+    // A durable repository may return the canonical existing session ID when
+    // an idempotent partner retry reissues a token for a CREATED session.
+    const finalClaims = persistedClaims ?? claims;
     const launchUrl = new URL(base.toString());
-    launchUrl.searchParams.set("session_id", sessionId);
+    launchUrl.searchParams.set("session_id", finalClaims.sessionId);
     launchUrl.searchParams.set("game", input.gameCode);
 
     return {
-      launchId,
-      sessionId,
+      launchId: finalClaims.launchId,
+      sessionId: finalClaims.sessionId,
       launchUrl: launchUrl.toString(),
       launchToken: token,
-      expiresAt: expires.toISOString(),
-      policyVersion: policy.policyVersion,
+      expiresAt: finalClaims.expiresAt,
+      policyVersion: finalClaims.policyVersion,
     };
   }
 
