@@ -181,7 +181,8 @@ export async function verifyEcdsaPayloadRequest(
   if (request.method.toUpperCase() === "POST") {
     const read = await readBoundedBody(request, maxPayloadBytes);
     if (read === null) return { ok: false, error: "PAYLOAD_TOO_LARGE" };
-    body = read;
+    body = new Uint8Array(read.byteLength);
+    body.set(read);
     payload = body;
   } else if (request.method.toUpperCase() === "GET") {
     const query = new URL(request.url).search.slice(1);
