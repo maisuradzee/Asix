@@ -300,10 +300,11 @@ DECLARE
   v_refund uuid;
   v_created boolean;
 BEGIN
-  SELECT w.id INTO v_original
-  FROM provider_internal.wallet_transactions AS w
-  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'::uuid
-    AND w.idempotency_key = 'ci-bet-idempotency-1'::text;
+  SELECT q.transaction_id INTO v_original
+  FROM provider_internal.get_wallet_transaction_status(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-bet-idempotency-1'::text
+  ) AS q;
 
   SELECT t.transaction_id, t.was_created INTO v_refund, v_created
   FROM provider_internal.create_wallet_transaction(
