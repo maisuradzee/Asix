@@ -123,7 +123,10 @@ export function createProviderGateway(deps: ProviderGatewayDependencies): (reque
 
     const rate = await deps.rateLimiter.consume(verified.partnerCode, now().getTime());
     if (!rate.allowed) {
-      const retryAfter = Math.max(1, Math.min(3600, Math.floor(rate.retryAfterSeconds ?? 1)));
+      const rawRetryAfter = rate.retryAfterSeconds ?? 1;
+      const retryAfter = Number.isFinite(rawRetryAfter) && rawRetryAfter > 0
+        ? Math.max(1, Math.min(3600, Math.floor(rawRetryAfter)))
+        : 1;
       return json({
         ok: false,
         error: {
@@ -172,6 +175,7 @@ export function createProviderGateway(deps: ProviderGatewayDependencies): (reque
         PARTNER_INACTIVE: 403,
         GAME_NOT_ENABLED: 403,
         CURRENCY_NOT_ALLOWED: 403,
+        PARTNER_SESSION_ALREADY_LAUNCHED: 409,
         JURISDICTION_NOT_ALLOWED: 403,
         LOCALE_NOT_ALLOWED: 403,
         INVALID_TRUSTED_LAUNCH_BASE_URL: 500,
