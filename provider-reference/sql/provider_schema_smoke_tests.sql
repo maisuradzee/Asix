@@ -128,6 +128,13 @@ DECLARE
   v_first boolean;
   v_second boolean;
   v_launch_count integer;
+  v_launch_status text;
+  v_new_session_id uuid;
+  v_reissued_session_id uuid;
+  v_token_issued boolean;
+  v_token_expiry timestamptz;
+  v_old_token_count integer;
+  v_new_token_count integer;
 BEGIN
   v_first := provider_internal.consume_partner_nonce(
     '00000000-0000-4000-8000-000000000101'::uuid,
@@ -145,17 +152,116 @@ BEGIN
     RAISE EXCEPTION 'NONCE_CONSUMPTION_NOT_ONE_TIME';
   END IF;
 
-  SELECT pg_catalog.count(*) INTO v_launch_count
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+    INTO v_launch_count, v_launch_status
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
-  );
-  IF v_launch_count <> 1 THEN RAISE EXCEPTION 'LAUNCH_TOKEN_FIRST_USE_FAILED'; END IF;
+  ) AS q;
+  IF v_launch_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'LAUNCH_TOKEN_DID_NOT_ATOMICALLY_ACTIVATE_SESSION';
+  END IF;
 
   SELECT pg_catalog.count(*) INTO v_launch_count
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
   );
   IF v_launch_count <> 0 THEN RAISE EXCEPTION 'LAUNCH_TOKEN_REPLAY_ACCEPTED'; END IF;
+
+  -- New session and one-time token are created through the approved function.
+  SELECT q.session_id, q.session_status, q.token_issued, q.token_expires_at
+    INTO v_new_session_id, v_launch_status, v_token_issued, v_token_expiry
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    1::integer,
+    pg_catalog.decode(pg_catalog.repeat('23', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_new_session_id IS NULL OR v_launch_status <> 'CREATED' OR NOT v_token_issued OR v_token_expiry IS NULL THEN
+    RAISE EXCEPTION 'LAUNCH_SESSION_CREATE_FAILED';
+  END IF;
+
+  -- Retry with identical partner/session identity reuses the session and
+  -- revokes the previously issued but still unconsumed token.
+  SELECT q.session_id, q.token_issued
+    INTO v_reissued_session_id, v_token_issued
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    1::integer,
+    pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_reissued_session_id <> v_new_session_id OR NOT v_token_issued THEN
+    RAISE EXCEPTION 'LAUNCH_SESSION_RETRY_NOT_IDEMPOTENT';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_old_token_count
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('23', 32), 'hex')
+  );
+  IF v_old_token_count <> 0 THEN RAISE EXCEPTION 'SUPERSEDED_LAUNCH_TOKEN_WAS_ACCEPTED'; END IF;
+
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+    INTO v_new_token_count, v_launch_status
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex')
+  ) AS q;
+  IF v_new_token_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'REISSUED_LAUNCH_TOKEN_FAILED_TO_ACTIVATE';
+  END IF;
+
+  -- A replay after ACTIVE does not mint another token.
+  SELECT q.token_issued, q.session_status
+    INTO v_token_issued, v_launch_status
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    1::integer,
+    pg_catalog.decode(pg_catalog.repeat('25', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_token_issued OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'ACTIVE_SESSION_WAS_RELAUNCHED';
+  END IF;
+
+  -- Reusing a partner session reference for a different player is a conflict.
+  BEGIN
+    PERFORM * FROM provider_internal.create_launch_session(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      'different-player'::text,
+      'ci-created-session'::text,
+      'ASIX_CI_GAME'::text,
+      'GE'::text,
+      'GEL'::text,
+      2::smallint,
+      'en-GB'::text,
+      1::integer,
+      pg_catalog.decode(pg_catalog.repeat('26', 32), 'hex'),
+      pg_catalog.clock_timestamp() + interval '2 minutes'
+    );
+    RAISE EXCEPTION 'PARTNER_SESSION_IDENTITY_CONFLICT_NOT_REJECTED';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
 END
 $nonce_and_launch$;
 
