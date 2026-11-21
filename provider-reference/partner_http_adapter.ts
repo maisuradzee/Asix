@@ -112,7 +112,7 @@ function resolveSafeUrl(base: URL, path: string): URL {
   }
   const url = new URL(path, base);
   if (url.protocol !== "https:" || url.origin !== base.origin ||
-      !url.pathname.startsWith(base.pathname) || url.username || url.password) {
+      !url.pathname.startsWith(base.pathname) || url.username || url.password || url.hash) {
     throw new PartnerHttpAdapterError("PARTNER_REQUEST_TARGET_NOT_ALLOWED");
   }
   return url;
@@ -266,8 +266,13 @@ export class HttpPartnerWalletAdapter implements PartnerWalletAdapter {
       timestamp,
     });
     for (const [name, value] of Object.entries(signedHeaders)) {
-      if (["host", "content-length", "connection", "transfer-encoding"].includes(name.toLowerCase())) {
+      const normalizedName = name.toLowerCase();
+      if (["host", "content-length", "connection", "transfer-encoding"].includes(normalizedName)) {
         throw new PartnerHttpAdapterError("SIGNER_RETURNED_FORBIDDEN_HEADER");
+      }
+      if (idempotencyKey && normalizedName === this.idempotencyHeaderName.toLowerCase() &&
+          value !== idempotencyKey) {
+        throw new PartnerHttpAdapterError("SIGNER_CHANGED_IDEMPOTENCY_KEY");
       }
       headers.set(name, value);
     }
