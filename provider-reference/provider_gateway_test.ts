@@ -31,6 +31,11 @@ class NonceStore implements ReplayNonceStore {
 class LaunchStore implements LaunchTokenStore {
   rows = new Map<string, StoredLaunchToken>();
   async create(record: StoredLaunchToken): Promise<void> {
+    const duplicateSession = [...this.rows.values()].some((row) =>
+      row.claims.partnerCode === record.claims.partnerCode &&
+      row.claims.partnerSessionRef === record.claims.partnerSessionRef
+    );
+    if (duplicateSession) throw new Error("PARTNER_SESSION_ALREADY_LAUNCHED");
     this.rows.set(record.tokenHash, record);
   }
   async consumeOnce(hash: string, at: string) {
