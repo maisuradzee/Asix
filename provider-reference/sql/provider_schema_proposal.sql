@@ -549,6 +549,11 @@ BEGIN
     RAISE EXCEPTION 'INVALID_LAUNCH_SESSION_INPUT' USING ERRCODE = '22023';
   END IF;
 
+  -- Serialize retries and token consumption for this partner/session identity.
+  PERFORM pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(p_partner_id::text || ':' || p_partner_session_ref, 0)
+  );
+
   SELECT c.id INTO v_config_id
   FROM provider_internal.partners AS p
   JOIN provider_internal.partner_game_configs AS c ON c.partner_id = p.id
@@ -628,10 +633,40 @@ RETURNS TABLE (
   partner_session_ref text, game_code text, currency text,
   jurisdiction text, locale text, session_status text
 )
-LANGUAGE sql
+LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = ''
 AS $consume_launch$
+DECLARE
+  v_partner_id uuid;
+  v_partner_session_ref text;
+BEGIN
+  IF p_token_hash IS NULL OR pg_catalog.octet_length(p_token_hash) <> 32 THEN
+    RETURN;
+  END IF;
+
+  -- Read only the lock identity first; do not lock rows until the shared
+  -- partner/session advisory lock is held. create_launch_session uses the
+  -- same key, preventing concurrent re-issue/consume deadlocks and split sessions.
+  SELECT t.partner_id, s.partner_session_ref
+    INTO v_partner_id, v_partner_session_ref
+  FROM provider_internal.launch_tokens AS t
+  JOIN provider_internal.sessions AS s
+    ON s.id = t.session_id AND s.partner_id = t.partner_id
+  WHERE t.token_hash = p_token_hash
+    AND t.consumed_at IS NULL
+    AND t.revoked_at IS NULL
+    AND t.expires_at > pg_catalog.clock_timestamp();
+
+  IF NOT FOUND THEN
+    RETURN;
+  END IF;
+
+  PERFORM pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(v_partner_id::text || ':' || v_partner_session_ref, 0)
+  );
+
+  RETURN QUERY
   WITH candidate AS (
     SELECT t.id AS token_id, t.partner_id, t.session_id
     FROM provider_internal.launch_tokens AS t
@@ -645,7 +680,6 @@ AS $consume_launch$
      AND c.currency = s.currency
      AND c.currency_exponent = s.currency_exponent
     WHERE t.token_hash = p_token_hash
-      AND pg_catalog.octet_length(p_token_hash) = 32
       AND t.consumed_at IS NULL
       AND t.revoked_at IS NULL
       AND t.expires_at > pg_catalog.clock_timestamp()
@@ -673,7 +707,8 @@ AS $consume_launch$
   )
   SELECT a.partner_id, a.id, a.partner_player_ref, a.partner_session_ref,
          a.game_code, a.currency, a.jurisdiction, a.locale, a.status
-  FROM activated AS a
+  FROM activated AS a;
+END
 $consume_launch$;
 
 CREATE OR REPLACE FUNCTION provider_internal.create_wallet_transaction(
