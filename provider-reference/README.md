@@ -59,36 +59,19 @@ These profiles are not interchangeable. Choose a profile only from the partner's
 The adapter does not invent operator endpoints or authentication. Each real partner requires an approved protocol mapper and signer based on that partner's current specification. The adapter itself does not retry wallet operations.
 
 
-## Provider database foundation — design-only assets
+## Provider database foundation — design only
 
-- sql/provider_schema_proposal.sql: proposed provider_internal schema, function-only runtime boundary, wallet transaction/outbox routines and immutable ledger posting controls. It is NOT a Supabase migration and has NOT been executed.
-- sql/README.md: provisioning, review and migration-generation status.
-- postgres_repository.ts: typed reference port for the proposed database functions; it does not connect to production.
-- postgres_repository_test.ts: mocked repository contract tests only.
+- sql/provider_schema_proposal.sql: isolated provider_internal schema, narrow database functions, function-only runtime grants and FORCE RLS. This is not a Supabase migration and has not been applied to the live project.
+- sql/provider_schema_smoke_tests.sql: disposable PostgreSQL 17 security, nonce, launch, wallet, response lifecycle and ledger smoke suite.
+- sql/provider_schema_concurrency_fixture.sql: seed data for concurrent exposure and refund-cap tests.
+- sql/provider_schema_wallet_response_tests.sql: leased response persistence, idempotent replay and stale-worker rejection tests.
+- postgres_repository.ts: dependency-injected typed port; no connection or secret lookup.
+- postgres_repository_test.ts: mocked repository tests, including worker-bound response persistence and scoped status reads.
 
-No Provider schema or database role has been created in the live project. Production use requires a verified V154 staging restore, Supabase-generated migration, dedicated database LOGIN secret, SQL review, pgTAP/concurrency tests and security advisor review.
+Latest verified GitHub Actions run 255:
+- 76 Deno tests passed, 0 failed.
+- Schema applied successfully to disposable PostgreSQL 17.
+- Provider DB smoke tests, wallet response-persistence tests and concurrent Bet/Refund limits passed.
+- The response persistence routine requires matching worker identity and an unexpired outbox lease.
 
-
-## PostgreSQL repository and disposable database validation
-
-- `postgres_repository.ts`: injected, typed repository port for the proposed provider_internal functions. It does not connect to any project or fetch secrets.
-- `postgres_repository_test.ts`: 8 mocked adapter-contract tests.
-- `sql/provider_schema_proposal.sql`: design-only database schema and narrow server-side functions.
-- `sql/provider_schema_smoke_tests.sql`: SQL integration smoke suite run inside disposable PostgreSQL 17 in CI, not against Supabase.
-- Latest verified CI: 73 Deno tests passed with zero failures; the disposable PostgreSQL 17 schema and smoke suite both completed successfully.
-
-Production blockers remain: clean V154 restore, Supabase-generated migration, dedicated runtime LOGIN/secret, Supabase Data API/exposed-schema check, pgTAP and concurrency/load/failover tests against the restored staging project, and independent security review.
-
-
-## PostgreSQL concurrency checks
-
-The disposable PostgreSQL 17 CI job now runs a two-connection race test:
-- simultaneous Bet creation across separate partner sessions sharing the same game/currency exposure limit; only one is allowed;
-- simultaneous partial Refunds against the same confirmed original Bet; only one may consume the remaining refundable amount.
-
-Latest verified CI: 73 Deno tests passed, 0 failed; schema smoke and both concurrency assertions passed on the disposable PostgreSQL 17 service. This is not a V154 restore or a live Supabase test.
-
-- `record_wallet_partner_response` is the proposed DB function for persisting DISPATCH and STATUS_QUERY responses. It checks the transaction state/generation, stores response hashes and attempt evidence, handles repeated persistence idempotently, and schedules bounded read-only status queries for PENDING/UNKNOWN responses.
-
-- Wallet response persistence is provided by the proposed `record_wallet_partner_response` database function. It validates outbox lease and status-query generation, stores immutable response-attempt evidence and schedules bounded read-only status queries.
-- Database immutability guards preserve completed round results, wallet financial identity, response attempt evidence, commercial contract versions and posted ledger entries/journals.
+This is not a clean V154 restore or a live Supabase staging test. No Provider schema, role, function, trigger or migration has been created in the live ASIX project.
