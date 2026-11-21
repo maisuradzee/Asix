@@ -27,3 +27,6 @@ The role LOGIN password and database URL must be provisioned separately through 
 - `provider_schema_concurrency_fixture.sql`: disposable data fixture for parallel Bet-exposure and Refund-cap checks.
 - The CI then launches two independent PostgreSQL clients at the same time for each pair. Exactly one of two 1,000-minor-unit Bets must be accepted with a 1,500 exposure cap, and exactly one of two 300-unit Refunds must be accepted against a 500-unit original Bet.
 - Latest verified CI markers: `PROVIDER_DATABASE_SMOKE_TESTS_PASSED` and `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
+
+- `provider_schema_wallet_response_tests.sql`: verifies dispatch-response persistence, PENDING status-query scheduling, idempotent response replay and eventual CONFIRMED resolution.
+- The response persistence routine writes an immutable attempt record, updates the current wallet state, closes the current outbox lease and schedules a bounded next status query when the partner returns PENDING/UNKNOWN.
