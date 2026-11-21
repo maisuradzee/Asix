@@ -83,8 +83,9 @@ Deno.test("valid HMAC signature is accepted and resolves trusted partner identit
 Deno.test("replayed nonce is rejected", async () => {
   const store = new MemoryNonceStore();
   const request = await signedRequest();
+  const replayRequest = await signedRequest();
   const first = await verifyPartnerRequest(request, keyResolver(), store, { nowEpochSeconds: now });
-  const second = await verifyPartnerRequest(request, keyResolver(), store, { nowEpochSeconds: now });
+  const second = await verifyPartnerRequest(replayRequest, keyResolver(), store, { nowEpochSeconds: now });
   assertEquals(first.ok, true);
   assertEquals(second.ok, false);
   if (!second.ok) assertEquals(second.error, "REPLAY_DETECTED");
