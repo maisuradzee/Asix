@@ -891,7 +891,7 @@ BEGIN
      OR v_session.currency <> p_currency
      OR v_session.currency_exponent <> p_currency_exponent
      OR (p_operation = 'BET' AND v_session.status <> 'ACTIVE')
-     OR (p_operation = 'WIN' AND v_session.status NOT IN ('ACTIVE','COMPLETED'))
+     OR (p_operation = 'WIN' AND v_session.status NOT IN ('ACTIVE','PAUSED','COMPLETED','CANCELLED'))
      OR (p_operation = 'REFUND' AND v_session.status NOT IN ('ACTIVE','PAUSED','COMPLETED','CANCELLED')) THEN
     RAISE EXCEPTION 'SESSION_OR_CURRENCY_INVALID' USING ERRCODE = '23514';
   END IF;
