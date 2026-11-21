@@ -57,3 +57,13 @@ These profiles are not interchangeable. Choose a profile only from the partner's
 - `partner_http_adapter_test.ts`: URL scope, idempotency header, timeout, response size and read-only status-query tests.
 
 The adapter does not invent operator endpoints or authentication. Each real partner requires an approved protocol mapper and signer based on that partner's current specification. The adapter itself does not retry wallet operations.
+
+
+## Provider database foundation — design-only assets
+
+- sql/provider_schema_proposal.sql: proposed provider_internal schema, function-only runtime boundary, wallet transaction/outbox routines and immutable ledger posting controls. It is NOT a Supabase migration and has NOT been executed.
+- sql/README.md: provisioning, review and migration-generation status.
+- postgres_repository.ts: typed reference port for the proposed database functions; it does not connect to production.
+- postgres_repository_test.ts: mocked repository contract tests only.
+
+No Provider schema or database role has been created in the live project. Production use requires a verified V154 staging restore, Supabase-generated migration, dedicated database LOGIN secret, SQL review, pgTAP/concurrency tests and security advisor review.
