@@ -33,6 +33,10 @@ export interface NonceConsumption {
 
 export interface LaunchSessionInput {
   partnerId: string;
+  keyId: string;
+  protocolVersion: string;
+  sessionId: string;
+  launchId: string;
   partnerPlayerRef: string;
   partnerSessionRef: string;
   gameCode: string;
@@ -40,29 +44,35 @@ export interface LaunchSessionInput {
   currency: string;
   currencyExponent: number;
   locale: string;
-  policyVersion: number;
+  policyVersion: string;
   tokenHash: Uint8Array;
   expiresAt: string;
 }
 
 export interface LaunchSessionResult {
+  launchId: string | null;
   sessionId: string;
   status: string;
   tokenIssued: boolean;
   tokenExpiresAt: string | null;
 }
 
-export interface LaunchClaimsRow {
-  [key: string]: unknown;
-  partner_id: string;
+export interface LaunchClaimsRow extends Record<string, unknown> {
+  launch_id: string;
   session_id: string;
+  partner_id: string;
+  partner_code: string;
   partner_player_ref: string;
   partner_session_ref: string;
   game_code: string;
   currency: string;
   jurisdiction: string;
   locale: string;
-  session_status: string;
+  key_id: string;
+  protocol_version: string;
+  policy_version: string;
+  issued_at: string;
+  expires_at: string;
 }
 
 export interface WalletTransactionInput {
@@ -186,25 +196,33 @@ export class ProviderPostgresRepository {
   async createLaunchSession(input: LaunchSessionInput): Promise<LaunchSessionResult> {
     validateHash(input.tokenHash, "launch_token");
     validateCurrency(input.currency, input.currencyExponent);
-    if (!input.partnerId ||
+    if (!input.partnerId || !input.keyId || input.keyId.length > 128 ||
+        !input.protocolVersion || input.protocolVersion.length > 64 ||
+        !/^[0-9a-f-]{36}$/i.test(input.sessionId) ||
+        !/^[0-9a-f-]{36}$/i.test(input.launchId) ||
         !input.partnerPlayerRef || input.partnerPlayerRef.length > 200 ||
         !input.partnerSessionRef || input.partnerSessionRef.length > 200 ||
         !input.gameCode || input.gameCode.length > 80 ||
         !/^[A-Z0-9_-]{2,8}$/.test(input.jurisdiction) ||
         !input.locale || input.locale.length > 35 ||
-        !Number.isInteger(input.policyVersion) || input.policyVersion < 1 ||
+        !input.policyVersion || input.policyVersion.length > 80 ||
         !Number.isFinite(Date.parse(input.expiresAt))) {
       throw new ProviderDatabaseError("INVALID_LAUNCH_SESSION_INPUT");
     }
     const result = await this.db.query<{
+      launch_id: string | null;
       session_id: string;
       session_status: string;
       token_issued: boolean;
       token_expires_at: string | null;
     }>(
-      "SELECT * FROM provider_internal.create_launch_session($1::uuid,$2::text,$3::text,$4::text,$5::text,$6::text,$7::smallint,$8::text,$9::integer,$10::bytea,$11::timestamptz)",
+      "SELECT * FROM provider_internal.create_launch_session($1::uuid,$2::text,$3::text,$4::uuid,$5::uuid,$6::text,$7::text,$8::text,$9::text,$10::text,$11::smallint,$12::text,$13::text,$14::bytea,$15::timestamptz)",
       [
         input.partnerId,
+        input.keyId,
+        input.protocolVersion,
+        input.sessionId,
+        input.launchId,
         input.partnerPlayerRef,
         input.partnerSessionRef,
         input.gameCode,
@@ -224,6 +242,7 @@ export class ProviderPostgresRepository {
       throw new ProviderDatabaseError("INVALID_LAUNCH_SESSION_FUNCTION_RESULT");
     }
     return {
+      launchId: result.rows[0].launch_id ?? null,
       sessionId: result.rows[0].session_id,
       status: result.rows[0].session_status,
       tokenIssued: result.rows[0].token_issued,
