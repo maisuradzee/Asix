@@ -111,7 +111,8 @@ Deno.test("launch token maps to claims and returns null when no token is consuma
 Deno.test("launch session uses partner-scoped config and one-use token hash", async () => {
   const db = new MockPg();
   db.responder = () => [{
-    session_id: "session-launch-1",
+    launch_id: "00000000-0000-4000-8000-000000000110",
+    session_id: "00000000-0000-4000-8000-000000000109",
     session_status: "CREATED",
     token_issued: true,
     token_expires_at: "2026-11-21T12:02:00.000Z",
@@ -119,6 +120,10 @@ Deno.test("launch session uses partner-scoped config and one-use token hash", as
   const repo = new ProviderPostgresRepository(db);
   const result = await repo.createLaunchSession({
     partnerId: "00000000-0000-4000-8000-000000000001",
+    keyId: "key-1",
+    protocolVersion: "provider-v1",
+    sessionId: "00000000-0000-4000-8000-000000000109",
+    launchId: "00000000-0000-4000-8000-000000000110",
     partnerPlayerRef: "opaque-player",
     partnerSessionRef: "operator-session",
     gameCode: "ASIX_CARD",
@@ -126,16 +131,21 @@ Deno.test("launch session uses partner-scoped config and one-use token hash", as
     currency: "GEL",
     currencyExponent: 2,
     locale: "ka-GE",
-    policyVersion: 1,
+    policyVersion: "policy-1",
     tokenHash: hash,
     expiresAt: "2026-11-21T12:02:00.000Z",
   });
-  assertEquals(result.sessionId, "session-launch-1");
+  assertEquals(result.launchId, "00000000-0000-4000-8000-000000000110");
+  assertEquals(result.sessionId, "00000000-0000-4000-8000-000000000109");
   assertEquals(result.status, "CREATED");
   assertEquals(result.tokenIssued, true);
   assertEquals(db.calls[0].sql.includes("create_launch_session"), true);
   assertEquals(db.calls[0].parameters[0], "00000000-0000-4000-8000-000000000001");
-  assertEquals(db.calls[0].parameters[9], hash);
+  assertEquals(db.calls[0].parameters[1], "key-1");
+  assertEquals(db.calls[0].parameters[2], "provider-v1");
+  assertEquals(db.calls[0].parameters[4], "00000000-0000-4000-8000-000000000110");
+  assertEquals(db.calls[0].parameters[12], "policy-1");
+  assertEquals(db.calls[0].parameters[13], hash);
 });
 
 Deno.test("launch session rejects invalid token hashes before database access", async () => {
@@ -144,6 +154,10 @@ Deno.test("launch session rejects invalid token hashes before database access", 
   await assertRejects(
     () => repo.createLaunchSession({
       partnerId: "partner-1",
+      keyId: "key-1",
+      protocolVersion: "provider-v1",
+      sessionId: "00000000-0000-4000-8000-000000000001",
+      launchId: "00000000-0000-4000-8000-000000000002",
       partnerPlayerRef: "player-1",
       partnerSessionRef: "session-1",
       gameCode: "ASIX_CARD",
@@ -151,7 +165,7 @@ Deno.test("launch session rejects invalid token hashes before database access", 
       currency: "GEL",
       currencyExponent: 2,
       locale: "ka-GE",
-      policyVersion: 1,
+      policyVersion: "policy-1",
       tokenHash: new Uint8Array(16),
       expiresAt: "2026-11-21T12:02:00.000Z",
     }),
