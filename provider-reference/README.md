@@ -67,3 +67,14 @@ The adapter does not invent operator endpoints or authentication. Each real part
 - postgres_repository_test.ts: mocked repository contract tests only.
 
 No Provider schema or database role has been created in the live project. Production use requires a verified V154 staging restore, Supabase-generated migration, dedicated database LOGIN secret, SQL review, pgTAP/concurrency tests and security advisor review.
+
+
+## PostgreSQL repository and disposable database validation
+
+- `postgres_repository.ts`: injected, typed repository port for the proposed provider_internal functions. It does not connect to any project or fetch secrets.
+- `postgres_repository_test.ts`: 8 mocked adapter-contract tests.
+- `sql/provider_schema_proposal.sql`: design-only database schema and narrow server-side functions.
+- `sql/provider_schema_smoke_tests.sql`: SQL integration smoke suite run inside disposable PostgreSQL 17 in CI, not against Supabase.
+- Latest verified CI: 73 Deno tests passed with zero failures; the disposable PostgreSQL 17 schema and smoke suite both completed successfully.
+
+Production blockers remain: clean V154 restore, Supabase-generated migration, dedicated runtime LOGIN/secret, Supabase Data API/exposed-schema check, pgTAP and concurrency/load/failover tests against the restored staging project, and independent security review.
