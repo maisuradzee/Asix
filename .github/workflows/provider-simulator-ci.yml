@@ -68,3 +68,45 @@ jobs:
           provider-reference/provider_gateway_test.ts
           provider-reference/partner_http_adapter_test.ts
           provider-reference/postgres_repository_test.ts
+
+  provider-database-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Supabase role fixtures in disposable PostgreSQL
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -c "
+            CREATE ROLE anon NOLOGIN;
+            CREATE ROLE authenticated NOLOGIN;
+            CREATE ROLE service_role NOLOGIN BYPASSRLS;
+          "
+
+      - name: Apply design proposal to disposable PostgreSQL 17 only
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_proposal.sql
+
+      - name: Run Provider database smoke tests in disposable PostgreSQL 17
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_smoke_tests.sql
