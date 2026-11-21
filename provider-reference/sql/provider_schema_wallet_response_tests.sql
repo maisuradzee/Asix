@@ -1,4 +1,13 @@
 \set ON_ERROR_STOP on
+
+-- Earlier isolated smoke scenarios intentionally leave unrelated wallet
+-- dispatch events behind. Mark only those old fixture events out of scope so
+-- this test claims precisely the concurrent Bet dispatch under test.
+UPDATE provider_internal.outbox_events
+SET state = 'SUPERSEDED', lease_owner = NULL, lease_until = NULL
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND state IN ('READY','RETRY','LEASED');
+
 SET ROLE provider_runtime;
 
 DO $dispatch_response$
