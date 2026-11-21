@@ -1,4 +1,4 @@
-# ASIX Provider Database Provisioning Runbook v1.1
+# ASIX Provider Database Provisioning Runbook v1.2
 
 Status: proposed procedure for isolated staging only. No production database changes have been applied.
 
@@ -35,20 +35,21 @@ Never connect Provider using the broad postgres credential or Supabase service_r
 ## 4. Data-access contract
 
 Initial routines:
-1. consume_partner_nonce — atomic partner/key/nonce-hash uniqueness.
-2. create_launch_session — partner/game/currency eligibility, partner-scoped launch idempotency, revocation of superseded token hashes and fresh one-use launch token issuance.
-3. consume_launch_token — atomic one-time token consumption by hash and CREATED → ACTIVE session transition.
-4. create_wallet_transaction — partner/session/config validation, scoped idempotency and outbox insert in one transaction.
-5. claim_outbox_events — bounded worker lease claims.
-6. mark_expired_wallet_dispatches_unknown — uncertain dispatch becomes UNKNOWN and queues a read-only status query, never a new debit.
-7. record_wallet_partner_response — requires the relevant outbox lease, the worker ID that owns that lease, its one-time lease token, an unexpired lease and the exact response generation; persists a partner DISPATCH/STATUS_QUERY response idempotently, stores attempt evidence, closes the lease and schedules a bounded next status query when still pending/unknown.
-8. get_wallet_transaction_status — returns only scoped transaction status fields for an authenticated partner context.
-9. post_ledger_journal — validates a same-currency balanced journal before posting.
-10. recover_expired_wallet_status_query_leases — returns expired read-only status checks to RETRY with bounded backoff, or moves events at max_attempts to DEAD_LETTER.
+1. resolve_partner_key — looks up an ACTIVE partner/key pair and returns auth profile, protocol version and KMS/Secrets Manager references only; never returns key material.
+2. consume_partner_nonce — atomic partner/key/nonce-hash uniqueness.
+3. create_launch_session — partner/game/currency eligibility, partner-scoped launch idempotency, revocation of superseded token hashes and fresh one-use launch token issuance.
+4. consume_launch_token — atomic one-time token consumption by hash and CREATED → ACTIVE session transition.
+5. create_wallet_transaction — partner/session/config validation, scoped idempotency and outbox insert in one transaction.
+6. claim_outbox_events — bounded worker lease claims.
+7. mark_expired_wallet_dispatches_unknown — uncertain dispatch becomes UNKNOWN and queues a read-only status query, never a new debit.
+8. record_wallet_partner_response — requires the relevant outbox lease, the worker ID that owns that lease, its one-time lease token, an unexpired lease and the exact response generation; persists a partner DISPATCH/STATUS_QUERY response idempotently, stores attempt evidence, closes the lease and schedules a bounded next status query when still pending/unknown.
+9. get_wallet_transaction_status — returns only scoped transaction status fields for an authenticated partner context.
+10. post_ledger_journal — validates a same-currency balanced journal before posting.
+11. recover_expired_wallet_status_query_leases — returns expired read-only status checks to RETRY with bounded backoff, or moves events at max_attempts to DEAD_LETTER.
 
 Append-only/integrity controls freeze completed/voided rounds, wallet financial identity fields, wallet attempt evidence, commercial contract versions, audit/approval history and posted ledger journals/entries. Financial status updates must use approved state-transition routines.
 
-Launch creation/reissue and token consumption share a partner/session advisory transaction lock. This serializes concurrent retries against the same operator session reference and prevents token consumption racing with reissue.
+Launch creation/reissue and token consumption share a partner/session advisory transaction lock. This serializes concurrent retries against the same operator session reference and prevents token consumption racing with reissue. Partner Gateway key resolution is server-only and returns secret-manager references, never raw HMAC/ECDSA private material.
 
 Runtime must not be granted direct access to provider tables. Add routines only after unit, SQL, concurrency and security review.
 
