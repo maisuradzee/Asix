@@ -1,0 +1,210 @@
+name: ASIX Provider Reference CI
+
+on:
+  pull_request:
+    paths:
+      - "provider-reference/**"
+      - ".github/workflows/provider-simulator-ci.yml"
+  push:
+    branches:
+      - "feature/provider-integration-foundation"
+    paths:
+      - "provider-reference/**"
+      - ".github/workflows/provider-simulator-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  provider-reference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Type-check all provider modules and tests
+        run: >-
+          deno check
+          provider-reference/wallet_orchestrator.ts
+          provider-reference/wallet_orchestrator_test.ts
+          provider-reference/simulator/server.ts
+          provider-reference/simulator/server_test.ts
+          provider-reference/partner_auth.ts
+          provider-reference/partner_auth_test.ts
+          provider-reference/partner_auth_ecdsa.ts
+          provider-reference/partner_auth_ecdsa_test.ts
+          provider-reference/ledger.ts
+          provider-reference/ledger_test.ts
+          provider-reference/settlement_engine.ts
+          provider-reference/settlement_engine_test.ts
+          provider-reference/launch_service.ts
+          provider-reference/launch_service_test.ts
+          provider-reference/resilience.ts
+          provider-reference/resilience_test.ts
+          provider-reference/provider_gateway.ts
+          provider-reference/provider_gateway_test.ts
+          provider-reference/partner_http_adapter.ts
+          provider-reference/partner_http_adapter_test.ts
+          provider-reference/postgres_repository.ts
+          provider-reference/postgres_repository_test.ts
+
+      - name: Run all provider reference tests
+        run: >-
+          deno test
+          provider-reference/wallet_orchestrator_test.ts
+          provider-reference/simulator/server_test.ts
+          provider-reference/partner_auth_test.ts
+          provider-reference/partner_auth_ecdsa_test.ts
+          provider-reference/ledger_test.ts
+          provider-reference/settlement_engine_test.ts
+          provider-reference/launch_service_test.ts
+          provider-reference/resilience_test.ts
+          provider-reference/provider_gateway_test.ts
+          provider-reference/partner_http_adapter_test.ts
+          provider-reference/postgres_repository_test.ts
+
+  provider-database-sql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Supabase role fixtures in disposable PostgreSQL
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -c "
+            CREATE ROLE anon NOLOGIN;
+            CREATE ROLE authenticated NOLOGIN;
+            CREATE ROLE service_role NOLOGIN BYPASSRLS;
+          "
+
+      - name: Apply design proposal to disposable PostgreSQL 17 only
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_proposal.sql
+
+      - name: Run Provider database smoke tests in disposable PostgreSQL 17
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_smoke_tests.sql
+
+      - name: Seed disposable concurrent wallet scenarios
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_concurrency_fixture.sql
+
+      - name: Verify concurrent exposure and refund limits
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          set +e
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000302'::uuid,
+              '00000000-0000-4000-8000-000000000303'::uuid,
+              'ci-concurrent-bet-a'::text,
+              decode(repeat('c5', 32), 'hex'),
+              'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+            );
+          " > /tmp/provider-bet-a.log 2>&1 &
+          BET_A_PID=$!
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000304'::uuid,
+              '00000000-0000-4000-8000-000000000305'::uuid,
+              'ci-concurrent-bet-b'::text,
+              decode(repeat('c6', 32), 'hex'),
+              'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+            );
+          " > /tmp/provider-bet-b.log 2>&1 &
+          BET_B_PID=$!
+
+          wait "$BET_A_PID"; BET_A_RC=$?
+          wait "$BET_B_PID"; BET_B_RC=$?
+          set -e
+
+          if [ "$BET_A_RC" -eq 0 ] && [ "$BET_B_RC" -ne 0 ]; then
+            grep -q "PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED" /tmp/provider-bet-b.log
+          elif [ "$BET_B_RC" -eq 0 ] && [ "$BET_A_RC" -ne 0 ]; then
+            grep -q "PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED" /tmp/provider-bet-a.log
+          else
+            cat /tmp/provider-bet-a.log /tmp/provider-bet-b.log
+            echo "Concurrent BET exposure test did not produce exactly one accepted request."
+            exit 1
+          fi
+
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_wallet_response_tests.sql
+
+          set +e
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000306'::uuid,
+              '00000000-0000-4000-8000-000000000307'::uuid,
+              'ci-concurrent-refund-a'::text,
+              decode(repeat('c7', 32), 'hex'),
+              'REFUND'::text, 300::bigint, 'GEL'::text, 2::smallint,
+              '00000000-0000-4000-8000-000000000308'::uuid
+            );
+          " > /tmp/provider-refund-a.log 2>&1 &
+          REFUND_A_PID=$!
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000306'::uuid,
+              '00000000-0000-4000-8000-000000000307'::uuid,
+              'ci-concurrent-refund-b'::text,
+              decode(repeat('c8', 32), 'hex'),
+              'REFUND'::text, 300::bigint, 'GEL'::text, 2::smallint,
+              '00000000-0000-4000-8000-000000000308'::uuid
+            );
+          " > /tmp/provider-refund-b.log 2>&1 &
+          REFUND_B_PID=$!
+
+          wait "$REFUND_A_PID"; REFUND_A_RC=$?
+          wait "$REFUND_B_PID"; REFUND_B_RC=$?
+          set -e
+
+          if [ "$REFUND_A_RC" -eq 0 ] && [ "$REFUND_B_RC" -ne 0 ]; then
+            grep -q "REFUND_EXCEEDS_UNREFUNDED_ORIGINAL_BET" /tmp/provider-refund-b.log
+          elif [ "$REFUND_B_RC" -eq 0 ] && [ "$REFUND_A_RC" -ne 0 ]; then
+            grep -q "REFUND_EXCEEDS_UNREFUNDED_ORIGINAL_BET" /tmp/provider-refund-a.log
+          else
+            cat /tmp/provider-refund-a.log /tmp/provider-refund-b.log
+            echo "Concurrent REFUND test did not produce exactly one accepted request."
+            exit 1
+          fi
+
+          echo "PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED"
