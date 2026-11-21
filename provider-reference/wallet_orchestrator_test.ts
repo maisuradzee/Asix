@@ -146,7 +146,7 @@ Deno.test("expired dispatch lease becomes UNKNOWN and is never automatically res
   const afterLeaseExpiry = new Date("2026-11-21T00:00:02.000Z");
   const service = new WalletOrchestrator(repo, () => makeAdapter({
     debitBet: async () => new Promise<WalletResult>(() => {}),
-  }), () => afterLeaseExpiry, 1_000);
+  }), () => afterLeaseExpiry, 1_000, 50);
 
   // Insert and claim through the repository to simulate a worker crash after dispatch.
   const cmd = command();
