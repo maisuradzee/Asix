@@ -33,7 +33,7 @@ export interface WalletTransactionRepository {
    * Must be atomic in a durable implementation:
    * unique(partner_code, idempotency_key), compare requestHash on conflict.
    */
-  createOrGet(command: WalletCommand, now: string): Promise<CreateOrGetResult>;
+  createOrGet(command: WalletCommand, requestHash: string, now: string): Promise<CreateOrGetResult>;
   getById(transactionId: string): Promise<WalletTransactionRecord | null>;
   claimInitialDispatch(
     transactionId: string,
@@ -66,7 +66,7 @@ export class TransactionNotFoundError extends Error {
 }
 
 function validateCommand(command: WalletCommand): void {
-  if (!command.transactionId || !command.idempotencyKey || !command.requestHash ||
+  if (!command.transactionId || !command.idempotencyKey ||
       !command.partnerCode || !command.partnerPlayerRef || !command.partnerSessionRef ||
       !command.roundId || !command.currency || !Number.isInteger(command.currencyExponent) ||
       command.currencyExponent < 0 || command.currencyExponent > 6 ||
@@ -75,21 +75,62 @@ function validateCommand(command: WalletCommand): void {
   }
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
+/**
+ * The orchestrator computes this fingerprint itself. A caller-supplied hash
+ * must never be trusted to establish idempotency.
+ */
+export async function computeWalletRequestHash(command: WalletCommand): Promise<string> {
+  const canonical = JSON.stringify({
+    partnerCode: command.partnerCode,
+    transactionId: command.transactionId,
+    idempotencyKey: command.idempotencyKey,
+    operation: command.operation,
+    partnerPlayerRef: command.partnerPlayerRef,
+    partnerSessionRef: command.partnerSessionRef,
+    roundId: command.roundId,
+    amountMinor: command.amountMinor.toString(),
+    currency: command.currency,
+    currencyExponent: command.currencyExponent,
+  });
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    toArrayBuffer(new TextEncoder().encode(canonical)),
+  );
+  const hex = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `sha256:${hex}`;
+}
+
 function validatePartnerResult(command: WalletCommand, result: WalletResult): void {
   if (result.transactionId !== command.transactionId ||
       result.partnerCode !== command.partnerCode ||
-      result.currency !== command.currency) {
+      result.currency !== command.currency ||
+      result.correlationId !== command.correlationId ||
+      result.adapterVersion !== command.adapterVersion ||
+      result.protocolVersion !== command.protocolVersion) {
     throw new Error("PARTNER_RESPONSE_CONTEXT_MISMATCH");
   }
-  if (result.amountMinor !== undefined && result.amountMinor !== command.amountMinor) {
+  if (result.amountMinor !== command.amountMinor) {
     throw new Error("PARTNER_RESPONSE_AMOUNT_MISMATCH");
+  }
+  if (!result.responseCode || !result.responseHash || !Number.isFinite(Date.parse(result.responseAt))) {
+    throw new Error("PARTNER_RESPONSE_EVIDENCE_INVALID");
+  }
+  if (result.state === "CONFIRMED" && !result.partnerTransactionRef?.trim()) {
+    throw new Error("PARTNER_TRANSACTION_REFERENCE_MISSING");
   }
 }
 
-function toStatusQuery(command: WalletCommand, requestedAt: string): TransactionStatusQuery {
+function toStatusQuery(command: WalletCommand, requestedAt: string, partnerTransactionRef?: string): TransactionStatusQuery {
   return {
     transactionId: command.transactionId,
     idempotencyKey: command.idempotencyKey,
+    partnerTransactionRef,
     partnerCode: command.partnerCode,
     adapterVersion: command.adapterVersion,
     protocolVersion: command.protocolVersion,
@@ -132,8 +173,9 @@ export class WalletOrchestrator {
     if (!workerId || workerId.length > 128) throw new Error("INVALID_WORKER_ID");
 
     const now = this.now();
-    const created = await this.repository.createOrGet(command, now.toISOString());
-    if (created.record.requestHash !== command.requestHash ||
+    const requestHash = await computeWalletRequestHash(command);
+    const created = await this.repository.createOrGet(command, requestHash, now.toISOString());
+    if (created.record.requestHash !== requestHash ||
         created.record.transactionId !== command.transactionId) {
       throw new IdempotencyConflictError();
     }
@@ -193,6 +235,7 @@ export class WalletOrchestrator {
       const result = await this.withTimeout(adapter.getTransactionStatus(toStatusQuery(
         current.command,
         this.now().toISOString(),
+        current.result?.partnerTransactionRef,
       )));
       validatePartnerResult(current.command, result);
       await this.repository.updateFromStates(transactionId, ["UNKNOWN", "PENDING"], {
