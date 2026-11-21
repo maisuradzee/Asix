@@ -70,7 +70,7 @@ function validateCommand(command: WalletCommand): void {
       !command.partnerCode || !command.partnerPlayerRef || !command.partnerSessionRef ||
       !command.roundId || !command.currency || !Number.isInteger(command.currencyExponent) ||
       command.currencyExponent < 0 || command.currencyExponent > 6 ||
-      command.amountMinor <= 0n ||
+      command.amountMinor <= 0n || !/^[A-Z]{3}$/.test(command.currency) ||
       (command.operation === "REFUND" &&
         (!command.originalTransactionId || !command.originalPartnerTransactionRef))) {
     throw new Error("INVALID_WALLET_COMMAND");
@@ -178,6 +178,9 @@ export class WalletOrchestrator {
     if (!Number.isInteger(operationTimeoutMs) || operationTimeoutMs < 50 || operationTimeoutMs > 60_000) {
       throw new Error("INVALID_OPERATION_TIMEOUT");
     }
+    if (dispatchLeaseMs <= operationTimeoutMs) {
+      throw new Error("DISPATCH_LEASE_MUST_EXCEED_OPERATION_TIMEOUT");
+    }
   }
 
   async execute(command: WalletCommand, workerId: string): Promise<WalletTransactionRecord> {
@@ -242,8 +245,8 @@ export class WalletOrchestrator {
     if (!current) throw new TransactionNotFoundError();
     if (current.state !== "UNKNOWN" && current.state !== "PENDING") return current;
 
-    const adapter = this.resolveAdapter(current.partnerCode);
     try {
+      const adapter = this.resolveAdapter(current.partnerCode);
       const result = await this.withTimeout(adapter.getTransactionStatus(toStatusQuery(
         current.command,
         this.now().toISOString(),
