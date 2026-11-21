@@ -502,6 +502,39 @@ BEGIN
 END
 $function$;
 
+-- Resolve active partner key metadata for the trusted Provider Gateway.
+-- Only KMS/Secrets Manager references are returned; secret/private-key values
+-- are never read from or returned by the database.
+CREATE OR REPLACE FUNCTION provider_internal.resolve_partner_key(
+  p_partner_code text,
+  p_key_id text
+)
+RETURNS TABLE (
+  partner_id uuid,
+  partner_code text,
+  key_id text,
+  auth_profile text,
+  protocol_version text,
+  secret_reference text,
+  public_key_reference text
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = ''
+AS $resolve_partner_key$
+  SELECT p.id, p.partner_code, k.key_id, k.auth_profile,
+         k.protocol_version, k.secret_reference, k.public_key_reference
+  FROM provider_internal.partners AS p
+  JOIN provider_internal.partner_keys AS k ON k.partner_id = p.id
+  WHERE p.partner_code = p_partner_code
+    AND k.key_id = p_key_id
+    AND p.status = 'ACTIVE'
+    AND k.status = 'ACTIVE'
+    AND k.revoked_at IS NULL
+    AND k.valid_from <= pg_catalog.clock_timestamp()
+    AND (k.valid_until IS NULL OR k.valid_until > pg_catalog.clock_timestamp())
+$resolve_partner_key$;
+
 -- Create/re-issue a one-use launch token. partner_session_ref is the
 -- partner-scoped idempotency key. A retry with identical immutable identity
 -- reuses CREATED sessions and revokes any previously issued unconsumed token.
@@ -1411,6 +1444,7 @@ END
 $rls$;
 
 GRANT EXECUTE ON FUNCTION provider_internal.consume_partner_nonce(uuid, text, bytea, timestamptz) TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.resolve_partner_key(text, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.create_launch_session(uuid, text, text, text, text, text, smallint, text, integer, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
