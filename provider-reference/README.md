@@ -78,3 +78,12 @@ No Provider schema or database role has been created in the live project. Produc
 - Latest verified CI: 73 Deno tests passed with zero failures; the disposable PostgreSQL 17 schema and smoke suite both completed successfully.
 
 Production blockers remain: clean V154 restore, Supabase-generated migration, dedicated runtime LOGIN/secret, Supabase Data API/exposed-schema check, pgTAP and concurrency/load/failover tests against the restored staging project, and independent security review.
+
+
+## PostgreSQL concurrency checks
+
+The disposable PostgreSQL 17 CI job now runs a two-connection race test:
+- simultaneous Bet creation across separate partner sessions sharing the same game/currency exposure limit; only one is allowed;
+- simultaneous partial Refunds against the same confirmed original Bet; only one may consume the remaining refundable amount.
+
+Latest verified CI: 73 Deno tests passed, 0 failed; schema smoke and both concurrency assertions passed on the disposable PostgreSQL 17 service. This is not a V154 restore or a live Supabase test.
