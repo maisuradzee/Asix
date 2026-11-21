@@ -109,3 +109,17 @@ The current CI workflow uses two separate jobs:
 - Provider database SQL job: design proposal applied successfully to disposable PostgreSQL 17; smoke suite ended with `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
 
 This validates draft SQL against vanilla PostgreSQL 17 and the specific smoke assertions. It does not prove V154 upgrade compatibility, Supabase Data API exposure settings, production load, or a successful restore of the historical ASIX database.
+
+
+## K. Current CI execution evidence (21 November 2026)
+
+Verified GitHub Actions run uses two isolated jobs:
+- Deno reference suite: 73 passed, 0 failed.
+- PostgreSQL 17 service container: schema proposal applied successfully, followed by smoke tests that emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
+- Concurrent financial checks emitted `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
+
+The concurrency assertions used separate database clients:
+1. Two 1,000-minor-unit BET requests raced against a 1,500-minor-unit partner/game/jurisdiction/currency open-exposure cap; one succeeded and one was rejected by the cap.
+2. Two 300-minor-unit REFUND requests raced against a 500-minor-unit confirmed original Bet; one succeeded and one was rejected because the combined amount would exceed the original debit.
+
+This validates the draft SQL and those specific concurrent paths on vanilla PostgreSQL 17. It does not prove compatibility with the restored ASIX V154 Supabase project, the Supabase Data API configuration, production throughput or every possible isolation/replica failure.
