@@ -125,3 +125,7 @@ The concurrency assertions used separate database clients:
 This validates the draft SQL and those specific concurrent paths on vanilla PostgreSQL 17. It does not prove compatibility with the restored ASIX V154 Supabase project, the Supabase Data API configuration, production throughput or every possible isolation/replica failure.
 
 - Wallet response persistence: DISPATCHING → PENDING/UNKNOWN → read-only STATUS_QUERY → CONFIRMED/DECLINED, including idempotent replay of the same response attempt and a bounded status-query generation limit.
+
+- Partner response persistence: DISPATCH/STATUS_QUERY responses must match a leased outbox event and generation; duplicate attempt persistence is idempotent; changing the response under the same attempt number is rejected.
+- Wallet financial identity fields are immutable; status/response metadata changes only through approved functions.
+- Completed/voided rounds, wallet attempt evidence and signed commercial contract versions cannot be updated or deleted.
