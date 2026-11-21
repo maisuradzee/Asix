@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  simulator:
+  provider-reference:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -28,7 +28,7 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Type-check provider reference and simulator
+      - name: Type-check provider reference modules and tests
         run: >-
           deno check
           provider-reference/wallet_orchestrator.ts
@@ -43,7 +43,6 @@ jobs:
           provider-reference/settlement_engine_test.ts
           provider-reference/launch_service.ts
           provider-reference/launch_service_test.ts
-          provider-reference/resilience_test.ts
           provider-reference/resilience.ts
           provider-reference/resilience_test.ts
 
@@ -56,3 +55,4 @@ jobs:
           provider-reference/ledger_test.ts
           provider-reference/settlement_engine_test.ts
           provider-reference/launch_service_test.ts
+          provider-reference/resilience_test.ts
