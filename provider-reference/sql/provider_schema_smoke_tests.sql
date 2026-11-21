@@ -295,11 +295,8 @@ BEGIN
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('27', 32), 'hex')
   );
-  SELECT s.status INTO v_expired_session_status
-  FROM provider_internal.sessions AS s
-  WHERE s.id = '00000000-0000-4000-8000-000000000106'::uuid;
-  IF v_expired_token_count <> 0 OR v_expired_session_status <> 'CREATED' THEN
-    RAISE EXCEPTION 'EXPIRED_LAUNCH_TOKEN_WAS_ACCEPTED_OR_SESSION_ACTIVATED';
+  IF v_expired_token_count <> 0 THEN
+    RAISE EXCEPTION 'EXPIRED_LAUNCH_TOKEN_WAS_ACCEPTED';
   END IF;
 
   -- Reusing a partner session reference for a different player is a conflict.
@@ -643,6 +640,19 @@ END
 $refund_and_win$;
 
 RESET ROLE;
+
+DO $expired_launch_state$
+DECLARE
+  v_status text;
+BEGIN
+  SELECT s.status INTO v_status
+  FROM provider_internal.sessions AS s
+  WHERE s.id = '00000000-0000-4000-8000-000000000106'::uuid;
+  IF v_status <> 'CREATED' THEN
+    RAISE EXCEPTION 'EXPIRED_LAUNCH_TOKEN_ACTIVATED_SESSION';
+  END IF;
+END
+$expired_launch_state$;
 
 -- Ledger posting, balance validation and immutability.
 INSERT INTO provider_internal.ledger_accounts(id, partner_id, account_code, account_type, currency)
