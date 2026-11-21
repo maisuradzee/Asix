@@ -1,4 +1,4 @@
-# ASIX Provider Data Model v1.1
+# ASIX Provider Data Model v1.2
 
 **Status:** logical model only; not a migration and not approved for production execution.
 
@@ -23,6 +23,8 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 |---|---|---|
 | `provider_internal.partners` | id, code, status, jurisdiction | Tenant/partner identity |
 | `provider_internal.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
+
+The trusted Provider Gateway resolves an active `(partner_code, key_id)` through `resolve_partner_key`. The function returns only the secret/public-key reference and protocol metadata; HMAC/ECDSA private key bytes remain in KMS/Secrets Manager.
 | `provider_internal.partner_game_configs` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
 | `provider_internal.partner_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
 | `provider_internal.launch_tokens` | partner_id, session_id, token_hash, expires_at, consumed_at, revoked_at | One-use launch authority; only the token hash is stored |
@@ -68,7 +70,14 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - RLS is enabled and FORCEd on every provider table as defense in depth; the partner API also enforces tenant scope before calling database functions.
 - Cross-tenant queries are prohibited unless an audited internal reporting role has an explicit purpose.
 
-## 5. Launch lifecycle invariants
+## 5. Partner authentication lookup invariants
+
+- The trusted Provider Gateway resolves `(partner_code, key_id)` using `resolve_partner_key` after receiving the server-to-server request.
+- Only ACTIVE partners and keys within their validity window are returned.
+- The database returns auth profile, protocol version and secret/public-key references only; it never returns raw HMAC secret or private signing material.
+- The API obtains secret material separately from KMS/Secrets Manager and verifies the signature before consuming a nonce.
+
+## 6. Launch lifecycle invariants
 
 - `create_launch_session` checks partner ACTIVE status and an enabled game/jurisdiction/currency/exponent configuration.
 - A repeated `partner_session_ref` with identical immutable identity reuses the CREATED session, revokes its earlier unconsumed tokens, and issues a new token hash.
@@ -77,7 +86,7 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - `consume_launch_token` and session activation from CREATED to ACTIVE are atomic.
 - Create/reissue and consume use the same partner/session advisory lock so concurrent replicas cannot split a session or race token supersession.
 
-## 6. Data classification and retention
+## 7. Data classification and retention
 
 - Secrets: never stored in database rows; store references to KMS/secret manager versions.
 - Player identifiers: pseudonymous operator references; avoid name, email, phone and payment data.
@@ -86,7 +95,7 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - Game events: retain enough evidence for replay, dispute investigation and certification, subject to retention rules.
 - Logs: no access tokens, session secrets, full wallet credentials or unnecessary personal information.
 
-## 7. Migration readiness gates
+## 8. Migration readiness gates
 
 A physical migration may be drafted only after:
 1. The V154 snapshot is restored into isolated staging.
