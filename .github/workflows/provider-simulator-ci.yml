@@ -43,6 +43,9 @@ jobs:
           provider-reference/settlement_engine_test.ts
           provider-reference/launch_service.ts
           provider-reference/launch_service_test.ts
+          provider-reference/resilience_test.ts
+          provider-reference/resilience.ts
+          provider-reference/resilience_test.ts
 
       - name: Run provider reference and simulator tests
         run: >-
