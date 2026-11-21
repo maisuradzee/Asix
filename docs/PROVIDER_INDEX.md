@@ -9,7 +9,6 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider Data Model v1.0](PROVIDER_DATA_MODEL_v1.0.md)
 - [Provider Database Provisioning Runbook](PROVIDER_DATABASE_PROVISIONING_RUNBOOK.md)
 - [Provider Database Test Plan](PROVIDER_DATABASE_TEST_PLAN.md)
-- [Provider Database Test Plan](PROVIDER_DATABASE_TEST_PLAN.md)
 - [Existing ASIX Compatibility Map](EXISTING_ASIX_COMPATIBILITY_MAP_v1.0.md)
 - [ST8 Aggregator Reference and API Direction](ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
 
