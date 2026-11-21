@@ -101,7 +101,7 @@ Deno.test("partner code is part of the signed identity and mismatched scope is r
     { nowEpochSeconds: now },
   );
   assertEquals(result.ok, false);
-  if (!result.ok) assertEquals(result.error, "SIGNATURE_INVALID");
+  if (!result.ok) assertEquals(result.error, "KEY_UNKNOWN_OR_REVOKED");
 });
 
 Deno.test("replayed nonce is rejected", async () => {
