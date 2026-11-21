@@ -62,11 +62,65 @@ Deno.test("launch token maps to claims and returns null when no token is consuma
     currency: "GEL",
     jurisdiction: "GE",
     locale: "ka-GE",
+    session_status: "ACTIVE",
   }];
   const repo = new ProviderPostgresRepository(db);
   assertEquals((await repo.consumeLaunchToken(hash))?.partner_session_ref, "operator-session");
   db.responder = () => [];
   assertEquals(await repo.consumeLaunchToken(hash), null);
+});
+
+Deno.test("launch session uses partner-scoped config and one-use token hash", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    session_id: "session-launch-1",
+    session_status: "CREATED",
+    token_issued: true,
+    token_expires_at: "2026-11-21T12:02:00.000Z",
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  const result = await repo.createLaunchSession({
+    partnerId: "00000000-0000-4000-8000-000000000001",
+    partnerPlayerRef: "opaque-player",
+    partnerSessionRef: "operator-session",
+    gameCode: "ASIX_CARD",
+    jurisdiction: "GE",
+    currency: "GEL",
+    currencyExponent: 2,
+    locale: "ka-GE",
+    policyVersion: 1,
+    tokenHash: hash,
+    expiresAt: "2026-11-21T12:02:00.000Z",
+  });
+  assertEquals(result.sessionId, "session-launch-1");
+  assertEquals(result.status, "CREATED");
+  assertEquals(result.tokenIssued, true);
+  assertEquals(db.calls[0].sql.includes("create_launch_session"), true);
+  assertEquals(db.calls[0].parameters[0], "00000000-0000-4000-8000-000000000001");
+  assertEquals(db.calls[0].parameters[9], hash);
+});
+
+Deno.test("launch session rejects invalid token hashes before database access", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.createLaunchSession({
+      partnerId: "partner-1",
+      partnerPlayerRef: "player-1",
+      partnerSessionRef: "session-1",
+      gameCode: "ASIX_CARD",
+      jurisdiction: "GE",
+      currency: "GEL",
+      currencyExponent: 2,
+      locale: "ka-GE",
+      policyVersion: 1,
+      tokenHash: new Uint8Array(16),
+      expiresAt: "2026-11-21T12:02:00.000Z",
+    }),
+    ProviderDatabaseError,
+    "INVALID_LAUNCH_TOKEN_HASH",
+  );
+  assertEquals(db.calls.length, 0);
 });
 
 Deno.test("wallet transaction sends integer minor units and request hash to DB function", async () => {
