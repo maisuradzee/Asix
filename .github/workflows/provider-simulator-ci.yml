@@ -163,6 +163,7 @@ jobs:
           fi
 
           docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_wallet_response_tests.sql
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_status_query_recovery_tests.sql
 
           set +e
           docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
