@@ -19,18 +19,21 @@ export class InMemoryWalletTransactionRepository implements WalletTransactionRep
     return `${partner}:${idempotencyKey}`;
   }
 
-  async createOrGet(command: WalletCommand, now: string): Promise<CreateOrGetResult> {
+  async createOrGet(command: WalletCommand, requestHash: string, now: string): Promise<CreateOrGetResult> {
     const key = this.key(command.partnerCode, command.idempotencyKey);
     const existingId = this.idempotency.get(key);
     if (existingId) {
       const existing = this.rows.get(existingId)!;
       return { record: existing, created: false };
     }
+    if (this.rows.has(command.transactionId)) {
+      throw new Error("TRANSACTION_ID_CONFLICT");
+    }
     const row: WalletTransactionRecord = {
       transactionId: command.transactionId,
       partnerCode: command.partnerCode,
       idempotencyKey: command.idempotencyKey,
-      requestHash: command.requestHash,
+      requestHash,
       command,
       state: "CREATED",
       attemptCount: 0,
