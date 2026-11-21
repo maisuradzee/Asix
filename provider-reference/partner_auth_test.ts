@@ -138,3 +138,20 @@ Deno.test("oversized body is rejected before signature processing", async () => 
   assertEquals(result.ok, false);
   if (!result.ok) assertEquals(result.error, "BODY_TOO_LARGE");
 });
+
+
+Deno.test("signature cannot be replayed against a different API host", async () => {
+  const original = await signedRequest();
+  const alteredHost = new Request(
+    original.url.replace("provider-sandbox.example.invalid", "other-environment.example.invalid"),
+    { method: "POST", headers: original.headers, body: JSON.stringify({ player: "opaque-1", currency: "GEL" }) },
+  );
+  const result = await verifyPartnerRequest(
+    alteredHost,
+    keyResolver(),
+    new MemoryNonceStore(),
+    { nowEpochSeconds: now },
+  );
+  assertEquals(result.ok, false);
+  if (!result.ok) assertEquals(result.error, "SIGNATURE_INVALID");
+});
