@@ -27,8 +27,16 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Type-check simulator and tests
-        run: deno check provider-reference/simulator/server.ts provider-reference/simulator/server_test.ts
+      - name: Type-check provider reference and simulator
+        run: >-
+          deno check
+          provider-reference/wallet_orchestrator.ts
+          provider-reference/wallet_orchestrator_test.ts
+          provider-reference/simulator/server.ts
+          provider-reference/simulator/server_test.ts
 
-      - name: Run simulator tests
-        run: deno test provider-reference/simulator/server_test.ts
+      - name: Run provider reference and simulator tests
+        run: >-
+          deno test
+          provider-reference/wallet_orchestrator_test.ts
+          provider-reference/simulator/server_test.ts
