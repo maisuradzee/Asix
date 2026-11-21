@@ -13,15 +13,15 @@ const now = new Date("2026-11-21T08:00:00.000Z");
 const nowSec = Math.floor(now.getTime() / 1000);
 
 const keyResolver: PartnerKeyResolver = {
-  resolve: async (keyId) => keyId === "key-1"
-    ? { partnerCode: "partner-1", keyId, protocolVersion: "provider-v1", key, active: true }
+  resolve: async (partnerCode, keyId) => partnerCode === "partner-1" && keyId === "key-1"
+    ? { partnerCode, keyId, protocolVersion: "provider-v1", key, active: true }
     : null,
 };
 
 class NonceStore implements ReplayNonceStore {
   private used = new Set<string>();
-  async consume(partner: string, nonce: string): Promise<boolean> {
-    const id = `${partner}:${nonce}`;
+  async consume(partner: string, keyId: string, nonce: string): Promise<boolean> {
+    const id = `${partner}:${keyId}:${nonce}`;
     if (this.used.has(id)) return false;
     this.used.add(id);
     return true;
@@ -73,7 +73,7 @@ async function signedRequest(body: unknown, nonce: string): Promise<Request> {
   const text = JSON.stringify(body);
   const request = new Request("https://gateway.asix.example.invalid/provider/v1/launches", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-asix-partner-code": "partner-1" },
     body: text,
   });
   const timestamp = String(nowSec);
@@ -83,6 +83,7 @@ async function signedRequest(body: unknown, nonce: string): Promise<Request> {
   const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(canonical)));
   const base64 = btoa(String.fromCharCode(...signature));
   const headers = new Headers(request.headers);
+  headers.set("x-asix-partner-code", "partner-1");
   headers.set("x-asix-key-id", "key-1");
   headers.set("x-asix-timestamp", timestamp);
   headers.set("x-asix-nonce", nonce);
