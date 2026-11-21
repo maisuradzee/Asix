@@ -26,7 +26,7 @@ export interface ReplayNonceStore {
    * Must atomically insert (partnerCode, nonce) with expiry.
    * Return false if the pair already exists.
    */
-  consume(partnerCode: string, nonce: string, expiresAt: number): Promise<boolean>;
+  consume(partnerCode: string, keyId: string, nonce: string, expiresAt: number): Promise<boolean>;
 }
 
 export interface PartnerSignatureOptions {
@@ -209,6 +209,7 @@ export async function verifyPartnerRequest(
   // across all gateway instances and enforce unique(partner_code, nonce).
   const consumed = await nonceStore.consume(
     resolved.partnerCode,
+    keyId,
     nonce,
     timestampSeconds + maxClockSkew + 1,
   );
