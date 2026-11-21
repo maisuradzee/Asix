@@ -25,7 +25,6 @@ function command(overrides: Partial<WalletCommand> = {}): WalletCommand {
     amountMinor: 500n as MinorUnits,
     currency,
     currencyExponent: 2,
-    requestHash: "sha256:stable-request-hash",
     correlationId: "corr-1",
     adapterVersion: "mock-v1",
     protocolVersion: "provider-v1",
@@ -44,6 +43,7 @@ function result(cmd: WalletCommand, state: WalletResult["state"]): WalletResult 
     responseCode: state === "CONFIRMED" ? "OK" : state,
     responseAt: "2026-11-21T00:00:01.000Z",
     responseHash: "sha256:mock-response",
+    ...(state === "CONFIRMED" ? { partnerTransactionRef: `partner-${cmd.transactionId}` } : {}),
     correlationId: cmd.correlationId,
     adapterVersion: cmd.adapterVersion,
     protocolVersion: cmd.protocolVersion,
@@ -126,12 +126,12 @@ Deno.test("transport failure becomes UNKNOWN then resolves by read-only status q
   assertEquals(statusQueries, 1);
 });
 
-Deno.test("same idempotency key with a different request hash is rejected", async () => {
+Deno.test("same idempotency key with a different financial payload is rejected", async () => {
   const repo = new InMemoryWalletTransactionRepository();
   const service = new WalletOrchestrator(repo, () => makeAdapter());
   await service.execute(command(), "worker-a");
   await assertRejects(
-    () => service.execute(command({ requestHash: "sha256:different-payload" }), "worker-b"),
+    () => service.execute(command({ amountMinor: 750n as MinorUnits }), "worker-b"),
     IdempotencyConflictError,
   );
 });
@@ -146,7 +146,7 @@ Deno.test("expired dispatch lease becomes UNKNOWN and is never automatically res
 
   // Insert and claim through the repository to simulate a worker crash after dispatch.
   const cmd = command();
-  const inserted = await repo.createOrGet(cmd, now.toISOString());
+  const inserted = await repo.createOrGet(cmd, await computeWalletRequestHash(cmd), now.toISOString());
   assertEquals(inserted.record.state, "CREATED");
   await repo.claimInitialDispatch(cmd.transactionId, "crashed-worker", "2026-11-21T00:00:01.000Z", now.toISOString());
 
