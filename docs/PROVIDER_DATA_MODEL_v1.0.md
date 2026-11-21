@@ -1,4 +1,4 @@
-# ASIX Provider Data Model v1.0
+# ASIX Provider Data Model v1.1
 
 **Status:** logical model only; not a migration and not approved for production execution.
 
