@@ -168,3 +168,21 @@ Deno.test("partner response with wrong transaction context is held as UNKNOWN", 
   assertEquals(record.state, "UNKNOWN");
   assertEquals(record.lastErrorCode, "PARTNER_RESPONSE_CONTEXT_MISMATCH");
 });
+
+
+Deno.test("hung partner request times out to UNKNOWN without retry", async () => {
+  const repo = new InMemoryWalletTransactionRepository();
+  let dispatches = 0;
+  const adapter = makeAdapter({
+    debitBet: async () => {
+      dispatches += 1;
+      return new Promise<WalletResult>(() => {});
+    },
+  });
+  const service = new WalletOrchestrator(repo, () => adapter, () => new Date(), 30_000, 50);
+  const cmd = command({ transactionId: "tx-timeout-001", idempotencyKey: "idem-timeout-001" });
+  const record = await service.execute(cmd, "worker-timeout");
+  assertEquals(record.state, "UNKNOWN");
+  assertEquals(record.lastErrorCode, "PARTNER_REQUEST_TIMEOUT");
+  assertEquals(dispatches, 1);
+});
