@@ -104,17 +104,8 @@ Expected result: no duplicate financial effect, no cross-partner access, no fabr
 
 ## K. Current CI execution evidence (21 November 2026)
 
-The current CI workflow uses two separate jobs:
-- Provider reference Deno job: 73 tests passed, 0 failed.
-- Provider database SQL job: design proposal applied successfully to disposable PostgreSQL 17; smoke suite ended with `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
-
-This validates draft SQL against vanilla PostgreSQL 17 and the specific smoke assertions. It does not prove V154 upgrade compatibility, Supabase Data API exposure settings, production load, or a successful restore of the historical ASIX database.
-
-
-## K. Current CI execution evidence (21 November 2026)
-
-Verified GitHub Actions run uses two isolated jobs:
-- Deno reference suite: 73 passed, 0 failed.
+Verified GitHub Actions run 255 uses two isolated jobs:
+- Deno reference suite: 76 passed, 0 failed.
 - PostgreSQL 17 service container: schema proposal applied successfully, followed by smoke tests that emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
 - Concurrent financial checks emitted `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
 
@@ -126,6 +117,7 @@ This validates the draft SQL and those specific concurrent paths on vanilla Post
 
 - Wallet response persistence: DISPATCHING → PENDING/UNKNOWN → read-only STATUS_QUERY → CONFIRMED/DECLINED, including idempotent replay of the same response attempt and a bounded status-query generation limit.
 
-- Partner response persistence: DISPATCH/STATUS_QUERY responses must match a leased outbox event and generation; duplicate attempt persistence is idempotent; changing the response under the same attempt number is rejected.
+- Partner response persistence: DISPATCH/STATUS_QUERY responses must match a leased outbox event, the same worker ID that claimed the event, and an unexpired lease; duplicate attempt persistence is idempotent; changing the response under the same attempt number is rejected.
+- A deliberately stale worker ID is rejected; the actual lease owner can still persist the response.
 - Wallet financial identity fields are immutable; status/response metadata changes only through approved functions.
 - Completed/voided rounds, wallet attempt evidence and signed commercial contract versions cannot be updated or deleted.
