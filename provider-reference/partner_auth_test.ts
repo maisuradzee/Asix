@@ -19,7 +19,7 @@ const now = 1_795_248_000; // fixed test timestamp
 function keyResolver(active = true): PartnerKeyResolver {
   return {
     resolve: async (keyId) => keyId === "sandbox-key-01"
-      ? { partnerCode: "operator-sandbox", keyId, key: partnerKey, active }
+      ? { partnerCode: "operator-sandbox", keyId, protocolVersion: "provider-v1", key: partnerKey, active }
       : null,
   };
 }
@@ -77,7 +77,10 @@ Deno.test("valid HMAC signature is accepted and resolves trusted partner identit
     { nowEpochSeconds: now },
   );
   assertEquals(result.ok, true);
-  if (result.ok) assertEquals(result.partnerCode, "operator-sandbox");
+  if (result.ok) {
+    assertEquals(result.partnerCode, "operator-sandbox");
+    assertEquals(result.protocolVersion, "provider-v1");
+  }
 });
 
 Deno.test("replayed nonce is rejected", async () => {
