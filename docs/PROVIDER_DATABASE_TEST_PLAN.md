@@ -1,4 +1,4 @@
-# ASIX Provider Database Test Plan v1.1
+# ASIX Provider Database Test Plan v1.2
 
 Target: disposable PostgreSQL 17 CI container for current automated smoke checks; full acceptance still requires isolated restored V154 Supabase staging. The SQL proposal has not been applied to the live ASIX database.
 
@@ -22,6 +22,8 @@ Target: disposable PostgreSQL 17 CI container for current automated smoke checks
 | Provider runtime is not a member of authenticated, service_role, postgres or supabase_admin | Pass |
 
 ## C. Partner and credential lifecycle
+- resolve_partner_key returns only an ACTIVE partner/key record and KMS/Secrets Manager reference, never secret material.
+- Unknown, suspended, revoked, expired or not-yet-valid partner/key pairs return no row.
 - Duplicate partner code rejected.
 - Duplicate key ID within a partner rejected; same key ID may exist for another partner.
 - Suspended/terminated partner and revoked/expired/not-yet-valid key cannot consume a nonce.
@@ -113,6 +115,7 @@ Expected result: no duplicate financial effect, no cross-partner access, no fabr
 Verified GitHub Actions run #309 uses two isolated jobs:
 - Deno reference suite: 80 passed, 0 failed.
 - PostgreSQL 17 service container: schema proposal applied successfully, followed by smoke tests that emitted `PROVIDER_DATABASE_SMOKE_TESTS_PASSED`.
+- Active partner-key metadata lookup returned the expected auth profile/protocol version/reference; an unknown key returned no row.
 - Concurrent Launch check emitted `PROVIDER_CONCURRENT_LAUNCH_IDEMPOTENCY_PASSED`.
 - Concurrent financial checks emitted `PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED`.
 
@@ -121,6 +124,8 @@ The concurrency assertions used separate database clients:
 2. Two 300-minor-unit REFUND requests raced against a 500-minor-unit confirmed original Bet; one succeeded and one was rejected because the combined amount would exceed the original debit.
 
 
+
+The key lookup test confirms the database returns only a KMS/Secrets Manager reference, not key bytes. The trusted API then resolves the secret from the external secret store.
 
 The concurrent Launch assertion used two independent PostgreSQL clients issuing create_launch_session for the same partner/session reference with different token hashes. Both calls returned the same session ID; the database retained exactly one session, one unconsumed/unrevoked token and one superseded token. This verifies the shared partner/session advisory lock and retry semantics on the disposable PostgreSQL 17 service.
 
