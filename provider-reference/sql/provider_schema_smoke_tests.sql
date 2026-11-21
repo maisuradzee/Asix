@@ -63,14 +63,14 @@ END
 $security$;
 
 INSERT INTO provider_internal.partners(id, partner_code, display_name, status)
-VALUES ('00000000-0000-4000-8000-000000000101', 'ci-operator', 'CI Operator', 'ACTIVE');
+VALUES ('00000000-0000-4000-8000-000000000101'::uuid, 'ci-operator', 'CI Operator', 'ACTIVE');
 
 INSERT INTO provider_internal.partner_keys(
   id, partner_id, key_id, auth_profile, protocol_version, secret_reference, status
 )
 VALUES (
   '00000000-0000-4000-8000-000000000102',
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-key-1', 'ASIX_HMAC_SHA256_V1', 'provider-v1', 'kms://ci/partner-key', 'ACTIVE'
 );
 
@@ -79,7 +79,7 @@ INSERT INTO provider_internal.partner_game_configs(
   min_bet_minor, max_bet_minor, max_win_minor, max_open_exposure_minor, enabled
 )
 VALUES (
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101'::uuid,
   'ASIX_CI_GAME', 'GE', 'GEL', 2, 100, 2000, 5000, 3000, true
 );
 
@@ -90,13 +90,13 @@ INSERT INTO provider_internal.sessions(
 VALUES
 (
   '00000000-0000-4000-8000-000000000103',
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-player-opaque', 'ci-session-launch', 'ASIX_CI_GAME',
   'GE', 'GEL', 2, 'en-GB', 'CREATED', 1
 ),
 (
-  '00000000-0000-4000-8000-000000000104',
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000104'::uuid,
+  '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-player-opaque', 'ci-session-wallet', 'ASIX_CI_GAME',
   'GE', 'GEL', 2, 'en-GB', 'ACTIVE', 1
 );
@@ -105,9 +105,9 @@ INSERT INTO provider_internal.rounds(
   id, partner_id, session_id, round_number, game_version, rules_hash, status
 )
 VALUES (
-  '00000000-0000-4000-8000-000000000105',
-  '00000000-0000-4000-8000-000000000101',
-  '00000000-0000-4000-8000-000000000104',
+  '00000000-0000-4000-8000-000000000105'::uuid,
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  '00000000-0000-4000-8000-000000000104'::uuid,
   1, 'ci-game-v1', pg_catalog.decode(pg_catalog.repeat('11', 32), 'hex'), 'OPEN'
 );
 
@@ -115,7 +115,7 @@ INSERT INTO provider_internal.launch_tokens(
   partner_id, session_id, token_hash, expires_at
 )
 VALUES (
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101'::uuid,
   '00000000-0000-4000-8000-000000000103',
   pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex'),
   pg_catalog.clock_timestamp() + interval '2 minutes'
@@ -130,13 +130,13 @@ DECLARE
   v_launch_count integer;
 BEGIN
   v_first := provider_internal.consume_partner_nonce(
-    '00000000-0000-4000-8000-000000000101',
+    '00000000-0000-4000-8000-000000000101'::uuid,
     'ci-key-1',
     pg_catalog.decode(pg_catalog.repeat('33', 32), 'hex'),
     pg_catalog.clock_timestamp() + interval '5 minutes'
   );
   v_second := provider_internal.consume_partner_nonce(
-    '00000000-0000-4000-8000-000000000101',
+    '00000000-0000-4000-8000-000000000101'::uuid,
     'ci-key-1',
     pg_catalog.decode(pg_catalog.repeat('33', 32), 'hex'),
     pg_catalog.clock_timestamp() + interval '5 minutes'
@@ -178,12 +178,12 @@ BEGIN
   SELECT t.transaction_id, t.transaction_status, t.was_created
     INTO v_tx, v_status, v_created
   FROM provider_internal.create_wallet_transaction(
-    '00000000-0000-4000-8000-000000000101',
-    '00000000-0000-4000-8000-000000000104',
-    '00000000-0000-4000-8000-000000000105',
-    'ci-bet-idempotency-1',
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-bet-idempotency-1'::text,
     pg_catalog.decode(pg_catalog.repeat('44', 32), 'hex'),
-    'BET', 1000, 'GEL', 2, NULL
+    'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
   ) AS t;
 
   IF v_tx IS NULL OR v_status <> 'CREATED' OR NOT v_created THEN
@@ -193,12 +193,12 @@ BEGIN
   SELECT t.transaction_id, t.transaction_status, t.was_created
     INTO v_existing_tx, v_status, v_created
   FROM provider_internal.create_wallet_transaction(
-    '00000000-0000-4000-8000-000000000101',
-    '00000000-0000-4000-8000-000000000104',
-    '00000000-0000-4000-8000-000000000105',
-    'ci-bet-idempotency-1',
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-bet-idempotency-1'::text,
     pg_catalog.decode(pg_catalog.repeat('44', 32), 'hex'),
-    'BET', 1000, 'GEL', 2, NULL
+    'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
   ) AS t;
 
   IF v_existing_tx <> v_tx OR v_created THEN
@@ -207,12 +207,12 @@ BEGIN
 
   BEGIN
     PERFORM * FROM provider_internal.create_wallet_transaction(
-      '00000000-0000-4000-8000-000000000101',
-      '00000000-0000-4000-8000-000000000104',
-      '00000000-0000-4000-8000-000000000105',
-      'ci-bet-idempotency-1',
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-bet-idempotency-1'::text,
       pg_catalog.decode(pg_catalog.repeat('55', 32), 'hex'),
-      'BET', 1000, 'GEL', 2, NULL
+      'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
     );
     RAISE EXCEPTION 'IDEMPOTENCY_DIFFERENT_HASH_WAS_ACCEPTED';
   EXCEPTION WHEN unique_violation THEN
@@ -221,12 +221,12 @@ BEGIN
 
   BEGIN
     PERFORM * FROM provider_internal.create_wallet_transaction(
-      '00000000-0000-4000-8000-000000000101',
-      '00000000-0000-4000-8000-000000000104',
-      '00000000-0000-4000-8000-000000000105',
-      'ci-bet-idempotency-over-limit',
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-bet-idempotency-over-limit'::text,
       pg_catalog.decode(pg_catalog.repeat('66', 32), 'hex'),
-      'BET', 2500, 'GEL', 2, NULL
+      'BET'::text, 2500::bigint, 'GEL'::text, 2::smallint, NULL::uuid
     );
     RAISE EXCEPTION 'OPEN_EXPOSURE_LIMIT_WAS_BYPASSED';
   EXCEPTION WHEN SQLSTATE '22003' THEN
@@ -253,8 +253,8 @@ WHERE id = '00000000-0000-4000-8000-000000000106';
 -- The actual transaction id is obtained through the idempotency key above.
 UPDATE provider_internal.wallet_transactions
 SET dispatch_lease_until = pg_catalog.clock_timestamp() - interval '1 minute'
-WHERE partner_id = '00000000-0000-4000-8000-000000000101'
-  AND idempotency_key = 'ci-bet-idempotency-1';
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND idempotency_key = 'ci-bet-idempotency-1'::text;
 
 SET ROLE provider_runtime;
 DO $recovery$
@@ -268,14 +268,14 @@ BEGIN
 
   SELECT w.status INTO v_status
   FROM provider_internal.wallet_transactions AS w
-  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'
-    AND w.idempotency_key = 'ci-bet-idempotency-1';
+  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+    AND w.idempotency_key = 'ci-bet-idempotency-1'::text;
   IF v_status <> 'UNKNOWN' THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_NOT_UNKNOWN'; END IF;
 
   SELECT pg_catalog.count(*) INTO v_query_events
   FROM provider_internal.outbox_events AS o
   WHERE o.event_type = 'WALLET_STATUS_QUERY'
-    AND o.partner_id = '00000000-0000-4000-8000-000000000101';
+    AND o.partner_id = '00000000-0000-4000-8000-000000000101'::uuid;
   IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_EVENT_NOT_CREATED'; END IF;
 
   SELECT pg_catalog.count(*) INTO v_query_events
@@ -291,12 +291,12 @@ RESET ROLE;
 -- Simulate the confirmed partner wallet response before testing refund lineage.
 UPDATE provider_internal.wallet_transactions
 SET status = 'CONFIRMED'
-WHERE partner_id = '00000000-0000-4000-8000-000000000101'
-  AND idempotency_key = 'ci-bet-idempotency-1';
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND idempotency_key = 'ci-bet-idempotency-1'::text;
 
 UPDATE provider_internal.rounds
 SET status = 'COMPLETED', completed_at = pg_catalog.clock_timestamp()
-WHERE id = '00000000-0000-4000-8000-000000000105';
+WHERE id = '00000000-0000-4000-8000-000000000105'::uuid;
 
 SET ROLE provider_runtime;
 DO $refund_and_win$
@@ -307,28 +307,28 @@ DECLARE
 BEGIN
   SELECT w.id INTO v_original
   FROM provider_internal.wallet_transactions AS w
-  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'
-    AND w.idempotency_key = 'ci-bet-idempotency-1';
+  WHERE w.partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+    AND w.idempotency_key = 'ci-bet-idempotency-1'::text;
 
   SELECT t.transaction_id, t.was_created INTO v_refund, v_created
   FROM provider_internal.create_wallet_transaction(
-    '00000000-0000-4000-8000-000000000101',
-    '00000000-0000-4000-8000-000000000104',
-    '00000000-0000-4000-8000-000000000105',
-    'ci-refund-idempotency-1',
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-refund-idempotency-1'::text,
     pg_catalog.decode(pg_catalog.repeat('77', 32), 'hex'),
-    'REFUND', 600, 'GEL', 2, v_original
+    'REFUND'::text, 600::bigint, 'GEL'::text, 2::smallint, v_original
   ) AS t;
   IF v_refund IS NULL OR NOT v_created THEN RAISE EXCEPTION 'VALID_REFUND_CREATE_FAILED'; END IF;
 
   BEGIN
     PERFORM * FROM provider_internal.create_wallet_transaction(
-      '00000000-0000-4000-8000-000000000101',
-      '00000000-0000-4000-8000-000000000104',
-      '00000000-0000-4000-8000-000000000105',
-      'ci-refund-over-idempotency',
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-refund-over-idempotency'::text,
       pg_catalog.decode(pg_catalog.repeat('88', 32), 'hex'),
-      'REFUND', 500, 'GEL', 2, v_original
+      'REFUND'::text, 500::bigint, 'GEL'::text, 2::smallint, v_original
     );
     RAISE EXCEPTION 'OVER_REFUND_WAS_ACCEPTED';
   EXCEPTION WHEN SQLSTATE '22003' THEN
@@ -337,22 +337,22 @@ BEGIN
 
   -- Wins are allowed only for completed rounds; cumulative win cap is enforced.
   PERFORM * FROM provider_internal.create_wallet_transaction(
-    '00000000-0000-4000-8000-000000000101',
-    '00000000-0000-4000-8000-000000000104',
-    '00000000-0000-4000-8000-000000000105',
-    'ci-win-idempotency-1',
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-win-idempotency-1'::text,
     pg_catalog.decode(pg_catalog.repeat('99', 32), 'hex'),
-    'WIN', 3000, 'GEL', 2, NULL
+    'WIN'::text, 3000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
   );
 
   BEGIN
     PERFORM * FROM provider_internal.create_wallet_transaction(
-      '00000000-0000-4000-8000-000000000101',
-      '00000000-0000-4000-8000-000000000104',
-      '00000000-0000-4000-8000-000000000105',
-      'ci-win-over-idempotency',
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-win-over-idempotency'::text,
       pg_catalog.decode(pg_catalog.repeat('aa', 32), 'hex'),
-      'WIN', 2500, 'GEL', 2, NULL
+      'WIN'::text, 2500::bigint, 'GEL'::text, 2::smallint, NULL::uuid
     );
     RAISE EXCEPTION 'CUMULATIVE_ROUND_WIN_LIMIT_WAS_BYPASSED';
   EXCEPTION WHEN SQLSTATE '22003' THEN
@@ -366,15 +366,15 @@ RESET ROLE;
 -- Ledger posting, balance validation and immutability.
 INSERT INTO provider_internal.ledger_accounts(id, partner_id, account_code, account_type, currency)
 VALUES
-('00000000-0000-4000-8000-000000000201','00000000-0000-4000-8000-000000000101','CLEARING','CLEARING','GEL'),
-('00000000-0000-4000-8000-000000000202','00000000-0000-4000-8000-000000000101','PROVIDER_PAYABLE','LIABILITY','GEL');
+('00000000-0000-4000-8000-000000000201','00000000-0000-4000-8000-000000000101'::uuid,'CLEARING','CLEARING','GEL'),
+('00000000-0000-4000-8000-000000000202','00000000-0000-4000-8000-000000000101'::uuid,'PROVIDER_PAYABLE','LIABILITY','GEL');
 
 INSERT INTO provider_internal.ledger_journals(
   id, partner_id, source_type, source_ref, journal_type, currency, status
 )
 VALUES (
   '00000000-0000-4000-8000-000000000203',
-  '00000000-0000-4000-8000-000000000101',
+  '00000000-0000-4000-8000-000000000101'::uuid,
   'WALLET_TRANSACTION', 'ci-ledger-source-1', 'TEST_POST', 'GEL', 'DRAFT'
 );
 
@@ -382,8 +382,8 @@ INSERT INTO provider_internal.ledger_entries(
   journal_id, partner_id, account_id, currency, direction, amount_minor
 )
 VALUES
-('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000201','GEL','DEBIT',1000),
-('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101','00000000-0000-4000-8000-000000000202','GEL','CREDIT',1000);
+('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101'::uuid,'00000000-0000-4000-8000-000000000201','GEL','DEBIT',1000),
+('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101'::uuid,'00000000-0000-4000-8000-000000000202','GEL','CREDIT',1000);
 
 SET ROLE provider_runtime;
 DO $ledger$
