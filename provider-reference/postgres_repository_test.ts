@@ -126,6 +126,7 @@ Deno.test("outbox claim bounds lease inputs and returns claimed events", async (
     payload: { transaction_id: "tx-id" },
     attempts: 2,
     lease_until: "2026-11-21T12:00:30.000Z",
+    lease_token: "00000000-0000-4000-8000-000000000099",
   }];
   const repo = new ProviderPostgresRepository(db);
   const events = await repo.claimOutboxEvents("00000000-0000-4000-8000-000000000003", 10, 45);
@@ -156,6 +157,7 @@ Deno.test("partner response persistence binds the exact worker lease and respons
   const result = await repo.recordWalletPartnerResponse({
     partnerId: "partner-1",
     workerId: "worker-9",
+    leaseToken: "00000000-0000-4000-8000-000000000099",
     transactionId: "tx-9",
     attemptKind: "DISPATCH",
     generation: 0,
@@ -171,8 +173,9 @@ Deno.test("partner response persistence binds the exact worker lease and respons
   assertEquals(db.calls[0].sql.includes("record_wallet_partner_response"), true);
   assertEquals(db.calls[0].parameters[0], "partner-1");
   assertEquals(db.calls[0].parameters[1], "worker-9");
-  assertEquals(db.calls[0].parameters[2], "tx-9");
-  assertEquals(db.calls[0].parameters[6], hash);
+  assertEquals(db.calls[0].parameters[2], "00000000-0000-4000-8000-000000000099");
+  assertEquals(db.calls[0].parameters[3], "tx-9");
+  assertEquals(db.calls[0].parameters[7], hash);
 });
 
 Deno.test("PENDING response requires a next read-only status-query time", async () => {
@@ -182,6 +185,7 @@ Deno.test("PENDING response requires a next read-only status-query time", async 
     () => repo.recordWalletPartnerResponse({
       partnerId: "partner-1",
       workerId: "worker-1",
+      leaseToken: "lease-token-1",
       transactionId: "tx-1",
       attemptKind: "DISPATCH",
       generation: 0,
