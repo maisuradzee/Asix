@@ -204,7 +204,11 @@ export function createMockPartner(options: MockPartnerOptions = {}): MockPartner
       if (existing.payloadHash !== payloadHash) {
         return json({ ok: false, error: "IDEMPOTENCY_CONFLICT" }, 409);
       }
-      const response = { ok: true, transaction: responseFor(existing), replay: true };
+      const response = {
+        ok: existing.state === "CONFIRMED",
+        transaction: responseFor(existing),
+        replay: true,
+      };
       return json(response, existing.state === "PENDING" ? 202 : 200);
     }
 
