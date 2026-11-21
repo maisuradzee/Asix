@@ -12,6 +12,7 @@
 export interface ResolvedPartnerKey {
   partnerCode: string;
   keyId: string;
+  protocolVersion: string;
   key: CryptoKey;
   active: boolean;
 }
@@ -35,7 +36,7 @@ export interface PartnerSignatureOptions {
 }
 
 export type PartnerSignatureResult =
-  | { ok: true; partnerCode: string; keyId: string; body: Uint8Array; nonce: string }
+  | { ok: true; partnerCode: string; keyId: string; protocolVersion: string; body: Uint8Array; nonce: string }
   | {
     ok: false;
     error:
@@ -209,6 +210,7 @@ export async function verifyPartnerRequest(
     ok: true,
     partnerCode: resolved.partnerCode,
     keyId,
+    protocolVersion: resolved.protocolVersion,
     body: bodyBuffer,
     nonce,
   };
