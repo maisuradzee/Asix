@@ -37,3 +37,11 @@ The launch-token store and circuit state coordination must be implemented with d
 - `provider_gateway_test.ts`: valid signed launch, invalid signature, rate limit, malformed JSON and unknown route tests.
 
 The handler has dependency-injected key, nonce, launch-token and rate-limit stores. Production use requires durable shared implementations, request metrics, network-level controls and deployment behind the approved provider API hostname. It is not attached to a Supabase Edge Function or public endpoint.
+
+## Partner signature profiles
+
+- `partner_auth.ts`: ASIX's proposed host-bound HMAC-SHA256 partner API profile.
+- `partner_auth_ecdsa.ts`: separate ECDSA P-256/SHA-256 raw-payload signature verifier reference for partners whose official protocol documents this form.
+- `partner_auth_ecdsa_test.ts`: DER signature parsing, POST body, GET query, tamper and size-limit tests.
+
+These profiles are not interchangeable. Choose a profile only from the partner's current signed technical specification. The ECDSA reference intentionally does not invent timestamp/nonce headers absent from the partner contract; replay prevention remains an application-level idempotency and token-lifecycle requirement where the protocol provides no signed freshness fields.
