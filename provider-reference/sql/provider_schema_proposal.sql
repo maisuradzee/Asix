@@ -1087,6 +1087,58 @@ BEGIN
 END
 $function$;
 
+-- Expired read-only status-query leases are safe to retry. Unlike wallet
+-- dispatches, these requests do not create a new debit/credit effect.
+-- Exhausted status-query events become visible dead letters for human review.
+CREATE OR REPLACE FUNCTION provider_internal.recover_expired_wallet_status_query_leases(
+  p_backoff_seconds integer DEFAULT 5
+)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_event record;
+  v_count integer := 0;
+BEGIN
+  IF p_backoff_seconds IS NULL OR p_backoff_seconds NOT BETWEEN 1 AND 300 THEN
+    RAISE EXCEPTION 'INVALID_STATUS_QUERY_BACKOFF' USING ERRCODE = '22023';
+  END IF;
+
+  FOR v_event IN
+    SELECT o.id, o.attempts, o.max_attempts
+    FROM provider_internal.outbox_events AS o
+    WHERE o.event_type = 'WALLET_STATUS_QUERY'
+      AND o.state = 'LEASED'
+      AND o.lease_until <= pg_catalog.clock_timestamp()
+    FOR UPDATE SKIP LOCKED
+  LOOP
+    IF v_event.attempts >= v_event.max_attempts THEN
+      UPDATE provider_internal.outbox_events
+      SET state = 'DEAD_LETTER',
+          lease_owner = NULL,
+          lease_token = NULL,
+          lease_until = NULL,
+          last_error_code = 'STATUS_QUERY_LEASE_EXHAUSTED'
+      WHERE id = v_event.id;
+    ELSE
+      UPDATE provider_internal.outbox_events
+      SET state = 'RETRY',
+          available_at = pg_catalog.clock_timestamp()
+                        + pg_catalog.make_interval(secs => p_backoff_seconds),
+          lease_owner = NULL,
+          lease_token = NULL,
+          lease_until = NULL,
+          last_error_code = 'STATUS_QUERY_LEASE_EXPIRED'
+      WHERE id = v_event.id;
+    END IF;
+    v_count := v_count + 1;
+  END LOOP;
+  RETURN v_count;
+END
+$function$;
+
 -- Partner-scoped read path: runtime can read only the minimum transaction
 -- status context; no direct SELECT grant is needed on wallet_transactions.
 CREATE OR REPLACE FUNCTION provider_internal.get_wallet_transaction_status(
@@ -1178,6 +1230,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provi
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.recover_expired_wallet_status_query_leases(integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.get_wallet_transaction_status(uuid, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
