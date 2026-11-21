@@ -18,7 +18,7 @@ export interface ResolvedPartnerKey {
 }
 
 export interface PartnerKeyResolver {
-  resolve(keyId: string): Promise<ResolvedPartnerKey | null>;
+  resolve(partnerCode: string, keyId: string): Promise<ResolvedPartnerKey | null>;
 }
 
 export interface ReplayNonceStore {
@@ -41,6 +41,7 @@ export type PartnerSignatureResult =
     ok: false;
     error:
       | "SIGNATURE_HEADERS_MISSING"
+      | "PARTNER_CODE_INVALID"
       | "KEY_UNKNOWN_OR_REVOKED"
       | "TIMESTAMP_INVALID"
       | "REQUEST_EXPIRED"
@@ -114,7 +115,7 @@ async function readBodyBounded(request: Request, maxBodyBytes: number): Promise<
 
 /**
  * Canonical signed payload:
- * METHOD\nPATH_AND_QUERY\nTIMESTAMP_SECONDS\nNONCE\nSHA256_BODY_HEX
+ * METHOD\nHOST\nPARTNER_CODE\nPATH_AND_QUERY\nTIMESTAMP_SECONDS\nNONCE\nSHA256_BODY_HEX
  *
  * The partner must use the exact raw HTTP body bytes and exact request path +
  * query string. Query parameter order is therefore part of the signature.
@@ -126,10 +127,12 @@ export async function buildPartnerCanonicalPayload(
   body: Uint8Array,
 ): Promise<string> {
   const url = new URL(request.url);
+  const partnerCode = request.headers.get("x-asix-partner-code") || "";
   const digest = await sha256Hex(body);
   return [
     request.method.toUpperCase(),
     url.host.toLowerCase(),
+    partnerCode,
     url.pathname + url.search,
     timestamp,
     nonce,
@@ -143,17 +146,21 @@ export async function verifyPartnerRequest(
   nonceStore: ReplayNonceStore,
   options: PartnerSignatureOptions = {},
 ): Promise<PartnerSignatureResult> {
+  const partnerCode = request.headers.get("x-asix-partner-code") || "";
   const keyId = request.headers.get("x-asix-key-id") || "";
   const timestamp = request.headers.get("x-asix-timestamp") || "";
   const nonce = request.headers.get("x-asix-nonce") || "";
   const signatureText = request.headers.get("x-asix-signature") || "";
 
+  if (!partnerCode || !/^[a-z0-9][a-z0-9_-]{1,63}$/.test(partnerCode)) {
+    return { ok: false, error: "PARTNER_CODE_INVALID" };
+  }
   if (!keyId || keyId.length > 128 || !timestamp || !nonce || !signatureText) {
     return { ok: false, error: "SIGNATURE_HEADERS_MISSING" };
   }
 
-  const resolved = await keyResolver.resolve(keyId);
-  if (!resolved || !resolved.active || resolved.keyId !== keyId) {
+  const resolved = await keyResolver.resolve(partnerCode, keyId);
+  if (!resolved || !resolved.active || resolved.keyId !== keyId || resolved.partnerCode !== partnerCode) {
     return { ok: false, error: "KEY_UNKNOWN_OR_REVOKED" };
   }
 
