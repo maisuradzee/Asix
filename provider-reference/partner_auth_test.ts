@@ -26,8 +26,8 @@ function keyResolver(active = true): PartnerKeyResolver {
 
 class MemoryNonceStore implements ReplayNonceStore {
   private readonly used = new Set<string>();
-  async consume(partnerCode: string, nonce: string): Promise<boolean> {
-    const key = `${partnerCode}:${nonce}`;
+  async consume(partnerCode: string, keyId: string, nonce: string): Promise<boolean> {
+    const key = `${partnerCode}:${keyId}:${nonce}`;
     if (this.used.has(key)) return false;
     this.used.add(key);
     return true;
