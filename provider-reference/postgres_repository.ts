@@ -21,6 +21,27 @@ export interface NonceConsumption {
   expiresAt: string;
 }
 
+export interface LaunchSessionInput {
+  partnerId: string;
+  partnerPlayerRef: string;
+  partnerSessionRef: string;
+  gameCode: string;
+  jurisdiction: string;
+  currency: string;
+  currencyExponent: number;
+  locale: string;
+  policyVersion: number;
+  tokenHash: Uint8Array;
+  expiresAt: string;
+}
+
+export interface LaunchSessionResult {
+  sessionId: string;
+  status: string;
+  tokenIssued: boolean;
+  tokenExpiresAt: string | null;
+}
+
 export interface LaunchClaimsRow {
   [key: string]: unknown;
   partner_id: string;
@@ -31,6 +52,7 @@ export interface LaunchClaimsRow {
   currency: string;
   jurisdiction: string;
   locale: string;
+  session_status: string;
 }
 
 export interface WalletTransactionInput {
@@ -131,6 +153,54 @@ export class ProviderPostgresRepository {
       throw new ProviderDatabaseError("INVALID_NONCE_FUNCTION_RESPONSE");
     }
     return result.rows[0].consumed;
+  }
+
+  async createLaunchSession(input: LaunchSessionInput): Promise<LaunchSessionResult> {
+    validateHash(input.tokenHash, "launch_token");
+    validateCurrency(input.currency, input.currencyExponent);
+    if (!input.partnerId ||
+        !input.partnerPlayerRef || input.partnerPlayerRef.length > 200 ||
+        !input.partnerSessionRef || input.partnerSessionRef.length > 200 ||
+        !input.gameCode || input.gameCode.length > 80 ||
+        !/^[A-Z0-9_-]{2,8}$/.test(input.jurisdiction) ||
+        !input.locale || input.locale.length > 35 ||
+        !Number.isInteger(input.policyVersion) || input.policyVersion < 1 ||
+        !Number.isFinite(Date.parse(input.expiresAt))) {
+      throw new ProviderDatabaseError("INVALID_LAUNCH_SESSION_INPUT");
+    }
+    const result = await this.db.query<{
+      session_id: string;
+      session_status: string;
+      token_issued: boolean;
+      token_expires_at: string | null;
+    }>(
+      "SELECT * FROM provider_internal.create_launch_session($1::uuid,$2::text,$3::text,$4::text,$5::text,$6::text,$7::smallint,$8::text,$9::integer,$10::bytea,$11::timestamptz)",
+      [
+        input.partnerId,
+        input.partnerPlayerRef,
+        input.partnerSessionRef,
+        input.gameCode,
+        input.jurisdiction,
+        input.currency,
+        input.currencyExponent,
+        input.locale,
+        input.policyVersion,
+        input.tokenHash,
+        input.expiresAt,
+      ],
+    );
+    if (result.rows.length !== 1 ||
+        !result.rows[0].session_id ||
+        !result.rows[0].session_status ||
+        typeof result.rows[0].token_issued !== "boolean") {
+      throw new ProviderDatabaseError("INVALID_LAUNCH_SESSION_FUNCTION_RESULT");
+    }
+    return {
+      sessionId: result.rows[0].session_id,
+      status: result.rows[0].session_status,
+      tokenIssued: result.rows[0].token_issued,
+      tokenExpiresAt: result.rows[0].token_expires_at ?? null,
+    };
   }
 
   async consumeLaunchToken(tokenHash: Uint8Array): Promise<LaunchClaimsRow | null> {
