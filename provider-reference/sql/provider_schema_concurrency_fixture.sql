@@ -17,6 +17,10 @@ VALUES (
   '00000000-0000-4000-8000-000000000301'::uuid,
   'ASIX_CI_CONCURRENCY', 'GE', 'GEL', 2,
   100, 2000, 5000, 1500, true
+), (
+  '00000000-0000-4000-8000-000000000301'::uuid,
+  'ASIX_CI_LAUNCH', 'GE', 'GEL', 2,
+  100, 2000, 5000, 1500, true
 );
 
 INSERT INTO provider_internal.sessions(
