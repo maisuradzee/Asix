@@ -39,7 +39,6 @@ export interface WalletCommand extends CorrelationContext {
   amountMinor: MinorUnits;
   currency: IsoCurrencyCode;
   currencyExponent: number;
-  requestHash: string;
   createdAt: string;
 }
 
@@ -47,7 +46,7 @@ export interface WalletResult extends CorrelationContext {
   state: "CONFIRMED" | "DECLINED" | "PENDING" | "UNKNOWN";
   transactionId: string;
   partnerTransactionRef?: string;
-  amountMinor?: MinorUnits;
+  amountMinor: MinorUnits;
   currency: IsoCurrencyCode;
   partnerCode: PartnerCode;
   responseCode: string;
