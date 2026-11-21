@@ -138,3 +138,19 @@ Deno.test("partial refund is capped and duplicate refund has one effect", async 
   assertEquals(mock.getBalance("player-1", "GEL"), 9_400);
   assertEquals(mock.transactionCount(), 2);
 });
+
+
+Deno.test("refund against a declined bet is rejected with no balance effect", async () => {
+  const mock = createMockPartner({ initialBalanceMinor: 10_000 });
+  await mock.handler(walletRequest("/wallet/bet", "idem-011", base, "decline"));
+  const refund = await mock.handler(walletRequest("/wallet/refund", "idem-012", {
+    ...base,
+    transactionRef: "tx-refund-declined-001",
+    amountMinor: 500,
+    originalTransactionRef: base.transactionRef,
+  }));
+  const payload = await refund.json();
+  assertEquals(payload.transaction.state, "DECLINED");
+  assertEquals(payload.transaction.responseCode, "ORIGINAL_BET_NOT_FOUND");
+  assertEquals(mock.getBalance("player-1", "GEL"), 10_000);
+});
