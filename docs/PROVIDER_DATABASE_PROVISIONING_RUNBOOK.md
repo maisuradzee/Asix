@@ -4,7 +4,7 @@ Status: proposed procedure for isolated staging only. No production database cha
 
 ## 1. Current live boundary verified
 
-The connected Supabase project is ASIX, running PostgreSQL 17.11.0.019. Its migration history includes V154 migration 20261118093932_asix_v154_sync_settled_player_stacks_into_game_snapshot.
+The connected Supabase project is ASIX, running PostgreSQL 17.11.0.019. Its migration history contains 128 records and ends at V154 migration 20261118093932_asix_v154_sync_settled_player_stacks_into_game_snapshot. GitHub contains only four recovered historical SQL files (V147/V148/V149); the full original 128-file migration chain is not present.
 
 The live product contains the existing consumer-domain objects:
 - public.asix_wallets
@@ -64,21 +64,29 @@ Supabase grants determine which roles can reach objects; RLS controls row access
 
 Do not copy auth.uid() policies onto Provider tables: casino partner identities are not Supabase Auth users. Partner identity is derived from verified key mapping in the trusted server.
 
-## 7. Staging migration workflow
+## 7. V154 baseline export and staging workflow
 
-1. Restore verified V154 snapshot into isolated staging.
-2. Verify existing consumer wallet, Q-CARD round lifecycle, commission and reconciliation smoke tests.
-3. Confirm historical migration source and schema diff.
-4. Install/verify Supabase CLI and inspect supabase --help.
-5. Generate the real filename using supabase migration new provider_internal_foundation. Do not invent timestamps or write this proposal manually under supabase/migrations.
-6. Review SQL and apply to staging only.
-7. Run security advisors, pgTAP, role/grant/RLS tests, concurrency and failure-injection tests.
-8. Verify schema is unexposed, table grants absent, and only approved function EXECUTE grants exist.
-9. Re-run existing consumer product smoke tests against baseline.
-10. Record migration ID, schema diff, test output, advisor results and rollback/forward-repair plan.
-11. Only after a separate release gate should production deployment be considered.
+The current source snapshot is useful for inspection but is not a proven restore. Read docs/V154_RESTORE_READINESS_ASSESSMENT.md before starting.
 
-Latest verified GitHub Actions run #281: 78 Deno tests passed, 0 failed; PostgreSQL 17 disposable-container checks passed for schema security/smoke, wallet response persistence, concurrent Bet/Refund limits and expired read-only status-query lease recovery. This is not a substitute for the same checks on an isolated restored V154 Supabase staging project.
+1. Install and authenticate the current Supabase CLI v3 on the authorized Windows workstation.
+2. From the repository root, run:
+   powershell -ExecutionPolicy Bypass -File .\scripts\export_asix_v154_baseline.ps1
+3. The script validates that supabase/config.toml points to kxcuvagipqiqisowtgys and that the CLI supports --remote and --role-only. It uses explicit --remote=kxcuvagipqiqisowtgys for both schema and role dumps.
+4. The script writes roles.sql, schema.sql and manifest.txt under supabase/private_exports/v154_<UTC timestamp>/. This folder is ignored by Git. Keep it private and retain the checksum manifest outside GitHub.
+5. No --data-only export is run. The export contains no source Auth users, player rows, wallet balances, financial transactions or Q-CARD game history.
+6. Create or select an isolated Supabase staging destination. The source project currently has no Supabase development branch. A new branch/project may incur charges; obtain the platform cost quote and explicit cost approval before creating one.
+7. Restore schema.sql and roles.sql into staging only. Ensure the destination is a compatible Supabase-managed environment with the required managed Auth/Storage services and compatible extension versions. The CLI dump excludes managed and extension-owned schemas.
+8. Review owner/grant/default-privilege behavior before applying roles. Never copy a source database password, login secret, Vault secret or source Auth UUID into staging.
+9. Compare schemas, tables, functions, views, indexes, policies, triggers and ACLs with the read-only source inventory. Review extension versions, RLS and SECURITY DEFINER search_path.
+10. Create synthetic destination Auth users and synthetic game/wallet fixtures. Use the destination-only commission bootstrap only after replacing its recipient marker with a new staging Auth user UUID.
+11. Run existing Q-CARD, game lifecycle, wallet, buy-in, payout, cashout, commission and reconciliation smoke tests. Record baseline results before installing Provider schema.
+12. Only after Stage 2A passes, create a Provider migration using the supported CLI command supabase migration new provider_internal_foundation, review it, and apply to isolated staging. Do not apply this SQL proposal to the source project.
+13. Run Supabase security/performance advisors, pgTAP, tenant-isolation, concurrency and failure-recovery tests. Re-run all existing consumer tests against the staging baseline.
+14. Record migration ID, schema diff, test evidence, extension versions, restore results and a forward-repair plan. Production deployment needs a separate release gate.
+
+Supabase CLI v3 runs database commands against the local stack by default unless --remote is supplied. The export script pins the exact project reference so it cannot silently dump whichever project happens to be linked. The CLI dump is read-only; it exports schema and roles separately and does not export data.
+
+Latest verified Provider GitHub Actions run #285: 78 Deno tests passed, 0 failed; disposable PostgreSQL 17 checks passed for schema security/smoke, wallet response persistence, concurrent Bet/Refund limits and expired read-only status-query lease recovery. This is not a V154 restore or a Supabase staging test.
 
 ## 8. Rollback and recovery
 
@@ -86,15 +94,11 @@ Do not drop provider tables or erase transactions after Provider has accepted li
 
 ## 9. Current blockers
 
-- Historical V154 SQL source is not fully present in the GitHub repository; migration history is visible but clean-restore proof is not recorded.
-- Supabase CLI is not installed in the current authoring environment; no Supabase-generated migration has been created.
+- The original 128-file SQL migration history is not fully present in GitHub. Only four V147/V148/V149 references were recovered; current-state catalog snapshots are not equivalent to the original replay chain.
+- The private schema/roles export script has been added but has not yet been executed on the authorized Windows workstation; a fresh manifest/checksum set is still pending.
+- No Supabase staging branch currently exists. No new branch/project was created because its cost has not been quoted and approved.
+- A clean schema/roles restore into isolated Supabase staging, extension reconciliation and consumer smoke tests have not yet been performed.
+- Supabase CLI-generated Provider migration is not yet created.
 - No dedicated Provider database LOGIN credential or secret has been provisioned.
 - No Provider schema, role, function, trigger or table has been created in the live project.
 
-
-### Wallet and status-query timeout handling
-
-- Expired \`WALLET_DISPATCH\`: transition the transaction to \`UNKNOWN\`, retire the dispatch event and enqueue a read-only \`WALLET_STATUS_QUERY\`. Do not send the original debit/credit again.
-- Expired \`WALLET_STATUS_QUERY\`: return only that read-only event to \`RETRY\` with bounded backoff and clear the expired lease owner/token. A new claim issues a new one-time token.
-- At \`max_attempts\`: move the status-query event to \`DEAD_LETTER\`; surface it for controlled exception handling rather than polling forever.
-- Response persistence must match worker ID + lease token + unexpired lease + response generation.
