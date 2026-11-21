@@ -124,15 +124,13 @@ export function createProviderGateway(deps: ProviderGatewayDependencies): (reque
     const rate = await deps.rateLimiter.consume(verified.partnerCode, now().getTime());
     if (!rate.allowed) {
       const retryAfter = Math.max(1, Math.min(3600, Math.floor(rate.retryAfterSeconds ?? 1)));
-      return errorResponse(
-        429,
-        "RATE_LIMITED",
-        "Partner request rate limit exceeded.",
-        trace,
-        { retryable: true },
-      ).withHeaders?.({ "retry-after": String(retryAfter) }) ?? json({
+      return json({
         ok: false,
-        error: { code: "RATE_LIMITED", message: "Partner request rate limit exceeded.", retryable: true },
+        error: {
+          code: "RATE_LIMITED",
+          message: "Partner request rate limit exceeded.",
+          retryable: true,
+        },
         correlation_id: trace,
       }, 429, trace, { "retry-after": String(retryAfter) });
     }
