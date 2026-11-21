@@ -173,20 +173,12 @@ BEGIN
     RAISE EXCEPTION 'NONCE_CONSUMPTION_NOT_ONE_TIME';
   END IF;
 
-  SELECT pg_catalog.count(*), pg_catalog.min(q.session_id::text)
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
     INTO v_launch_count, v_launch_status
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
   ) AS q;
-  IF v_launch_count <> 1 THEN
-    RAISE EXCEPTION 'LAUNCH_TOKEN_FIRST_USE_FAILED';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1 FROM provider_internal.sessions
-    WHERE id = '00000000-0000-4000-8000-000000000103'::uuid
-      AND status = 'ACTIVE'
-  ) THEN
+  IF v_launch_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
     RAISE EXCEPTION 'LAUNCH_TOKEN_DID_NOT_ATOMICALLY_ACTIVATE_SESSION';
   END IF;
 
@@ -251,14 +243,12 @@ BEGIN
   );
   IF v_old_token_count <> 0 THEN RAISE EXCEPTION 'SUPERSEDED_LAUNCH_TOKEN_WAS_ACCEPTED'; END IF;
 
-  SELECT pg_catalog.count(*) INTO v_new_token_count
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+    INTO v_new_token_count, v_launch_status
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex')
-  );
-  IF v_new_token_count <> 1 OR NOT EXISTS (
-    SELECT 1 FROM provider_internal.sessions
-    WHERE id = v_new_session_id AND status = 'ACTIVE'
-  ) THEN
+  ) AS q;
+  IF v_new_token_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
     RAISE EXCEPTION 'REISSUED_LAUNCH_TOKEN_FAILED_TO_ACTIVATE';
   END IF;
 
