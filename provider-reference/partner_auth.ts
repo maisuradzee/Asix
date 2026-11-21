@@ -198,7 +198,7 @@ export async function verifyPartnerRequest(
   const consumed = await nonceStore.consume(
     resolved.partnerCode,
     nonce,
-    timestampSeconds + maxClockSkew,
+    timestampSeconds + maxClockSkew + 1,
   );
   if (!consumed) return { ok: false, error: "REPLAY_DETECTED" };
 
