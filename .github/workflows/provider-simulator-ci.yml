@@ -110,3 +110,99 @@ jobs:
           PG_CONTAINER: ${{ job.services.postgres.id }}
         run: |
           docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_smoke_tests.sql
+
+      - name: Seed disposable concurrent wallet scenarios
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_concurrency_fixture.sql
+
+      - name: Verify concurrent exposure and refund limits
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          set +e
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000302'::uuid,
+              '00000000-0000-4000-8000-000000000303'::uuid,
+              'ci-concurrent-bet-a'::text,
+              decode(repeat('c5', 32), 'hex'),
+              'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+            );
+          " > /tmp/provider-bet-a.log 2>&1 &
+          BET_A_PID=$!
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000304'::uuid,
+              '00000000-0000-4000-8000-000000000305'::uuid,
+              'ci-concurrent-bet-b'::text,
+              decode(repeat('c6', 32), 'hex'),
+              'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+            );
+          " > /tmp/provider-bet-b.log 2>&1 &
+          BET_B_PID=$!
+
+          wait "$BET_A_PID"; BET_A_RC=$?
+          wait "$BET_B_PID"; BET_B_RC=$?
+          set -e
+
+          if [ "$BET_A_RC" -eq 0 ] && [ "$BET_B_RC" -ne 0 ]; then
+            grep -q "PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED" /tmp/provider-bet-b.log
+          elif [ "$BET_B_RC" -eq 0 ] && [ "$BET_A_RC" -ne 0 ]; then
+            grep -q "PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED" /tmp/provider-bet-a.log
+          else
+            cat /tmp/provider-bet-a.log /tmp/provider-bet-b.log
+            echo "Concurrent BET exposure test did not produce exactly one accepted request."
+            exit 1
+          fi
+
+          set +e
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000306'::uuid,
+              '00000000-0000-4000-8000-000000000307'::uuid,
+              'ci-concurrent-refund-a'::text,
+              decode(repeat('c7', 32), 'hex'),
+              'REFUND'::text, 300::bigint, 'GEL'::text, 2::smallint,
+              '00000000-0000-4000-8000-000000000308'::uuid
+            );
+          " > /tmp/provider-refund-a.log 2>&1 &
+          REFUND_A_PID=$!
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT * FROM provider_internal.create_wallet_transaction(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              '00000000-0000-4000-8000-000000000306'::uuid,
+              '00000000-0000-4000-8000-000000000307'::uuid,
+              'ci-concurrent-refund-b'::text,
+              decode(repeat('c8', 32), 'hex'),
+              'REFUND'::text, 300::bigint, 'GEL'::text, 2::smallint,
+              '00000000-0000-4000-8000-000000000308'::uuid
+            );
+          " > /tmp/provider-refund-b.log 2>&1 &
+          REFUND_B_PID=$!
+
+          wait "$REFUND_A_PID"; REFUND_A_RC=$?
+          wait "$REFUND_B_PID"; REFUND_B_RC=$?
+          set -e
+
+          if [ "$REFUND_A_RC" -eq 0 ] && [ "$REFUND_B_RC" -ne 0 ]; then
+            grep -q "REFUND_EXCEEDS_UNREFUNDED_ORIGINAL_BET" /tmp/provider-refund-b.log
+          elif [ "$REFUND_B_RC" -eq 0 ] && [ "$REFUND_A_RC" -ne 0 ]; then
+            grep -q "REFUND_EXCEEDS_UNREFUNDED_ORIGINAL_BET" /tmp/provider-refund-a.log
+          else
+            cat /tmp/provider-refund-a.log /tmp/provider-refund-b.log
+            echo "Concurrent REFUND test did not produce exactly one accepted request."
+            exit 1
+          fi
+
+          echo "PROVIDER_CONCURRENT_FINANCIAL_LIMIT_TESTS_PASSED"
