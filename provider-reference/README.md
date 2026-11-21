@@ -85,7 +85,7 @@ GitHub Actions run #307:
 - 80 Deno tests passed, 0 failed.
 - The consolidated SQL schema applied successfully to disposable PostgreSQL 17.
 - Database smoke tests passed, including one-time nonce/Launch Token use, session activation, reissue, old-token revocation, post-activation no-relaunch and session-reference conflict.
-- Concurrent Launch test passed with two independent PostgreSQL clients: one partner session was created, one new token remained usable, and the earlier token was revoked.
+- Concurrent Launch test passed with two independent PostgreSQL clients: both requests returned the same partner session, one new token remained usable, and the earlier token was revoked.
 - Concurrent Bet exposure and partial Refund caps passed.
 - Wallet response lifecycle, worker-lease binding and status-query lease recovery passed.
 
