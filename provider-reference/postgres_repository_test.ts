@@ -145,6 +145,67 @@ Deno.test("ledger posting must be confirmed by DB function", async () => {
   );
 });
 
+Deno.test("partner response persistence binds the exact worker lease and response evidence", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    transaction_status: "CONFIRMED",
+    status_query_generation: 0,
+    was_recorded: true,
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  const result = await repo.recordWalletPartnerResponse({
+    partnerId: "partner-1",
+    workerId: "worker-9",
+    transactionId: "tx-9",
+    attemptKind: "DISPATCH",
+    generation: 0,
+    attemptNumber: 1,
+    requestHash: hash,
+    responseHash: new Uint8Array(32).fill(8),
+    targetStatus: "CONFIRMED",
+    responseCode: "OK",
+    partnerTransactionRef: "operator-tx-9",
+  });
+  assertEquals(result.transactionStatus, "CONFIRMED");
+  assertEquals(result.wasRecorded, true);
+  assertEquals(db.calls[0].sql.includes("record_wallet_partner_response"), true);
+  assertEquals(db.calls[0].parameters[0], "partner-1");
+  assertEquals(db.calls[0].parameters[1], "worker-9");
+  assertEquals(db.calls[0].parameters[2], "tx-9");
+  assertEquals(db.calls[0].parameters[6], hash);
+});
+
+Deno.test("PENDING response requires a next read-only status-query time", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.recordWalletPartnerResponse({
+      partnerId: "partner-1",
+      workerId: "worker-1",
+      transactionId: "tx-1",
+      attemptKind: "DISPATCH",
+      generation: 0,
+      attemptNumber: 1,
+      requestHash: hash,
+      responseHash: hash,
+      targetStatus: "PENDING",
+      responseCode: "PENDING",
+    }),
+    ProviderDatabaseError,
+    "NEXT_STATUS_QUERY_TIME_REQUIRED",
+  );
+  assertEquals(db.calls.length, 0);
+});
+
+Deno.test("partner-scoped wallet status returns null when no record exists", async () => {
+  const db = new MockPg();
+  db.responder = () => [];
+  const repo = new ProviderPostgresRepository(db);
+  assertEquals(await repo.getWalletTransactionStatus("partner-1", "idem-1"), null);
+  assertEquals(db.calls[0].sql.includes("get_wallet_transaction_status"), true);
+  assertEquals(db.calls[0].parameters, ["partner-1", "idem-1"]);
+});
+
 Deno.test("invalid hashes and currency are rejected before database access", async () => {
   const db = new MockPg();
   const repo = new ProviderPostgresRepository(db);
