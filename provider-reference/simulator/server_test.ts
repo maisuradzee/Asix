@@ -99,3 +99,42 @@ Deno.test("refund cannot exceed original bet amount", async () => {
   assertEquals(payload.transaction.state, "DECLINED");
   assertEquals(mock.getBalance("player-1", "GEL"), 9_000);
 });
+
+
+Deno.test("declined debit remains declined on idempotent replay", async () => {
+  const mock = createMockPartner({ initialBalanceMinor: 10_000 });
+  const declined = await mock.handler(walletRequest("/wallet/bet", "idem-007", base, "decline"));
+  const replay = await mock.handler(walletRequest("/wallet/bet", "idem-007", base));
+  const firstPayload = await declined.json();
+  const secondPayload = await replay.json();
+  assertEquals(firstPayload.transaction.state, "DECLINED");
+  assertEquals(secondPayload.transaction.state, "DECLINED");
+  assertEquals(secondPayload.ok, false);
+  assertEquals(secondPayload.replay, true);
+  assertEquals(mock.getBalance("player-1", "GEL"), 10_000);
+  assertEquals(mock.transactionCount(), 1);
+});
+
+Deno.test("win credit is idempotent", async () => {
+  const mock = createMockPartner({ initialBalanceMinor: 10_000 });
+  const winBody = { ...base, transactionRef: "tx-win-001", amountMinor: 2_500 };
+  await mock.handler(walletRequest("/wallet/win", "idem-008", winBody));
+  await mock.handler(walletRequest("/wallet/win", "idem-008", winBody));
+  assertEquals(mock.getBalance("player-1", "GEL"), 12_500);
+  assertEquals(mock.transactionCount(), 1);
+});
+
+Deno.test("partial refund is capped and duplicate refund has one effect", async () => {
+  const mock = createMockPartner({ initialBalanceMinor: 10_000 });
+  await mock.handler(walletRequest("/wallet/bet", "idem-009", base));
+  const partial = {
+    ...base,
+    transactionRef: "tx-refund-partial-001",
+    amountMinor: 400,
+    originalTransactionRef: base.transactionRef,
+  };
+  await mock.handler(walletRequest("/wallet/refund", "idem-010", partial));
+  await mock.handler(walletRequest("/wallet/refund", "idem-010", partial));
+  assertEquals(mock.getBalance("player-1", "GEL"), 9_400);
+  assertEquals(mock.transactionCount(), 2);
+});
