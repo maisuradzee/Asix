@@ -162,6 +162,8 @@ jobs:
             exit 1
           fi
 
+          docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_wallet_response_tests.sql
+
           set +e
           docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
             SET ROLE provider_runtime;
