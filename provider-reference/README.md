@@ -21,3 +21,12 @@ A mock operator wallet is available under `provider-reference/simulator/`.
 - Automated tests: `provider-reference/simulator/server_test.ts`
 
 The simulator is local-only and in-memory. It exercises idempotency, delayed status resolution, simulated response loss after acceptance and refund caps. It is not deployable production code.
+
+## Provider launch and resilience references
+
+- `launch_service.ts`: verifies partner policy and issues short-lived, one-use launch tokens. Only token hashes are persisted through the injected store interface.
+- `launch_service_test.ts`: launch policy, token expiry and replay tests.
+- `resilience.ts`: partner-scoped circuit breaker and bounded read-only status-query backoff.
+- `resilience_test.ts`: partner isolation, open/half-open/closed transitions and backoff tests.
+
+The launch-token store and circuit state coordination must be implemented with durable shared infrastructure before multi-replica production use. Current tests use in-memory stores and do not prove distributed atomicity.
