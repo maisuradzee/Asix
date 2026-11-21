@@ -526,13 +526,25 @@ AS $function$
 $function$;
 
 CREATE OR REPLACE FUNCTION provider_internal.create_wallet_transaction(
-  p_partner_id uuid, p_session_id uuid, p_round_id uuid,
-  p_idempotency_key text, p_request_hash bytea, p_operation text,
-  p_amount_minor bigint, p_currency text, p_currency_exponent smallint,
+  p_partner_id uuid,
+  p_session_id uuid,
+  p_round_id uuid,
+  p_idempotency_key text,
+  p_request_hash bytea,
+  p_operation text,
+  p_amount_minor bigint,
+  p_currency text,
+  p_currency_exponent smallint,
   p_original_transaction_id uuid DEFAULT NULL
 )
-RETURNS TABLE(transaction_id uuid, transaction_status text, was_created boolean)
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
+RETURNS TABLE (
+  transaction_id uuid,
+  transaction_status text,
+  was_created boolean
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
 AS $function$
 DECLARE
   v_existing provider_internal.wallet_transactions%ROWTYPE;
@@ -544,18 +556,32 @@ DECLARE
   v_round_payout numeric;
   v_new_id uuid;
 BEGIN
-  IF p_partner_id IS NULL OR p_session_id IS NULL
-     OR p_idempotency_key IS NULL OR pg_catalog.length(p_idempotency_key) NOT BETWEEN 1 AND 200
-     OR p_request_hash IS NULL OR pg_catalog.octet_length(p_request_hash) <> 32
-     OR p_operation IS NULL OR p_operation NOT IN ('BET','WIN','REFUND')
-     OR p_amount_minor IS NULL OR p_amount_minor <= 0
-     OR p_currency IS NULL OR p_currency !~ '^[A-Z]{3}
+  -- Strictly validate every externally supplied value, including NULL.
+  IF p_partner_id IS NULL
+     OR p_session_id IS NULL
+     OR p_idempotency_key IS NULL
+     OR pg_catalog.length(p_idempotency_key) NOT BETWEEN 1 AND 200
+     OR p_request_hash IS NULL
+     OR pg_catalog.octet_length(p_request_hash) <> 32
+     OR p_operation IS NULL
+     OR p_operation NOT IN ('BET','WIN','REFUND')
+     OR p_amount_minor IS NULL
+     OR p_amount_minor <= 0
+     OR p_currency IS NULL
+     OR p_currency !~ '^[A-Z]{3}$'
+     OR p_currency_exponent IS NULL
+     OR p_currency_exponent NOT BETWEEN 0 AND 6 THEN
+    RAISE EXCEPTION 'INVALID_WALLET_TRANSACTION_INPUT' USING ERRCODE = '22023';
   END IF;
 
+  -- Return an exact prior result on idempotent replay. Same key with a
+  -- different server-generated canonical request hash is a hard conflict.
   SELECT w.* INTO v_existing
   FROM provider_internal.wallet_transactions AS w
-  WHERE w.partner_id = p_partner_id AND w.idempotency_key = p_idempotency_key
+  WHERE w.partner_id = p_partner_id
+    AND w.idempotency_key = p_idempotency_key
   FOR UPDATE;
+
   IF FOUND THEN
     IF v_existing.request_hash <> p_request_hash THEN
       RAISE EXCEPTION 'IDEMPOTENCY_CONFLICT' USING ERRCODE = '23505';
@@ -567,6 +593,8 @@ BEGIN
     RETURN;
   END IF;
 
+  -- New exposure is disabled when partner is suspended. Already incurred
+  -- WIN and REFUND obligations remain processable for active/suspended partners.
   IF NOT EXISTS (
     SELECT 1
     FROM provider_internal.partners AS p
@@ -582,8 +610,10 @@ BEGIN
 
   SELECT s.* INTO v_session
   FROM provider_internal.sessions AS s
-  WHERE s.id = p_session_id AND s.partner_id = p_partner_id
+  WHERE s.id = p_session_id
+    AND s.partner_id = p_partner_id
   FOR UPDATE;
+
   IF NOT FOUND
      OR v_session.currency <> p_currency
      OR v_session.currency_exponent <> p_currency_exponent
@@ -598,45 +628,58 @@ BEGIN
   END IF;
 
   IF p_operation = 'BET' AND NOT EXISTS (
-    SELECT 1 FROM provider_internal.rounds AS r
-    WHERE r.id = p_round_id AND r.partner_id = p_partner_id
-      AND r.session_id = p_session_id AND r.status = 'OPEN'
+    SELECT 1
+    FROM provider_internal.rounds AS r
+    WHERE r.id = p_round_id
+      AND r.partner_id = p_partner_id
+      AND r.session_id = p_session_id
+      AND r.status = 'OPEN'
   ) THEN
     RAISE EXCEPTION 'BET_REQUIRES_OPEN_ROUND' USING ERRCODE = '23514';
   END IF;
 
   IF p_operation = 'WIN' AND NOT EXISTS (
-    SELECT 1 FROM provider_internal.rounds AS r
-    WHERE r.id = p_round_id AND r.partner_id = p_partner_id
-      AND r.session_id = p_session_id AND r.status = 'COMPLETED'
+    SELECT 1
+    FROM provider_internal.rounds AS r
+    WHERE r.id = p_round_id
+      AND r.partner_id = p_partner_id
+      AND r.session_id = p_session_id
+      AND r.status = 'COMPLETED'
   ) THEN
     RAISE EXCEPTION 'WIN_REQUIRES_COMPLETED_ROUND' USING ERRCODE = '23514';
   END IF;
 
+  -- Lock the partner/game/jurisdiction/currency configuration row. This
+  -- serializes concurrent exposure and payout checks for this same limit key.
   SELECT c.* INTO v_config
   FROM provider_internal.partner_game_configs AS c
-  WHERE c.partner_id = p_partner_id AND c.game_code = v_session.game_code
-    AND c.jurisdiction = v_session.jurisdiction AND c.currency = p_currency
+  WHERE c.partner_id = p_partner_id
+    AND c.game_code = v_session.game_code
+    AND c.jurisdiction = v_session.jurisdiction
+    AND c.currency = p_currency
     AND c.currency_exponent = p_currency_exponent
     AND (p_operation <> 'BET' OR c.enabled = true)
   FOR UPDATE;
+
   IF NOT FOUND THEN
     RAISE EXCEPTION 'PARTNER_GAME_CONFIGURATION_NOT_ENABLED' USING ERRCODE = '42501';
   END IF;
 
-  IF p_operation = 'BET' AND
-     (p_amount_minor < v_config.min_bet_minor OR p_amount_minor > v_config.max_bet_minor) THEN
-    RAISE EXCEPTION 'BET_OUTSIDE_PARTNER_LIMITS' USING ERRCODE = '22003';
-  END IF;
-
   IF p_operation = 'BET' THEN
+    IF p_amount_minor < v_config.min_bet_minor
+       OR p_amount_minor > v_config.max_bet_minor THEN
+      RAISE EXCEPTION 'BET_OUTSIDE_PARTNER_LIMITS' USING ERRCODE = '22003';
+    END IF;
+
     SELECT COALESCE(pg_catalog.sum(w.amount_minor), 0)
       INTO v_open_exposure
     FROM provider_internal.wallet_transactions AS w
     JOIN provider_internal.sessions AS s
-      ON s.id = w.session_id AND s.partner_id = w.partner_id
+      ON s.id = w.session_id
+     AND s.partner_id = w.partner_id
     JOIN provider_internal.rounds AS r
-      ON r.id = w.round_id AND r.partner_id = w.partner_id
+      ON r.id = w.round_id
+     AND r.partner_id = w.partner_id
     WHERE w.partner_id = p_partner_id
       AND s.game_code = v_session.game_code
       AND s.jurisdiction = v_session.jurisdiction
@@ -649,6 +692,7 @@ BEGIN
       RAISE EXCEPTION 'PARTNER_OPEN_EXPOSURE_LIMIT_EXCEEDED' USING ERRCODE = '22003';
     END IF;
   END IF;
+
   IF p_operation = 'WIN' THEN
     SELECT COALESCE(pg_catalog.sum(w.amount_minor), 0)
       INTO v_round_payout
@@ -667,22 +711,30 @@ BEGIN
     IF p_original_transaction_id IS NULL THEN
       RAISE EXCEPTION 'REFUND_REQUIRES_ORIGINAL_TRANSACTION' USING ERRCODE = '22023';
     END IF;
+
     SELECT w.* INTO v_original
     FROM provider_internal.wallet_transactions AS w
-    WHERE w.id = p_original_transaction_id AND w.partner_id = p_partner_id
+    WHERE w.id = p_original_transaction_id
+      AND w.partner_id = p_partner_id
       AND w.session_id = p_session_id
       AND w.round_id IS NOT DISTINCT FROM p_round_id
-      AND w.operation = 'BET' AND w.currency = p_currency
+      AND w.operation = 'BET'
+      AND w.currency = p_currency
       AND w.status IN ('CONFIRMED','RECONCILED')
     FOR UPDATE;
+
     IF NOT FOUND THEN
       RAISE EXCEPTION 'ORIGINAL_CONFIRMED_BET_NOT_FOUND' USING ERRCODE = '23503';
     END IF;
-    SELECT COALESCE(pg_catalog.sum(r.amount_minor), 0) INTO v_refunded
+
+    SELECT COALESCE(pg_catalog.sum(r.amount_minor), 0)
+      INTO v_refunded
     FROM provider_internal.wallet_transactions AS r
-    WHERE r.partner_id = p_partner_id AND r.original_transaction_id = p_original_transaction_id
+    WHERE r.partner_id = p_partner_id
+      AND r.original_transaction_id = p_original_transaction_id
       AND r.operation = 'REFUND'
       AND r.status IN ('CREATED','DISPATCHING','PENDING','UNKNOWN','CONFIRMED','RECONCILED');
+
     IF v_refunded + p_amount_minor > v_original.amount_minor THEN
       RAISE EXCEPTION 'REFUND_EXCEEDS_UNREFUNDED_ORIGINAL_BET' USING ERRCODE = '22003';
     END IF;
@@ -700,11 +752,16 @@ BEGIN
   RETURNING id INTO v_new_id;
 
   IF v_new_id IS NULL THEN
-    SELECT w.* INTO v_existing FROM provider_internal.wallet_transactions AS w
-    WHERE w.partner_id = p_partner_id AND w.idempotency_key = p_idempotency_key FOR UPDATE;
+    SELECT w.* INTO v_existing
+    FROM provider_internal.wallet_transactions AS w
+    WHERE w.partner_id = p_partner_id
+      AND w.idempotency_key = p_idempotency_key
+    FOR UPDATE;
+
     IF v_existing.request_hash <> p_request_hash THEN
       RAISE EXCEPTION 'IDEMPOTENCY_CONFLICT' USING ERRCODE = '23505';
     END IF;
+
     transaction_id := v_existing.id;
     transaction_status := v_existing.status;
     was_created := false;
@@ -712,10 +769,14 @@ BEGIN
     RETURN;
   END IF;
 
-  INSERT INTO provider_internal.outbox_events(partner_id, wallet_transaction_id, event_type, dedupe_key, payload)
-  VALUES (p_partner_id, v_new_id, 'WALLET_DISPATCH',
-          'wallet-dispatch:' || v_new_id::text,
-          pg_catalog.jsonb_build_object('transaction_id', v_new_id));
+  INSERT INTO provider_internal.outbox_events(
+    partner_id, wallet_transaction_id, event_type, generation, dedupe_key, payload
+  )
+  VALUES (
+    p_partner_id, v_new_id, 'WALLET_DISPATCH', 0,
+    'wallet-dispatch:' || v_new_id::text,
+    pg_catalog.jsonb_build_object('transaction_id', v_new_id)
+  );
 
   transaction_id := v_new_id;
   transaction_status := 'CREATED';
