@@ -446,6 +446,27 @@ CREATE TRIGGER provider_approval_decisions_append_only
 BEFORE UPDATE OR DELETE ON provider_internal.approval_decisions
 FOR EACH ROW EXECUTE FUNCTION provider_internal.guard_append_only_history();
 
+CREATE OR REPLACE FUNCTION provider_internal.guard_posted_journal_header()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+BEGIN
+  IF OLD.status = 'POSTED' THEN
+    RAISE EXCEPTION 'POSTED_JOURNAL_HEADER_IS_IMMUTABLE' USING ERRCODE = '55000';
+  END IF;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
+END
+$function$;
+
+CREATE TRIGGER provider_guard_posted_journal_header
+BEFORE UPDATE OR DELETE ON provider_internal.ledger_journals
+FOR EACH ROW EXECUTE FUNCTION provider_internal.guard_posted_journal_header();
+
 CREATE OR REPLACE FUNCTION provider_internal.consume_partner_nonce(
   p_partner_id uuid, p_key_id text, p_nonce_hash bytea, p_expires_at timestamptz
 )
@@ -665,8 +686,8 @@ BEGIN
         )
       )
     ORDER BY o.available_at, o.created_at
-    FOR UPDATE SKIP LOCKED
     LIMIT p_limit
+    FOR UPDATE SKIP LOCKED
   LOOP
     IF v_event.event_type = 'WALLET_DISPATCH' THEN
       UPDATE provider_internal.wallet_transactions AS w
