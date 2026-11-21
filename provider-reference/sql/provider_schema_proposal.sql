@@ -1003,11 +1003,12 @@ BEGIN
     END IF;
   ELSE
     UPDATE provider_internal.outbox_events AS o
-    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_until = NULL
+    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_token = NULL, lease_until = NULL
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_STATUS_QUERY'
       AND o.generation = p_generation
       AND o.lease_owner = p_worker_id
+      AND o.lease_token = p_lease_token
       AND o.lease_until > v_now
       AND o.state = 'LEASED';
     GET DIAGNOSTICS v_updated = ROW_COUNT;
