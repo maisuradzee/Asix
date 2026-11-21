@@ -833,7 +833,7 @@ AS $function$
   JOIN provider_internal.partners AS p ON p.id = w.partner_id
   WHERE w.partner_id = p_partner_id
     AND w.idempotency_key = p_idempotency_key
-    AND p.status = 'ACTIVE'
+    AND p.status IN ('ACTIVE','SUSPENDED')
 $function$;
 
 CREATE OR REPLACE FUNCTION provider_internal.post_ledger_journal(p_journal_id uuid, p_journal_hash bytea)
