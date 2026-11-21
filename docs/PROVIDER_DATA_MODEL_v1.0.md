@@ -25,8 +25,8 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 | `provider_internal.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
 | `provider_internal.partner_game_configs` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
 | `provider_internal.partner_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
-| `provider_internal.launch_tokens` | token_hash, partner_id, player_ref, session_ref, game_id, currency, expiry | One-use launch authority |
-| `provider_internal.sessions` | partner/session/player/game/status | B2B game session context |
+| `provider_internal.launch_tokens` | partner_id, session_id, token_hash, expires_at, consumed_at, revoked_at | One-use launch authority; only the token hash is stored |
+| `provider_internal.sessions` | partner/session/player/game/currency/exponent/policy/status/started_at/closed_at | B2B game session context; token consumption activates the session atomically |
 | `provider_internal.rounds` | session_id, round_no, rules_hash, game_version, result_hash | Round identity and immutable result reference |
 | `provider_internal.wallet_transactions` | partner_id, idempotency_key, request_hash, operation, amount, currency, state | Durable partner-wallet workflow |
 | `provider_internal.wallet_attempts` | transaction_id, attempt_no, request/response hashes, timestamps, result | External dispatch evidence |
@@ -47,6 +47,8 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - `partner_keys(partner_id, key_id)` unique.
 - `launch_nonces(partner_id, nonce_hash)` unique.
 - `launch_tokens.token_hash` unique.
+- `launch_tokens` are one-use and may be consumed only while unexpired and not revoked.
+- `sessions(partner_id, partner_session_ref)` is the partner-scoped Launch idempotency key.
 - `sessions(partner_id, partner_session_ref)` unique.
 - `rounds(session_id, round_no)` unique.
 - `wallet_transactions(partner_id, idempotency_key)` unique.
@@ -66,7 +68,16 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - RLS is enabled and FORCEd on every provider table as defense in depth; the partner API also enforces tenant scope before calling database functions.
 - Cross-tenant queries are prohibited unless an audited internal reporting role has an explicit purpose.
 
-## 5. Data classification and retention
+## 5. Launch lifecycle invariants
+
+- `create_launch_session` checks partner ACTIVE status and an enabled game/jurisdiction/currency/exponent configuration.
+- A repeated `partner_session_ref` with identical immutable identity reuses the CREATED session, revokes its earlier unconsumed tokens, and issues a new token hash.
+- Reusing a partner session reference with different player/game/currency/policy identity is rejected.
+- A repeated Launch after the session becomes ACTIVE does not issue a new token.
+- `consume_launch_token` and session activation from CREATED to ACTIVE are atomic.
+- Create/reissue and consume use the same partner/session advisory lock so concurrent replicas cannot split a session or race token supersession.
+
+## 6. Data classification and retention
 
 - Secrets: never stored in database rows; store references to KMS/secret manager versions.
 - Player identifiers: pseudonymous operator references; avoid name, email, phone and payment data.
@@ -75,7 +86,7 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 - Game events: retain enough evidence for replay, dispute investigation and certification, subject to retention rules.
 - Logs: no access tokens, session secrets, full wallet credentials or unnecessary personal information.
 
-## 6. Migration readiness gates
+## 7. Migration readiness gates
 
 A physical migration may be drafted only after:
 1. The V154 snapshot is restored into isolated staging.
