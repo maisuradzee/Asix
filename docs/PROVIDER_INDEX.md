@@ -7,6 +7,8 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider API Contract v1.0](PROVIDER_API_CONTRACT_v1.0.md)
 - [Provider Wallet Protocol v1.0](PROVIDER_WALLET_PROTOCOL_v1.0.md)
 - [Provider Data Model v1.0](PROVIDER_DATA_MODEL_v1.0.md)
+- [Provider Database Provisioning Runbook](PROVIDER_DATABASE_PROVISIONING_RUNBOOK.md)
+- [Provider Database Test Plan](PROVIDER_DATABASE_TEST_PLAN.md)
 - [Existing ASIX Compatibility Map](EXISTING_ASIX_COMPATIBILITY_MAP_v1.0.md)
 - [ST8 Aggregator Reference and API Direction](ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
 
@@ -45,6 +47,9 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Partner authentication tests](../provider-reference/partner_auth_test.ts)
 - [Partner API OpenAPI contract](../provider-reference/openapi/provider-api.yaml)
 - [Test-only in-memory repository](../provider-reference/testing/in_memory_repository.ts)
+- [Provider SQL schema proposal — design only](../provider-reference/sql/provider_schema_proposal.sql)
+- [PostgreSQL repository port](../provider-reference/postgres_repository.ts)
+- [PostgreSQL repository tests](../provider-reference/postgres_repository_test.ts)
 - [Local mock operator wallet simulator guide](../provider-reference/simulator/README.md)
 - [Simulator server](../provider-reference/simulator/server.ts)
 - [Simulator tests](../provider-reference/simulator/server_test.ts)
