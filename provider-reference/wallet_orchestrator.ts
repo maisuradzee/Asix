@@ -70,7 +70,9 @@ function validateCommand(command: WalletCommand): void {
       !command.partnerCode || !command.partnerPlayerRef || !command.partnerSessionRef ||
       !command.roundId || !command.currency || !Number.isInteger(command.currencyExponent) ||
       command.currencyExponent < 0 || command.currencyExponent > 6 ||
-      command.amountMinor <= 0n) {
+      command.amountMinor <= 0n ||
+      (command.operation === "REFUND" &&
+        (!command.originalTransactionId || !command.originalPartnerTransactionRef))) {
     throw new Error("INVALID_WALLET_COMMAND");
   }
 }
@@ -94,6 +96,8 @@ export async function computeWalletRequestHash(command: WalletCommand): Promise<
     partnerPlayerRef: command.partnerPlayerRef,
     partnerSessionRef: command.partnerSessionRef,
     roundId: command.roundId,
+    originalTransactionId: command.originalTransactionId ?? null,
+    originalPartnerTransactionRef: command.originalPartnerTransactionRef ?? null,
     amountMinor: command.amountMinor.toString(),
     currency: command.currency,
     currencyExponent: command.currencyExponent,
@@ -106,7 +110,11 @@ export async function computeWalletRequestHash(command: WalletCommand): Promise<
   return `sha256:${hex}`;
 }
 
-function validatePartnerResult(command: WalletCommand, result: WalletResult): void {
+function validatePartnerResult(
+  command: WalletCommand,
+  result: WalletResult,
+  expectedPartnerTransactionRef?: string,
+): void {
   if (result.transactionId !== command.transactionId ||
       result.partnerCode !== command.partnerCode ||
       result.currency !== command.currency ||
@@ -117,6 +125,10 @@ function validatePartnerResult(command: WalletCommand, result: WalletResult): vo
   }
   if (result.amountMinor !== command.amountMinor) {
     throw new Error("PARTNER_RESPONSE_AMOUNT_MISMATCH");
+  }
+  if (expectedPartnerTransactionRef &&
+      result.partnerTransactionRef !== expectedPartnerTransactionRef) {
+    throw new Error("PARTNER_RESPONSE_REFERENCE_MISMATCH");
   }
   if (!result.responseCode || !result.responseHash || !Number.isFinite(Date.parse(result.responseAt))) {
     throw new Error("PARTNER_RESPONSE_EVIDENCE_INVALID");
@@ -237,7 +249,7 @@ export class WalletOrchestrator {
         this.now().toISOString(),
         current.result?.partnerTransactionRef,
       )));
-      validatePartnerResult(current.command, result);
+      validatePartnerResult(current.command, result, current.result?.partnerTransactionRef);
       await this.repository.updateFromStates(transactionId, ["UNKNOWN", "PENDING"], {
         state: result.state,
         result,
