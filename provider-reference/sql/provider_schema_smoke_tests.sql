@@ -545,7 +545,7 @@ SET status = 'SUSPENDED'
 WHERE id = '00000000-0000-4000-8000-000000000101'::uuid;
 
 UPDATE provider_internal.sessions
-SET status = 'COMPLETED', closed_at = pg_catalog.clock_timestamp()
+SET status = 'PAUSED', closed_at = pg_catalog.clock_timestamp()
 WHERE id = '00000000-0000-4000-8000-000000000104'::uuid;
 
 UPDATE provider_internal.partner_game_configs
@@ -614,6 +614,16 @@ BEGIN
     'ci-win-idempotency-1'::text,
     pg_catalog.decode(pg_catalog.repeat('99', 32), 'hex'),
     'WIN'::text, 3000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+  );
+
+  -- A paused/closed session must still settle a valid win from a completed round.
+  PERFORM * FROM provider_internal.create_wallet_transaction(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-win-after-session-pause'::text,
+    pg_catalog.decode(pg_catalog.repeat('ab', 32), 'hex'),
+    'WIN'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
   );
 
   BEGIN
