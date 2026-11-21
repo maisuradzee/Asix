@@ -43,11 +43,17 @@ function p1363ToDer(signature: Uint8Array): Uint8Array {
   return new Uint8Array([0x30, ...lengthDer(body.length), ...body]);
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 async function signPayload(payload: Uint8Array): Promise<string> {
   const raw = new Uint8Array(await crypto.subtle.sign(
     { name: "ECDSA", hash: "SHA-256" },
     pair.privateKey,
-    payload,
+    toArrayBuffer(payload),
   ));
   const der = p1363ToDer(raw);
   return btoa(String.fromCharCode(...der));
