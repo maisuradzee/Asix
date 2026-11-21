@@ -165,6 +165,7 @@ DECLARE
   v_status text;
   v_created boolean;
   v_existing_count integer;
+  v_existing_tx uuid;
 BEGIN
   -- Direct table reads are denied even though the SECURITY DEFINER functions work.
   BEGIN
@@ -190,7 +191,7 @@ BEGIN
   END IF;
 
   SELECT t.transaction_id, t.transaction_status, t.was_created
-    INTO v_existing_count, v_status, v_created
+    INTO v_existing_tx, v_status, v_created
   FROM provider_internal.create_wallet_transaction(
     '00000000-0000-4000-8000-000000000101',
     '00000000-0000-4000-8000-000000000104',
@@ -200,7 +201,7 @@ BEGIN
     'BET', 1000, 'GEL', 2, NULL
   ) AS t;
 
-  IF v_existing_count::uuid <> v_tx OR v_created THEN
+  IF v_existing_tx <> v_tx OR v_created THEN
     RAISE EXCEPTION 'WALLET_IDEMPOTENCY_REPLAY_FAILED';
   END IF;
 
