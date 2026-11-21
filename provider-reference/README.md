@@ -65,13 +65,15 @@ The adapter does not invent operator endpoints or authentication. Each real part
 - sql/provider_schema_smoke_tests.sql: disposable PostgreSQL 17 security, nonce, launch, wallet, response lifecycle and ledger smoke suite.
 - sql/provider_schema_concurrency_fixture.sql: seed data for concurrent exposure and refund-cap tests.
 - sql/provider_schema_wallet_response_tests.sql: leased response persistence, idempotent replay and stale-worker rejection tests.
+- sql/provider_schema_status_query_recovery_tests.sql: expired read-only status-query lease retry and dead-letter tests.
 - postgres_repository.ts: dependency-injected typed port; no connection or secret lookup.
 - postgres_repository_test.ts: mocked repository tests, including worker-bound response persistence and scoped status reads.
 
-Latest verified GitHub Actions run 255:
-- 76 Deno tests passed, 0 failed.
+Latest verified GitHub Actions run 281:
+- 78 Deno tests passed, 0 failed.
 - Schema applied successfully to disposable PostgreSQL 17.
-- Provider DB smoke tests, wallet response-persistence tests and concurrent Bet/Refund limits passed.
-- The response persistence routine requires matching worker identity and an unexpired outbox lease.
+- Provider DB smoke, wallet response-persistence, concurrent Bet/Refund and expired STATUS_QUERY lease recovery tests passed.
+- Response persistence requires the matching worker identity, one-time lease token and an unexpired lease.
+- A timed-out read-only status query is re-queued with a new token; exhausted queries are moved to DEAD_LETTER.
 
 This is not a clean V154 restore or a live Supabase staging test. No Provider schema, role, function, trigger or migration has been created in the live ASIX project.
