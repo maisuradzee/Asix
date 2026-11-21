@@ -208,6 +208,9 @@ CREATE TABLE provider_internal.wallet_attempts (
   transport_state text NOT NULL
     CHECK (transport_state IN ('SENT','RESPONSE','TIMEOUT','TRANSPORT_ERROR','MALFORMED_RESPONSE')),
   partner_response_code text,
+  partner_transaction_status text
+    CHECK (partner_transaction_status IS NULL OR partner_transaction_status IN ('CONFIRMED','DECLINED','PENDING','UNKNOWN')),
+  partner_transaction_ref text,
   started_at timestamptz NOT NULL DEFAULT pg_catalog.clock_timestamp(),
   completed_at timestamptz,
   UNIQUE (transaction_id, attempt_number)
@@ -774,6 +777,200 @@ BEGIN
 END
 $function$;
 
+-- Persist one partner wallet response, close the current outbox lease and
+-- (for PENDING/UNKNOWN) atomically schedule the next read-only status query.
+-- Replayed persistence of the same attempt is idempotent by attempt_number.
+CREATE OR REPLACE FUNCTION provider_internal.record_wallet_partner_response(
+  p_partner_id uuid,
+  p_transaction_id uuid,
+  p_attempt_kind text,
+  p_generation integer,
+  p_attempt_number integer,
+  p_request_hash bytea,
+  p_response_hash bytea,
+  p_target_status text,
+  p_response_code text,
+  p_partner_transaction_ref text DEFAULT NULL,
+  p_next_status_at timestamptz DEFAULT NULL
+)
+RETURNS TABLE (
+  transaction_status text,
+  status_query_generation integer,
+  was_recorded boolean
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_tx provider_internal.wallet_transactions%ROWTYPE;
+  v_attempt provider_internal.wallet_attempts%ROWTYPE;
+  v_next_generation integer;
+  v_final_status text;
+  v_now timestamptz := pg_catalog.clock_timestamp();
+BEGIN
+  IF p_partner_id IS NULL OR p_transaction_id IS NULL
+     OR p_attempt_kind NOT IN ('DISPATCH','STATUS_QUERY')
+     OR p_generation < 0 OR p_attempt_number < 1
+     OR p_request_hash IS NULL OR pg_catalog.octet_length(p_request_hash) <> 32
+     OR p_response_hash IS NULL OR pg_catalog.octet_length(p_response_hash) <> 32
+     OR p_target_status NOT IN ('CONFIRMED','DECLINED','PENDING','UNKNOWN')
+     OR p_response_code IS NULL OR pg_catalog.length(p_response_code) NOT BETWEEN 1 AND 128
+     OR (p_target_status = 'CONFIRMED' AND
+         (p_partner_transaction_ref IS NULL OR pg_catalog.length(p_partner_transaction_ref) NOT BETWEEN 1 AND 200))
+     OR (p_partner_transaction_ref IS NOT NULL AND pg_catalog.length(p_partner_transaction_ref) > 200) THEN
+    RAISE EXCEPTION 'INVALID_PARTNER_WALLET_RESPONSE' USING ERRCODE = '22023';
+  END IF;
+
+  SELECT w.* INTO v_tx
+  FROM provider_internal.wallet_transactions AS w
+  WHERE w.id = p_transaction_id AND w.partner_id = p_partner_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'WALLET_TRANSACTION_NOT_FOUND' USING ERRCODE = '23503';
+  END IF;
+
+  -- Same response/attempt replay is safe; different payload under the same
+  -- attempt number is an integrity conflict.
+  SELECT a.* INTO v_attempt
+  FROM provider_internal.wallet_attempts AS a
+  WHERE a.transaction_id = p_transaction_id
+    AND a.attempt_number = p_attempt_number
+  FOR UPDATE;
+  IF FOUND THEN
+    IF v_attempt.attempt_kind = p_attempt_kind
+       AND v_attempt.request_hash = p_request_hash
+       AND v_attempt.response_hash = p_response_hash
+       AND v_attempt.partner_response_code = p_response_code
+       AND v_attempt.partner_transaction_status = p_target_status
+       AND v_attempt.partner_transaction_ref IS NOT DISTINCT FROM p_partner_transaction_ref THEN
+      transaction_status := v_tx.status;
+      status_query_generation := v_tx.status_query_generation;
+      was_recorded := false;
+      RETURN NEXT;
+      RETURN;
+    END IF;
+    RAISE EXCEPTION 'WALLET_ATTEMPT_IDEMPOTENCY_CONFLICT' USING ERRCODE = '23505';
+  END IF;
+
+  IF p_attempt_kind = 'DISPATCH' THEN
+    IF v_tx.status <> 'DISPATCHING' OR p_generation <> 0 THEN
+      RAISE EXCEPTION 'WALLET_DISPATCH_RESPONSE_STATE_CONFLICT' USING ERRCODE = '55000';
+    END IF;
+  ELSE
+    IF v_tx.status NOT IN ('UNKNOWN','PENDING')
+       OR p_generation <> v_tx.status_query_generation THEN
+      RAISE EXCEPTION 'WALLET_STATUS_QUERY_GENERATION_CONFLICT' USING ERRCODE = '55000';
+    END IF;
+  END IF;
+
+  IF v_tx.partner_transaction_ref IS NOT NULL
+     AND p_partner_transaction_ref IS NOT NULL
+     AND v_tx.partner_transaction_ref <> p_partner_transaction_ref THEN
+    RAISE EXCEPTION 'PARTNER_TRANSACTION_REFERENCE_CHANGED' USING ERRCODE = '23514';
+  END IF;
+
+  IF p_target_status IN ('PENDING','UNKNOWN') THEN
+    v_next_generation := CASE
+      WHEN p_attempt_kind = 'DISPATCH' THEN 1
+      ELSE p_generation + 1
+    END;
+    IF v_next_generation <= 10 THEN
+      IF p_next_status_at IS NULL
+         OR p_next_status_at < v_now
+         OR p_next_status_at > v_now + interval '24 hours' THEN
+        RAISE EXCEPTION 'INVALID_NEXT_STATUS_QUERY_TIME' USING ERRCODE = '22023';
+      END IF;
+      v_final_status := p_target_status;
+    ELSE
+      -- Bounded read-only status resolution. After ten generations, stop
+      -- automated polling and expose a human-review exception.
+      v_final_status := 'EXCEPTION';
+    END IF;
+  ELSE
+    v_next_generation := v_tx.status_query_generation;
+    v_final_status := p_target_status;
+  END IF;
+
+  INSERT INTO provider_internal.wallet_attempts(
+    transaction_id, attempt_number, attempt_kind, request_hash,
+    response_hash, transport_state, partner_response_code,
+    partner_transaction_status, partner_transaction_ref,
+    started_at, completed_at
+  )
+  VALUES (
+    p_transaction_id, p_attempt_number, p_attempt_kind, p_request_hash,
+    p_response_hash, 'RESPONSE', p_response_code,
+    p_target_status, p_partner_transaction_ref, v_now, v_now
+  );
+
+  UPDATE provider_internal.wallet_transactions AS w
+  SET status = v_final_status,
+      partner_transaction_ref = COALESCE(p_partner_transaction_ref, w.partner_transaction_ref),
+      response_code = p_response_code,
+      response_hash = p_response_hash,
+      status_query_generation = CASE
+        WHEN p_target_status IN ('PENDING','UNKNOWN') AND v_next_generation <= 10
+          THEN v_next_generation
+        ELSE w.status_query_generation
+      END,
+      resolved_at = CASE
+        WHEN v_final_status IN ('CONFIRMED','DECLINED','EXCEPTION') THEN v_now
+        ELSE NULL
+      END,
+      updated_at = v_now
+  WHERE w.id = p_transaction_id AND w.partner_id = p_partner_id;
+
+  IF p_attempt_kind = 'DISPATCH' THEN
+    UPDATE provider_internal.outbox_events AS o
+    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_until = NULL
+    WHERE o.wallet_transaction_id = p_transaction_id
+      AND o.event_type = 'WALLET_DISPATCH'
+      AND o.generation = 0
+      AND o.state IN ('LEASED','READY','RETRY');
+  ELSE
+    UPDATE provider_internal.outbox_events AS o
+    SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_until = NULL
+    WHERE o.wallet_transaction_id = p_transaction_id
+      AND o.event_type = 'WALLET_STATUS_QUERY'
+      AND o.generation = p_generation
+      AND o.state IN ('LEASED','READY','RETRY');
+  END IF;
+
+  IF v_final_status IN ('CONFIRMED','DECLINED','EXCEPTION') THEN
+    UPDATE provider_internal.outbox_events AS o
+    SET state = 'SUPERSEDED', lease_owner = NULL, lease_until = NULL
+    WHERE o.wallet_transaction_id = p_transaction_id
+      AND o.event_type = 'WALLET_STATUS_QUERY'
+      AND o.state IN ('READY','RETRY','LEASED');
+  ELSIF p_target_status IN ('PENDING','UNKNOWN') THEN
+    INSERT INTO provider_internal.outbox_events(
+      partner_id, wallet_transaction_id, event_type, generation,
+      dedupe_key, payload, available_at
+    )
+    VALUES (
+      p_partner_id,
+      p_transaction_id,
+      'WALLET_STATUS_QUERY',
+      v_next_generation,
+      'wallet-status:' || p_transaction_id::text || ':' || v_next_generation::text,
+      pg_catalog.jsonb_build_object('transaction_id', p_transaction_id),
+      p_next_status_at
+    )
+    ON CONFLICT (wallet_transaction_id, event_type, generation) DO NOTHING;
+  END IF;
+
+  transaction_status := v_final_status;
+  status_query_generation := CASE
+    WHEN p_target_status IN ('PENDING','UNKNOWN') AND v_next_generation <= 10
+      THEN v_next_generation
+    ELSE v_tx.status_query_generation
+  END;
+  was_recorded := true;
+  RETURN NEXT;
+END
+$function$;
+
 CREATE OR REPLACE FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = ''
 AS $function$
@@ -901,6 +1098,7 @@ GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provi
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.mark_expired_wallet_dispatches_unknown() TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.record_wallet_partner_response(uuid, uuid, text, integer, integer, bytea, bytea, text, text, text, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.get_wallet_transaction_status(uuid, text) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.post_ledger_journal(uuid, bytea) TO provider_runtime;
 
