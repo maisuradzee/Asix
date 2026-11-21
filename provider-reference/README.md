@@ -50,3 +50,10 @@ These profiles are not interchangeable. Choose a profile only from the partner's
 
 - [ST8 Aggregator Reference and API Direction](../docs/ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
 - The reviewed public ST8 document is an Operator API; it is not assumed to be a provider/developer onboarding API for ASIX.
+
+## Protocol-neutral HTTP Wallet Adapter
+
+- `partner_http_adapter.ts`: shared HTTPS-only adapter wrapper for partner-specific protocol mappers/signers.
+- `partner_http_adapter_test.ts`: URL scope, idempotency header, timeout, response size and read-only status-query tests.
+
+The adapter does not invent operator endpoints or authentication. Each real partner requires an approved protocol mapper and signer based on that partner's current specification. The adapter itself does not retry wallet operations.
