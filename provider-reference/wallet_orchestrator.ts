@@ -117,9 +117,13 @@ export class WalletOrchestrator {
     private readonly resolveAdapter: AdapterResolver,
     private readonly now: () => Date = () => new Date(),
     private readonly dispatchLeaseMs = 30_000,
+    private readonly operationTimeoutMs = 8_000,
   ) {
     if (!Number.isInteger(dispatchLeaseMs) || dispatchLeaseMs < 1_000 || dispatchLeaseMs > 120_000) {
       throw new Error("INVALID_DISPATCH_LEASE");
+    }
+    if (!Number.isInteger(operationTimeoutMs) || operationTimeoutMs < 50 || operationTimeoutMs > 60_000) {
+      throw new Error("INVALID_OPERATION_TIMEOUT");
     }
   }
 
@@ -153,7 +157,7 @@ export class WalletOrchestrator {
 
     try {
       const adapter = this.resolveAdapter(command.partnerCode);
-      const result = await this.dispatch(adapter, command);
+      const result = await this.withTimeout(this.dispatch(adapter, command));
       validatePartnerResult(command, result);
       await this.repository.updateFromStates(command.transactionId, ["DISPATCHING"], {
         state: result.state,
@@ -186,10 +190,10 @@ export class WalletOrchestrator {
 
     const adapter = this.resolveAdapter(current.partnerCode);
     try {
-      const result = await adapter.getTransactionStatus(toStatusQuery(
+      const result = await this.withTimeout(adapter.getTransactionStatus(toStatusQuery(
         current.command,
         this.now().toISOString(),
-      ));
+      )));
       validatePartnerResult(current.command, result);
       await this.repository.updateFromStates(transactionId, ["UNKNOWN", "PENDING"], {
         state: result.state,
@@ -218,6 +222,21 @@ export class WalletOrchestrator {
     const current = await this.repository.getById(transactionId);
     if (!current) throw new TransactionNotFoundError();
     return current;
+  }
+
+
+  private async withTimeout<T>(operation: Promise<T>): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        operation,
+        new Promise<T>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("PARTNER_REQUEST_TIMEOUT")), this.operationTimeoutMs);
+        }),
+      ]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
   }
 
   private async dispatch(adapter: PartnerWalletAdapter, command: WalletCommand): Promise<WalletResult> {
