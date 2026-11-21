@@ -119,7 +119,7 @@ components:
       name: x-asix-signature
       description: |
         HMAC-SHA256 Base64 signature over:
-        METHOD + newline + PATH_AND_QUERY + newline + TIMESTAMP_SECONDS +
+        METHOD + newline + HOST + newline + PATH_AND_QUERY + newline + TIMESTAMP_SECONDS +
         newline + NONCE + newline + SHA256_HEX_OF_RAW_BODY.
         Key ID, timestamp and nonce are supplied in companion x-asix headers.
   parameters:
