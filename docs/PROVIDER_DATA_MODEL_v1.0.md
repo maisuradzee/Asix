@@ -23,14 +23,14 @@ Existing room commission/prize-pool rules are not the ASIX B2B revenue-share mod
 |---|---|---|
 | `provider_internal.partners` | id, code, status, jurisdiction | Tenant/partner identity |
 | `provider_internal.partner_keys` | partner_id, key_id, auth_profile, protocol_version, secret_ref/public_key_ref, valid_from/to, revoked_at | Per-partner signature/auth profile; key material stays in KMS/secrets manager |
-| `provider_internal.partner_game_config` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
-| `provider_internal.launch_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
+| `provider_internal.partner_game_configs` | partner_id, game_id, currency, limits, enabled, version | Per-partner game configuration |
+| `provider_internal.partner_nonces` | partner_id, nonce_hash, expires_at, consumed_at | Replay protection |
 | `provider_internal.launch_tokens` | token_hash, partner_id, player_ref, session_ref, game_id, currency, expiry | One-use launch authority |
 | `provider_internal.sessions` | partner/session/player/game/status | B2B game session context |
 | `provider_internal.rounds` | session_id, round_no, rules_hash, game_version, result_hash | Round identity and immutable result reference |
 | `provider_internal.wallet_transactions` | partner_id, idempotency_key, request_hash, operation, amount, currency, state | Durable partner-wallet workflow |
 | `provider_internal.wallet_attempts` | transaction_id, attempt_no, request/response hashes, timestamps, result | External dispatch evidence |
-| `provider_internal.outbox` | event_id, transaction_id, lease, attempts, next_attempt_at | Durable delivery |
+| `provider_internal.outbox_events` | event_id, transaction_id, lease, attempts, next_attempt_at | Durable delivery |
 | `provider_internal.ledger_accounts` | code, account_type, currency | Contract-specific chart of accounts |
 | `provider_internal.ledger_journals` | partner_id, source_ref, journal_type, currency, status | Double-entry journal |
 | `provider_internal.ledger_entries` | journal_id, account_id, direction, amount_minor | Debit/credit lines |
