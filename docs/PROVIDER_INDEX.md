@@ -31,6 +31,8 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider settlement calculator](../provider-reference/settlement_engine.ts)
 - [Wallet Orchestrator tests](../provider-reference/wallet_orchestrator_test.ts)
 - [Partner HMAC authentication reference](../provider-reference/partner_auth.ts)
+- [One-time launch service](../provider-reference/launch_service.ts)
+- [Launch service tests](../provider-reference/launch_service_test.ts)
 - [Partner authentication tests](../provider-reference/partner_auth_test.ts)
 - [Partner API OpenAPI contract](../provider-reference/openapi/provider-api.yaml)
 - [Test-only in-memory repository](../provider-reference/testing/in_memory_repository.ts)
