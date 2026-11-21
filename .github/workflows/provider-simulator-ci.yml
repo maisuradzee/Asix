@@ -74,6 +74,7 @@ jobs:
           provider-reference/partner_http_adapter_test.ts
           provider-reference/postgres_repository_test.ts
           provider-reference/postgres_gateway_adapters_test.ts
+          provider-reference/postgres_provider_gateway_test.ts
 
   provider-database-sql:
     runs-on: ubuntu-latest
