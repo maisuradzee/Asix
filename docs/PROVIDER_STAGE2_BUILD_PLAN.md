@@ -5,16 +5,22 @@
 ## Stage 2A — Establish the safe engineering baseline
 
 Tasks:
-1. Download the exact V154 schema, function, grant, RLS, trigger and index snapshots from the source project.
-2. Restore into a new isolated Supabase staging project.
-3. Reconcile schema object counts and compare critical function definitions.
-4. Run existing read-only validation scripts and the 2–5 player consumer-game smoke suite.
-5. Decide how V157 relates to the selected current consumer-game 5%/95% rule; do not apply it merely because it exists as a candidate.
-6. Capture a signed-off compatibility baseline.
+1. Review docs/V154_RESTORE_READINESS_ASSESSMENT.md; confirm V154, PostgreSQL 17.11.0.019 and the current 128-entry migration inventory.
+2. Run scripts/export_asix_v154_baseline.ps1 on the authorized workstation. It exports only schema.sql and roles.sql from the explicit source project reference, with a SHA-256 manifest; no live data is exported.
+3. Preserve the private export under supabase/private_exports/ (Git-ignored). Never commit source role metadata, schema dump or any future private backup files.
+4. Obtain the cost quote and explicit cost approval before creating a dedicated Supabase staging branch/project. The current source project has no staging branch.
+5. Restore schema/roles to staging only. Reconcile Supabase-managed Auth/Storage dependencies and the five installed source extensions/versions before applying objects.
+6. Compare schemas, tables, functions, views, indexes, triggers, RLS policies and grants against the read-only source inventory.
+7. Create synthetic destination Auth identities and synthetic wallet/game fixtures. Do not import source Auth users, player rows, wallet balances, ledger transactions or Q-CARD game history.
+8. Run existing 2–5 player game, wallet, buy-in, payout, cashout, commission and reconciliation smoke tests.
+9. Record a signed-off staging baseline and every restore exception. Do not treat the four recovered V147/V148/V149 SQL files as the full historical migration chain.
+10. Decide how V157 relates to the selected current consumer-game 5%/95% rule; do not apply it merely because it exists as a candidate.
 
 Exit criteria:
-- Clean restore completes with documented exceptions.
-- Existing wallet and Q-CARD financial invariants pass.
+- Private schema/roles export completed and SHA-256 manifest verified.
+- Restore completed in an isolated Supabase staging environment with managed schemas/extensions reconciled.
+- Object counts, critical function definitions, RLS and grants match the recorded live baseline or have reviewed exceptions.
+- Existing wallet and Q-CARD financial invariants pass with synthetic fixtures.
 - Staging is isolated from source production and live player data.
 - No B2B migration has been applied yet.
 
