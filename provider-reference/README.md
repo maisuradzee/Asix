@@ -89,3 +89,6 @@ The disposable PostgreSQL 17 CI job now runs a two-connection race test:
 Latest verified CI: 73 Deno tests passed, 0 failed; schema smoke and both concurrency assertions passed on the disposable PostgreSQL 17 service. This is not a V154 restore or a live Supabase test.
 
 - `record_wallet_partner_response` is the proposed DB function for persisting DISPATCH and STATUS_QUERY responses. It checks the transaction state/generation, stores response hashes and attempt evidence, handles repeated persistence idempotently, and schedules bounded read-only status queries for PENDING/UNKNOWN responses.
+
+- Wallet response persistence is provided by the proposed `record_wallet_partner_response` database function. It validates outbox lease and status-query generation, stores immutable response-attempt evidence and schedules bounded read-only status queries.
+- Database immutability guards preserve completed round results, wallet financial identity, response attempt evidence, commercial contract versions and posted ledger entries/journals.
