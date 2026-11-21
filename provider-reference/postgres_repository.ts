@@ -52,6 +52,36 @@ export interface WalletTransactionCreated {
   wasCreated: boolean;
 }
 
+export interface WalletPartnerResponseInput {
+  partnerId: string;
+  workerId: string;
+  transactionId: string;
+  attemptKind: "DISPATCH" | "STATUS_QUERY";
+  generation: number;
+  attemptNumber: number;
+  requestHash: Uint8Array;
+  responseHash: Uint8Array;
+  targetStatus: "CONFIRMED" | "DECLINED" | "PENDING" | "UNKNOWN";
+  responseCode: string;
+  partnerTransactionRef?: string | null;
+  nextStatusAt?: string | null;
+}
+
+export interface WalletPartnerResponseResult {
+  transactionStatus: string;
+  statusQueryGeneration: number;
+  wasRecorded: boolean;
+}
+
+export interface WalletTransactionStatus {
+  transaction_id: string;
+  transaction_status: string;
+  operation: "BET" | "WIN" | "REFUND";
+  amount_minor: number | string;
+  currency: string;
+  partner_transaction_ref: string | null;
+}
+
 export interface ClaimedOutboxEvent {
   [key: string]: unknown;
   id: string;
@@ -161,6 +191,73 @@ export class ProviderPostgresRepository {
       [workerId, limit, leaseSeconds],
     );
     return result.rows;
+  }
+
+  async recordWalletPartnerResponse(input: WalletPartnerResponseInput): Promise<WalletPartnerResponseResult> {
+    validateHash(input.requestHash, "request");
+    validateHash(input.responseHash, "response");
+    if (!input.partnerId || !input.workerId || !input.transactionId ||
+        (input.attemptKind !== "DISPATCH" && input.attemptKind !== "STATUS_QUERY") ||
+        !Number.isInteger(input.generation) || input.generation < 0 ||
+        !Number.isInteger(input.attemptNumber) || input.attemptNumber < 1 ||
+        !["CONFIRMED", "DECLINED", "PENDING", "UNKNOWN"].includes(input.targetStatus) ||
+        !input.responseCode || input.responseCode.length > 128 ||
+        (input.partnerTransactionRef != null && input.partnerTransactionRef.length > 200) ||
+        (input.targetStatus === "CONFIRMED" && !input.partnerTransactionRef) ||
+        (input.nextStatusAt != null && !Number.isFinite(Date.parse(input.nextStatusAt)))) {
+      throw new ProviderDatabaseError("INVALID_PARTNER_WALLET_RESPONSE");
+    }
+    if ((input.targetStatus === "PENDING" || input.targetStatus === "UNKNOWN") &&
+        !input.nextStatusAt) {
+      throw new ProviderDatabaseError("NEXT_STATUS_QUERY_TIME_REQUIRED");
+    }
+    const result = await this.db.query<{
+      transaction_status: string;
+      status_query_generation: number;
+      was_recorded: boolean;
+    }>(
+      "SELECT * FROM provider_internal.record_wallet_partner_response($1::uuid,$2::uuid,$3::uuid,$4::text,$5::integer,$6::integer,$7::bytea,$8::bytea,$9::text,$10::text,$11::text,$12::timestamptz)",
+      [
+        input.partnerId,
+        input.workerId,
+        input.transactionId,
+        input.attemptKind,
+        input.generation,
+        input.attemptNumber,
+        input.requestHash,
+        input.responseHash,
+        input.targetStatus,
+        input.responseCode,
+        input.partnerTransactionRef ?? null,
+        input.nextStatusAt ?? null,
+      ],
+    );
+    if (result.rows.length !== 1 ||
+        !result.rows[0].transaction_status ||
+        !Number.isInteger(result.rows[0].status_query_generation) ||
+        typeof result.rows[0].was_recorded !== "boolean") {
+      throw new ProviderDatabaseError("INVALID_PARTNER_RESPONSE_FUNCTION_RESULT");
+    }
+    return {
+      transactionStatus: result.rows[0].transaction_status,
+      statusQueryGeneration: result.rows[0].status_query_generation,
+      wasRecorded: result.rows[0].was_recorded,
+    };
+  }
+
+  async getWalletTransactionStatus(
+    partnerId: string,
+    idempotencyKey: string,
+  ): Promise<WalletTransactionStatus | null> {
+    if (!partnerId || !idempotencyKey || idempotencyKey.length > 200) {
+      throw new ProviderDatabaseError("INVALID_WALLET_STATUS_QUERY");
+    }
+    const result = await this.db.query<WalletTransactionStatus>(
+      "SELECT * FROM provider_internal.get_wallet_transaction_status($1::uuid,$2::text)",
+      [partnerId, idempotencyKey],
+    );
+    if (result.rows.length > 1) throw new ProviderDatabaseError("NON_UNIQUE_WALLET_STATUS_RESULT");
+    return result.rows[0] ?? null;
   }
 
   async markExpiredDispatchesUnknown(): Promise<number> {
