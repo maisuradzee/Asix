@@ -99,6 +99,12 @@ VALUES
   '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-player-opaque', 'ci-session-wallet', 'ASIX_CI_GAME',
   'GE', 'GEL', 2, 'en-GB', 'ACTIVE', 'policy-1'
+),
+(
+  '00000000-0000-4000-8000-000000000106'::uuid,
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'ci-player-expired', 'ci-session-expired-launch', 'ASIX_CI_GAME',
+  'GE', 'GEL', 2, 'en-GB', 'CREATED', 'policy-1'
 );
 
 INSERT INTO provider_internal.rounds(
@@ -120,6 +126,12 @@ VALUES (
   'ci-key-1', 'provider-v1',
   pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex'),
   pg_catalog.clock_timestamp() + interval '2 minutes'
+), (
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  '00000000-0000-4000-8000-000000000106'::uuid,
+  'ci-key-1', 'provider-v1',
+  pg_catalog.decode(pg_catalog.repeat('27', 32), 'hex'),
+  pg_catalog.clock_timestamp() - interval '1 second'
 );
 
 SET ROLE provider_runtime;
@@ -140,6 +152,8 @@ DECLARE
   v_token_expiry timestamptz;
   v_old_token_count integer;
   v_new_token_count integer;
+  v_expired_token_count integer;
+  v_expired_session_status text;
 BEGIN
   SELECT q.partner_id, q.auth_profile, q.secret_reference
     INTO v_resolved_partner_id, v_auth_profile, v_secret_reference
@@ -274,6 +288,18 @@ BEGIN
   ) AS q;
   IF v_token_issued OR v_launch_status <> 'ACTIVE' THEN
     RAISE EXCEPTION 'ACTIVE_SESSION_WAS_RELAUNCHED';
+  END IF;
+
+  -- Expired tokens must neither be consumed nor activate their CREATED session.
+  SELECT pg_catalog.count(*) INTO v_expired_token_count
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('27', 32), 'hex')
+  );
+  SELECT s.status INTO v_expired_session_status
+  FROM provider_internal.sessions AS s
+  WHERE s.id = '00000000-0000-4000-8000-000000000106'::uuid;
+  IF v_expired_token_count <> 0 OR v_expired_session_status <> 'CREATED' THEN
+    RAISE EXCEPTION 'EXPIRED_LAUNCH_TOKEN_WAS_ACCEPTED_OR_SESSION_ACTIVATED';
   END IF;
 
   -- Reusing a partner session reference for a different player is a conflict.
