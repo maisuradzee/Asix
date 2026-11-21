@@ -117,6 +117,92 @@ jobs:
         run: |
           docker exec -i "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 < provider-reference/sql/provider_schema_concurrency_fixture.sql
 
+      - name: Verify concurrent launch idempotency and token supersession
+        env:
+          PG_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          set -e
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT session_id::text || '|' || session_status || '|' || token_issued::text
+            FROM provider_internal.create_launch_session(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              'ci-launch-player'::text,
+              'ci-concurrent-launch-session'::text,
+              'ASIX_CI_LAUNCH'::text,
+              'GE'::text,
+              'GEL'::text,
+              2::smallint,
+              'en-GB'::text,
+              1::integer,
+              decode(repeat('d1', 32), 'hex'),
+              clock_timestamp() + interval '2 minutes'
+            );
+          " > /tmp/provider-launch-a.log 2>&1 &
+          LAUNCH_A_PID=$!
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            SET ROLE provider_runtime;
+            SELECT session_id::text || '|' || session_status || '|' || token_issued::text
+            FROM provider_internal.create_launch_session(
+              '00000000-0000-4000-8000-000000000301'::uuid,
+              'ci-launch-player'::text,
+              'ci-concurrent-launch-session'::text,
+              'ASIX_CI_LAUNCH'::text,
+              'GE'::text,
+              'GEL'::text,
+              2::smallint,
+              'en-GB'::text,
+              1::integer,
+              decode(repeat('d2', 32), 'hex'),
+              clock_timestamp() + interval '2 minutes'
+            );
+          " > /tmp/provider-launch-b.log 2>&1 &
+          LAUNCH_B_PID=$!
+
+          wait "$LAUNCH_A_PID"
+          wait "$LAUNCH_B_PID"
+
+          SESSION_A="$(cut -d '|' -f 1 /tmp/provider-launch-a.log)"
+          SESSION_B="$(cut -d '|' -f 1 /tmp/provider-launch-b.log)"
+          if [ -z "$SESSION_A" ] || [ "$SESSION_A" != "$SESSION_B" ]; then
+            cat /tmp/provider-launch-a.log /tmp/provider-launch-b.log
+            echo "Concurrent launch retries created different sessions."
+            exit 1
+          fi
+
+          docker exec "$PG_CONTAINER" psql -U postgres -v ON_ERROR_STOP=1 -qAt -c "
+            DO \$launch_race\$
+            DECLARE
+              v_sessions integer;
+              v_active_tokens integer;
+              v_revoked_tokens integer;
+            BEGIN
+              SELECT count(*) INTO v_sessions
+              FROM provider_internal.sessions
+              WHERE partner_id = '00000000-0000-4000-8000-000000000301'::uuid
+                AND partner_session_ref = 'ci-concurrent-launch-session';
+
+              SELECT count(*) INTO v_active_tokens
+              FROM provider_internal.launch_tokens
+              WHERE session_id = '$SESSION_A'::uuid
+                AND consumed_at IS NULL
+                AND revoked_at IS NULL;
+
+              SELECT count(*) INTO v_revoked_tokens
+              FROM provider_internal.launch_tokens
+              WHERE session_id = '$SESSION_A'::uuid
+                AND revoked_at IS NOT NULL;
+
+              IF v_sessions <> 1 OR v_active_tokens <> 1 OR v_revoked_tokens <> 1 THEN
+                RAISE EXCEPTION 'CONCURRENT_LAUNCH_IDEMPOTENCY_FAILED sessions %, active %, revoked %',
+                  v_sessions, v_active_tokens, v_revoked_tokens;
+              END IF;
+            END
+            \$launch_race\$;
+          "
+          echo "PROVIDER_CONCURRENT_LAUNCH_IDEMPOTENCY_PASSED"
+
       - name: Verify concurrent exposure and refund limits
         env:
           PG_CONTAINER: ${{ job.services.postgres.id }}
