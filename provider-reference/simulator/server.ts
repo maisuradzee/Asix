@@ -116,7 +116,7 @@ export function createMockPartner(options: MockPartnerOptions = {}): MockPartner
       const original = tx.originalTransactionRef
         ? byReference.get(tx.originalTransactionRef)
         : undefined;
-      if (!original || original.operation !== "BET" ||
+      if (!original || original.operation !== "BET" || original.state !== "CONFIRMED" ||
           original.playerRef !== tx.playerRef || original.currency !== tx.currency) {
         tx.state = "DECLINED";
         tx.responseCode = "ORIGINAL_BET_NOT_FOUND";
