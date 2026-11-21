@@ -68,6 +68,10 @@ The adapter does not invent operator endpoints or authentication. Each real part
 - `sql/provider_schema_status_query_recovery_tests.sql`: expired read-only status-query lease retry and dead-letter tests.
 - `postgres_repository.ts`: dependency-injected typed PostgreSQL port; no connection, secret lookup or network access.
 - `postgres_repository_test.ts`: mocked repository tests for active partner key resolution, launch creation/consumption, wallet processing, worker lease response persistence and scoped status reads.
+- `postgres_gateway_adapters.ts`: durable PostgreSQL-backed HMAC key resolution, partner/key-scoped nonce replay storage and one-use LaunchToken storage; KMS and currency registry remain injected.
+- `postgres_gateway_adapters_test.ts`: adapter tests for KMS-only key resolution, nonce hashing and durable launch claim creation/consumption.
+- `postgres_provider_gateway.ts`: composition root wiring the existing signed Provider Gateway to the durable PostgreSQL adapters and injected distributed rate limiter.
+- `postgres_provider_gateway_test.ts`: signed end-to-end launch test through partner key lookup, HMAC verification, nonce consumption, policy checks and PostgreSQL-backed token creation.
 
 ### Launch lifecycle
 
@@ -81,12 +85,12 @@ The create/reissue and consume routines use the same partner/session advisory lo
 
 ### Latest verified validation
 
-GitHub Actions run #309:
-- 80 Deno tests passed, 0 failed.
-- The consolidated SQL schema applied successfully to disposable PostgreSQL 17.
-- Active partner key lookup returned only its auth profile, protocol version and KMS secret reference; an unknown key returned no row.
-- Database smoke tests passed, including one-time nonce/Launch Token use, session activation, reissue, old-token revocation, post-activation no-relaunch and session-reference conflict.
-- Concurrent Launch test passed with two independent PostgreSQL clients: both requests returned the same partner session, one new token remained usable, and the earlier token was revoked.
+GitHub Actions run #369:
+- **93 Deno tests passed, 0 failed**; all Provider modules and tests passed TypeScript checking.
+- The consolidated SQL proposal applied successfully to disposable PostgreSQL 17.
+- Database smoke tests passed, including active partner key metadata lookup, one-time nonce and Launch Token use, session activation, reissue and old-token revocation.
+- The signed end-to-end Gateway composition test passed through durable key lookup, non-exportable KMS-backed HMAC verification, partner/key-scoped nonce consumption, partner policy checks and PostgreSQL-backed Launch Token creation.
+- Concurrent Launch test passed with two independent PostgreSQL clients: both requests returned the same partner session; the database retained one usable token and revoked the superseded token.
 - Concurrent Bet exposure and partial Refund caps passed.
 - Wallet response lifecycle, worker-lease binding and status-query lease recovery passed.
 
