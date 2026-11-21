@@ -1,0 +1,172 @@
+import { assertEquals, assertRejects } from "https://deno.land/std@0.224.0/assert/mod.ts";
+import {
+  ProviderPostgresRepository,
+  ProviderDatabaseError,
+  type ProviderPgExecutor,
+  type PgQueryResult,
+} from "./postgres_repository.ts";
+
+class MockPg implements ProviderPgExecutor {
+  calls: Array<{ sql: string; parameters: readonly unknown[] }> = [];
+  responder: (sql: string, parameters: readonly unknown[]) => Record<string, unknown>[] = () => [];
+
+  async query<T extends Record<string, unknown>>(
+    sql: string,
+    parameters: readonly unknown[],
+  ): Promise<PgQueryResult<T>> {
+    this.calls.push({ sql, parameters });
+    const rows = this.responder(sql, parameters) as T[];
+    return { rows, rowCount: rows.length };
+  }
+}
+
+const hash = new Uint8Array(32).fill(7);
+
+Deno.test("nonce consumption calls atomic DB function with hash", async () => {
+  const db = new MockPg();
+  db.responder = () => [{ consumed: true }];
+  const repo = new ProviderPostgresRepository(db);
+  const consumed = await repo.consumePartnerNonce({
+    partnerId: "00000000-0000-4000-8000-000000000001",
+    keyId: "key-a",
+    nonceHash: hash,
+    expiresAt: "2026-11-21T12:00:00.000Z",
+  });
+  assertEquals(consumed, true);
+  assertEquals(db.calls.length, 1);
+  assertEquals(db.calls[0].sql.includes("consume_partner_nonce"), true);
+  assertEquals(db.calls[0].parameters[2], hash);
+});
+
+Deno.test("duplicate nonce returns false", async () => {
+  const db = new MockPg();
+  db.responder = () => [{ consumed: false }];
+  const repo = new ProviderPostgresRepository(db);
+  const consumed = await repo.consumePartnerNonce({
+    partnerId: "00000000-0000-4000-8000-000000000001",
+    keyId: "key-a",
+    nonceHash: hash,
+    expiresAt: "2026-11-21T12:00:00.000Z",
+  });
+  assertEquals(consumed, false);
+});
+
+Deno.test("launch token maps to claims and returns null when no token is consumable", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    partner_id: "partner-id",
+    session_id: "session-id",
+    partner_player_ref: "opaque-player",
+    partner_session_ref: "operator-session",
+    game_code: "ASIX_CARD",
+    currency: "GEL",
+    jurisdiction: "GE",
+    locale: "ka-GE",
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  assertEquals((await repo.consumeLaunchToken(hash))?.partner_session_ref, "operator-session");
+  db.responder = () => [];
+  assertEquals(await repo.consumeLaunchToken(hash), null);
+});
+
+Deno.test("wallet transaction sends integer minor units and request hash to DB function", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    transaction_id: "wallet-tx-id",
+    transaction_status: "CREATED",
+    was_created: true,
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  const result = await repo.createWalletTransaction({
+    partnerId: "00000000-0000-4000-8000-000000000001",
+    sessionId: "00000000-0000-4000-8000-000000000002",
+    roundId: null,
+    idempotencyKey: "partner-idem-1",
+    requestHash: hash,
+    operation: "BET",
+    amountMinor: 125n,
+    currency: "GEL",
+    currencyExponent: 2,
+  });
+  assertEquals(result.transactionId, "wallet-tx-id");
+  assertEquals(result.wasCreated, true);
+  assertEquals(db.calls[0].parameters[6], "125");
+  assertEquals(db.calls[0].parameters[4], hash);
+});
+
+Deno.test("refund requires original transaction before database call", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.createWalletTransaction({
+      partnerId: "partner",
+      sessionId: "session",
+      roundId: null,
+      idempotencyKey: "refund-1",
+      requestHash: hash,
+      operation: "REFUND",
+      amountMinor: 100n,
+      currency: "GEL",
+      currencyExponent: 2,
+    }),
+    ProviderDatabaseError,
+    "INVALID_WALLET_TRANSACTION_INPUT",
+  );
+  assertEquals(db.calls.length, 0);
+});
+
+Deno.test("outbox claim bounds lease inputs and returns claimed events", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    id: "event-id",
+    partner_id: "partner-id",
+    wallet_transaction_id: "tx-id",
+    event_type: "WALLET_STATUS_QUERY",
+    generation: 1,
+    payload: { transaction_id: "tx-id" },
+    attempts: 2,
+    lease_until: "2026-11-21T12:00:30.000Z",
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  const events = await repo.claimOutboxEvents("00000000-0000-4000-8000-000000000003", 10, 45);
+  assertEquals(events.length, 1);
+  assertEquals(events[0].event_type, "WALLET_STATUS_QUERY");
+  assertEquals(db.calls[0].parameters[1], 10);
+  assertEquals(db.calls[0].parameters[2], 45);
+});
+
+Deno.test("ledger posting must be confirmed by DB function", async () => {
+  const db = new MockPg();
+  db.responder = () => [{ posted: true }];
+  const repo = new ProviderPostgresRepository(db);
+  assertEquals(
+    await repo.postLedgerJournal("00000000-0000-4000-8000-000000000009", hash),
+    true,
+  );
+});
+
+Deno.test("invalid hashes and currency are rejected before database access", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.consumeLaunchToken(new Uint8Array(12)),
+    ProviderDatabaseError,
+    "INVALID_LAUNCH_TOKEN_HASH",
+  );
+  await assertRejects(
+    () => repo.createWalletTransaction({
+      partnerId: "partner",
+      sessionId: "session",
+      roundId: null,
+      idempotencyKey: "bet-1",
+      requestHash: hash,
+      operation: "BET",
+      amountMinor: 100n,
+      currency: "US",
+      currencyExponent: 2,
+    }),
+    ProviderDatabaseError,
+    "INVALID_CURRENCY_CONTEXT",
+  );
+  assertEquals(db.calls.length, 0);
+});
