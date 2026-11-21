@@ -81,7 +81,7 @@ async function readBodyBounded(request: Request, maxBodyBytes: number): Promise<
     if (Number(declaredLength) > maxBodyBytes) return null;
   }
 
-  const stream = request.clone().body;
+  const stream = request.body;
   if (!stream) return new Uint8Array(0);
 
   const reader = stream.getReader();
