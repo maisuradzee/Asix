@@ -113,7 +113,7 @@ CREATE TABLE provider_internal.sessions (
   locale text NOT NULL,
   status text NOT NULL DEFAULT 'CREATED'
     CHECK (status IN ('CREATED','ACTIVE','PAUSED','COMPLETED','CANCELLED','EXCEPTION')),
-  policy_version integer NOT NULL CHECK (policy_version > 0),
+  policy_version text NOT NULL CHECK (pg_catalog.length(policy_version) BETWEEN 1 AND 80),
   created_at timestamptz NOT NULL DEFAULT pg_catalog.clock_timestamp(),
   started_at timestamptz,
   closed_at timestamptz,
@@ -127,13 +127,18 @@ CREATE TABLE provider_internal.launch_tokens (
   id uuid PRIMARY KEY DEFAULT pg_catalog.gen_random_uuid(),
   partner_id uuid NOT NULL,
   session_id uuid NOT NULL,
+  key_id text NOT NULL,
+  protocol_version text NOT NULL CHECK (pg_catalog.length(protocol_version) BETWEEN 1 AND 64),
   token_hash bytea NOT NULL UNIQUE CHECK (pg_catalog.octet_length(token_hash) = 32),
   expires_at timestamptz NOT NULL,
   consumed_at timestamptz,
   revoked_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT pg_catalog.clock_timestamp(),
   FOREIGN KEY (session_id, partner_id)
-    REFERENCES provider_internal.sessions(id, partner_id)
+    REFERENCES provider_internal.sessions(id, partner_id),
+  FOREIGN KEY (partner_id, key_id)
+    REFERENCES provider_internal.partner_keys(partner_id, key_id),
+  UNIQUE (id, partner_id)
 );
 CREATE INDEX provider_launch_tokens_expiry_idx
   ON provider_internal.launch_tokens(expires_at) WHERE consumed_at IS NULL AND revoked_at IS NULL;
@@ -540,6 +545,10 @@ $resolve_partner_key$;
 -- reuses CREATED sessions and revokes any previously issued unconsumed token.
 CREATE OR REPLACE FUNCTION provider_internal.create_launch_session(
   p_partner_id uuid,
+  p_key_id text,
+  p_protocol_version text,
+  p_session_id uuid,
+  p_launch_id uuid,
   p_partner_player_ref text,
   p_partner_session_ref text,
   p_game_code text,
@@ -547,11 +556,12 @@ CREATE OR REPLACE FUNCTION provider_internal.create_launch_session(
   p_currency text,
   p_currency_exponent smallint,
   p_locale text,
-  p_policy_version integer,
+  p_policy_version text,
   p_token_hash bytea,
   p_expires_at timestamptz
 )
 RETURNS TABLE (
+  launch_id uuid,
   session_id uuid,
   session_status text,
   token_issued boolean,
@@ -567,6 +577,9 @@ DECLARE
   v_now timestamptz := pg_catalog.clock_timestamp();
 BEGIN
   IF p_partner_id IS NULL
+     OR p_key_id IS NULL OR pg_catalog.length(p_key_id) NOT BETWEEN 1 AND 128
+     OR p_protocol_version IS NULL OR pg_catalog.length(p_protocol_version) NOT BETWEEN 1 AND 64
+     OR p_session_id IS NULL OR p_launch_id IS NULL
      OR p_partner_player_ref IS NULL OR pg_catalog.length(p_partner_player_ref) NOT BETWEEN 1 AND 200
      OR p_partner_session_ref IS NULL OR pg_catalog.length(p_partner_session_ref) NOT BETWEEN 1 AND 200
      OR p_game_code IS NULL OR pg_catalog.length(p_game_code) NOT BETWEEN 1 AND 80
@@ -575,7 +588,7 @@ BEGIN
      OR p_currency IS NULL OR pg_catalog.length(p_currency) <> 3 OR p_currency ~ '[^A-Z]'
      OR p_currency_exponent IS NULL OR p_currency_exponent NOT BETWEEN 0 AND 6
      OR p_locale IS NULL OR pg_catalog.length(p_locale) NOT BETWEEN 2 AND 35
-     OR p_policy_version IS NULL OR p_policy_version < 1
+     OR p_policy_version IS NULL OR pg_catalog.length(p_policy_version) NOT BETWEEN 1 AND 80
      OR p_token_hash IS NULL OR pg_catalog.octet_length(p_token_hash) <> 32
      OR p_expires_at IS NULL OR p_expires_at <= v_now
      OR p_expires_at > v_now + interval '5 minutes' THEN
@@ -587,20 +600,29 @@ BEGIN
     pg_catalog.hashtextextended(p_partner_id::text || ':' || p_partner_session_ref, 0)
   );
 
+  -- Partner, exact signing key and exact game configuration must all still
+  -- be active at token issuance time; key rotation/revocation cannot race issue.
   SELECT c.id INTO v_config_id
   FROM provider_internal.partners AS p
+  JOIN provider_internal.partner_keys AS k ON k.partner_id = p.id
   JOIN provider_internal.partner_game_configs AS c ON c.partner_id = p.id
   WHERE p.id = p_partner_id
     AND p.status = 'ACTIVE'
+    AND k.key_id = p_key_id
+    AND k.protocol_version = p_protocol_version
+    AND k.status = 'ACTIVE'
+    AND k.revoked_at IS NULL
+    AND k.valid_from <= v_now
+    AND (k.valid_until IS NULL OR k.valid_until > v_now)
     AND c.game_code = p_game_code
     AND c.jurisdiction = p_jurisdiction
     AND c.currency = p_currency
     AND c.currency_exponent = p_currency_exponent
     AND c.enabled = true
-  FOR UPDATE OF p, c;
+  FOR UPDATE OF p, k, c;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'PARTNER_GAME_CONFIGURATION_NOT_ENABLED' USING ERRCODE = '42501';
+    RAISE EXCEPTION 'PARTNER_KEY_OR_GAME_CONFIGURATION_NOT_ACTIVE' USING ERRCODE = '42501';
   END IF;
 
   SELECT s.* INTO v_session
@@ -621,6 +643,7 @@ BEGIN
     END IF;
 
     IF v_session.status <> 'CREATED' THEN
+      launch_id := NULL;
       session_id := v_session.id;
       session_status := v_session.status;
       token_issued := false;
@@ -637,19 +660,24 @@ BEGIN
       AND t.revoked_at IS NULL;
   ELSE
     INSERT INTO provider_internal.sessions(
-      partner_id, partner_player_ref, partner_session_ref, game_code,
+      id, partner_id, partner_player_ref, partner_session_ref, game_code,
       jurisdiction, currency, currency_exponent, locale, status, policy_version
     )
     VALUES(
-      p_partner_id, p_partner_player_ref, p_partner_session_ref, p_game_code,
+      p_session_id, p_partner_id, p_partner_player_ref, p_partner_session_ref, p_game_code,
       p_jurisdiction, p_currency, p_currency_exponent, p_locale, 'CREATED', p_policy_version
     )
     RETURNING * INTO v_session;
   END IF;
 
-  INSERT INTO provider_internal.launch_tokens(partner_id, session_id, token_hash, expires_at)
-  VALUES(p_partner_id, v_session.id, p_token_hash, p_expires_at);
+  INSERT INTO provider_internal.launch_tokens(
+    id, partner_id, session_id, key_id, protocol_version, token_hash, expires_at
+  )
+  VALUES(
+    p_launch_id, p_partner_id, v_session.id, p_key_id, p_protocol_version, p_token_hash, p_expires_at
+  );
 
+  launch_id := p_launch_id;
   session_id := v_session.id;
   session_status := 'CREATED';
   token_issued := true;
@@ -659,12 +687,24 @@ END
 $create_launch$;
 
 -- Token consumption and session activation are one atomic statement.
--- Replay, revocation, expiry, disabled game or inactive partner returns no row.
+-- Full signed launch claims are reconstructed from durable session/token rows.
 CREATE OR REPLACE FUNCTION provider_internal.consume_launch_token(p_token_hash bytea)
 RETURNS TABLE (
-  partner_id uuid, session_id uuid, partner_player_ref text,
-  partner_session_ref text, game_code text, currency text,
-  jurisdiction text, locale text, session_status text
+  launch_id uuid,
+  session_id uuid,
+  partner_id uuid,
+  partner_code text,
+  partner_player_ref text,
+  partner_session_ref text,
+  game_code text,
+  currency text,
+  jurisdiction text,
+  locale text,
+  key_id text,
+  protocol_version text,
+  policy_version text,
+  issued_at timestamptz,
+  expires_at timestamptz
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -706,6 +746,10 @@ BEGIN
     JOIN provider_internal.sessions AS s
       ON s.id = t.session_id AND s.partner_id = t.partner_id
     JOIN provider_internal.partners AS p ON p.id = t.partner_id
+    JOIN provider_internal.partner_keys AS k
+      ON k.partner_id = t.partner_id
+     AND k.key_id = t.key_id
+     AND k.protocol_version = t.protocol_version
     JOIN provider_internal.partner_game_configs AS c
       ON c.partner_id = t.partner_id
      AND c.game_code = s.game_code
@@ -718,15 +762,20 @@ BEGIN
       AND t.expires_at > pg_catalog.clock_timestamp()
       AND s.status = 'CREATED'
       AND p.status = 'ACTIVE'
+      AND k.status = 'ACTIVE'
+      AND k.revoked_at IS NULL
+      AND k.valid_from <= pg_catalog.clock_timestamp()
+      AND (k.valid_until IS NULL OR k.valid_until > pg_catalog.clock_timestamp())
       AND c.enabled = true
-    FOR UPDATE OF t, s, p, c
+    FOR UPDATE OF t, s, p, k, c
   ),
   consumed AS (
     UPDATE provider_internal.launch_tokens AS t
     SET consumed_at = pg_catalog.clock_timestamp()
     FROM candidate AS x
     WHERE t.id = x.token_id
-    RETURNING t.partner_id, t.session_id
+    RETURNING t.id AS launch_id, t.partner_id, t.session_id, t.key_id,
+              t.protocol_version, t.created_at AS issued_at, t.expires_at
   ),
   activated AS (
     UPDATE provider_internal.sessions AS s
@@ -738,9 +787,13 @@ BEGIN
       AND s.status = 'CREATED'
     RETURNING s.*
   )
-  SELECT a.partner_id, a.id, a.partner_player_ref, a.partner_session_ref,
-         a.game_code, a.currency, a.jurisdiction, a.locale, a.status
-  FROM activated AS a;
+  SELECT x.launch_id, a.id, a.partner_id, p.partner_code,
+         a.partner_player_ref, a.partner_session_ref, a.game_code,
+         a.currency, a.jurisdiction, a.locale, x.key_id, x.protocol_version,
+         a.policy_version, x.issued_at, x.expires_at
+  FROM activated AS a
+  JOIN consumed AS x ON x.session_id = a.id AND x.partner_id = a.partner_id
+  JOIN provider_internal.partners AS p ON p.id = a.partner_id;
 END
 $consume_launch$;
 
@@ -1445,7 +1498,7 @@ $rls$;
 
 GRANT EXECUTE ON FUNCTION provider_internal.consume_partner_nonce(uuid, text, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.resolve_partner_key(text, text) TO provider_runtime;
-GRANT EXECUTE ON FUNCTION provider_internal.create_launch_session(uuid, text, text, text, text, text, smallint, text, integer, bytea, timestamptz) TO provider_runtime;
+GRANT EXECUTE ON FUNCTION provider_internal.create_launch_session(uuid, text, text, uuid, uuid, text, text, text, text, text, smallint, text, text, bytea, timestamptz) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.consume_launch_token(bytea) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.create_wallet_transaction(uuid, uuid, uuid, text, bytea, text, bigint, text, smallint, uuid) TO provider_runtime;
 GRANT EXECUTE ON FUNCTION provider_internal.claim_outbox_events(uuid, integer, integer) TO provider_runtime;
