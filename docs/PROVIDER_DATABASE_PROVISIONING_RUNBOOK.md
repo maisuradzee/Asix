@@ -40,9 +40,11 @@ Initial routines:
 3. create_wallet_transaction — partner/session/config validation, scoped idempotency and outbox insert in one transaction.
 4. claim_outbox_events — bounded worker lease claims.
 5. mark_expired_wallet_dispatches_unknown — uncertain dispatch becomes UNKNOWN and queues a read-only status query, never a new debit.
-6. record_wallet_partner_response — persists a partner DISPATCH/STATUS_QUERY response, checks allowed state/generation, stores attempt evidence, closes the current outbox lease and schedules a bounded next status query when still pending/unknown.
+6. record_wallet_partner_response — requires the relevant outbox lease and response generation, persists a partner DISPATCH/STATUS_QUERY response idempotently, stores attempt evidence, closes the current outbox lease and schedules a bounded next status query when still pending/unknown.
 7. get_wallet_transaction_status — returns only scoped transaction status fields for an authenticated partner context.
 8. post_ledger_journal — validates a same-currency balanced journal before posting.
+
+Append-only/integrity controls freeze completed/voided rounds, wallet financial identity fields, wallet attempt evidence, commercial contract versions, audit/approval history and posted ledger journals/entries. Financial status updates must use approved state-transition routines.
 
 Runtime must not be granted direct access to provider tables. Add routines only after unit, SQL, concurrency and security review.
 
