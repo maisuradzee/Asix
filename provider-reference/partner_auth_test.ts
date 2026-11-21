@@ -18,8 +18,8 @@ const now = 1_795_248_000; // fixed test timestamp
 
 function keyResolver(active = true): PartnerKeyResolver {
   return {
-    resolve: async (keyId) => keyId === "sandbox-key-01"
-      ? { partnerCode: "operator-sandbox", keyId, protocolVersion: "provider-v1", key: partnerKey, active }
+    resolve: async (partnerCode, keyId) => partnerCode === "operator-sandbox" && keyId === "sandbox-key-01"
+      ? { partnerCode, keyId, protocolVersion: "provider-v1", key: partnerKey, active }
       : null,
   };
 }
@@ -46,6 +46,7 @@ async function signedRequest(options: {
   const nonce = options.nonce ?? "nonce_value_123456789";
   const request = new Request(`https://provider-sandbox.example.invalid${path}`, {
     method: "POST",
+    headers: { "x-asix-partner-code": "operator-sandbox" },
     body,
   });
   const canonical = await buildPartnerCanonicalPayload(
@@ -61,6 +62,7 @@ async function signedRequest(options: {
   ));
   const base64 = btoa(String.fromCharCode(...signature));
   const headers = new Headers(request.headers);
+  headers.set("x-asix-partner-code", "operator-sandbox");
   headers.set("x-asix-key-id", "sandbox-key-01");
   headers.set("x-asix-timestamp", timestamp);
   headers.set("x-asix-nonce", nonce);
@@ -81,6 +83,25 @@ Deno.test("valid HMAC signature is accepted and resolves trusted partner identit
     assertEquals(result.partnerCode, "operator-sandbox");
     assertEquals(result.protocolVersion, "provider-v1");
   }
+});
+
+Deno.test("partner code is part of the signed identity and mismatched scope is rejected", async () => {
+  const original = await signedRequest();
+  const headers = new Headers(original.headers);
+  headers.set("x-asix-partner-code", "another-operator");
+  const mismatched = new Request(original.url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ player: "opaque-1", currency: "GEL" }),
+  });
+  const result = await verifyPartnerRequest(
+    mismatched,
+    keyResolver(),
+    new MemoryNonceStore(),
+    { nowEpochSeconds: now },
+  );
+  assertEquals(result.ok, false);
+  if (!result.ok) assertEquals(result.error, "SIGNATURE_INVALID");
 });
 
 Deno.test("replayed nonce is rejected", async () => {
