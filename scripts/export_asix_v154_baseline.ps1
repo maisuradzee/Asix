@@ -13,7 +13,7 @@ $ExportRoot = Join-Path $SupabaseDirectory "private_exports"
 
 function Stop-Export {
     param([string]$Message)
-    Write-Error $Message
+    Write-Host "ERROR: $Message" -ForegroundColor Red
     exit 1
 }
 
