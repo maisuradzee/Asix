@@ -250,7 +250,7 @@ export function createMockPartner(options: MockPartnerOptions = {}): MockPartner
 
     // Simulates the critical distributed-systems case: partner applies the
     // wallet effect, persists it, but the HTTP response is lost.
-    if (faultMode === "accept_then_timeout") {
+    if (faultMode === "accept_then_timeout" && tx.state === "CONFIRMED") {
       return json({ ok: false, error: "SIMULATED_RESPONSE_LOST_AFTER_ACCEPTANCE" }, 504);
     }
 
