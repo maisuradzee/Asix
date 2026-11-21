@@ -22,6 +22,44 @@ class MockPg implements ProviderPgExecutor {
 
 const hash = new Uint8Array(32).fill(7);
 
+Deno.test("partner key resolution returns only active key metadata and secret references", async () => {
+  const db = new MockPg();
+  db.responder = () => [{
+    partner_id: "partner-uuid",
+    partner_code: "ci-operator",
+    key_id: "ci-key-1",
+    auth_profile: "ASIX_HMAC_SHA256_V1",
+    protocol_version: "provider-v1",
+    secret_reference: "kms://partners/ci-operator/hmac-v1",
+    public_key_reference: null,
+  }];
+  const repo = new ProviderPostgresRepository(db);
+  const key = await repo.resolvePartnerKey("ci-operator", "ci-key-1");
+  assertEquals(key?.partner_id, "partner-uuid");
+  assertEquals(key?.auth_profile, "ASIX_HMAC_SHA256_V1");
+  assertEquals(key?.secret_reference, "kms://partners/ci-operator/hmac-v1");
+  assertEquals(db.calls[0].sql.includes("resolve_partner_key"), true);
+  assertEquals(db.calls[0].parameters, ["ci-operator", "ci-key-1"]);
+});
+
+Deno.test("unknown or inactive partner key metadata resolves to null", async () => {
+  const db = new MockPg();
+  db.responder = () => [];
+  const repo = new ProviderPostgresRepository(db);
+  assertEquals(await repo.resolvePartnerKey("ci-operator", "revoked-key"), null);
+});
+
+Deno.test("invalid partner-key lookup parameters are rejected before database access", async () => {
+  const db = new MockPg();
+  const repo = new ProviderPostgresRepository(db);
+  await assertRejects(
+    () => repo.resolvePartnerKey("INVALID partner", "key-1"),
+    ProviderDatabaseError,
+    "INVALID_PARTNER_KEY_LOOKUP",
+  );
+  assertEquals(db.calls.length, 0);
+});
+
 Deno.test("nonce consumption calls atomic DB function with hash", async () => {
   const db = new MockPg();
   db.responder = () => [{ consumed: true }];
