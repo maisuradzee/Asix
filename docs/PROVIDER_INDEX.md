@@ -19,6 +19,9 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Partner Onboarding](PROVIDER_PARTNER_ONBOARDING_v1.0.md)
 - [Commercial and Settlement Model](PROVIDER_COMMERCIAL_SETTLEMENT_MODEL_v1.0.md)
 - [Game Release and Certification](PROVIDER_GAME_RELEASE_AND_CERTIFICATION_v1.0.md)
+- [Disaster Recovery and Backup](PROVIDER_DR_AND_BACKUP_v1.0.md)
+- [Privacy and Data Governance](PROVIDER_PRIVACY_AND_DATA_GOVERNANCE_v1.0.md)
+- [RACI and Governance](PROVIDER_RACI_AND_GOVERNANCE_v1.0.md)
 
 ## Reference implementation
 - [Provider reference contracts and simulator](../provider-reference/README.md)
