@@ -808,6 +808,7 @@ DECLARE
   v_attempt provider_internal.wallet_attempts%ROWTYPE;
   v_next_generation integer;
   v_final_status text;
+  v_updated integer;
   v_now timestamptz := pg_catalog.clock_timestamp();
 BEGIN
   IF p_partner_id IS NULL OR p_transaction_id IS NULL
@@ -929,14 +930,22 @@ BEGIN
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_DISPATCH'
       AND o.generation = 0
-      AND o.state IN ('LEASED','READY','RETRY');
+      AND o.state = 'LEASED';
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN
+      RAISE EXCEPTION 'WALLET_DISPATCH_OUTBOX_LEASE_NOT_FOUND' USING ERRCODE = '55000';
+    END IF;
   ELSE
     UPDATE provider_internal.outbox_events AS o
     SET state = 'DELIVERED', delivered_at = v_now, lease_owner = NULL, lease_until = NULL
     WHERE o.wallet_transaction_id = p_transaction_id
       AND o.event_type = 'WALLET_STATUS_QUERY'
       AND o.generation = p_generation
-      AND o.state IN ('LEASED','READY','RETRY');
+      AND o.state = 'LEASED';
+    GET DIAGNOSTICS v_updated = ROW_COUNT;
+    IF v_updated <> 1 THEN
+      RAISE EXCEPTION 'WALLET_STATUS_QUERY_OUTBOX_LEASE_NOT_FOUND' USING ERRCODE = '55000';
+    END IF;
   END IF;
 
   IF v_final_status IN ('CONFIRMED','DECLINED','EXCEPTION') THEN
