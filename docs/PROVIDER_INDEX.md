@@ -8,6 +8,7 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider Wallet Protocol v1.0](PROVIDER_WALLET_PROTOCOL_v1.0.md)
 - [Provider Data Model v1.0](PROVIDER_DATA_MODEL_v1.0.md)
 - [Existing ASIX Compatibility Map](EXISTING_ASIX_COMPATIBILITY_MAP_v1.0.md)
+- [ST8 Aggregator Reference and API Direction](ST8_AGGREGATOR_REFERENCE_AND_DIRECTION.md)
 
 ## Reliability, testing and operations
 - [Partner UAT Test Matrix v1.0](PARTNER_UAT_TEST_MATRIX_v1.0.md)
