@@ -64,11 +64,12 @@ Deno.test("negative GGR can be floored or carried forward only as contract defin
   assertEquals(floored.rawGgrMinor, -2_000n);
   assertEquals(floored.effectiveGgrMinor, 0n);
 
-  const carried = await calculateProviderSettlement({
+  const carriedLoss = await calculateProviderSettlement({
     ...baseContract,
     negativeGgrPolicy: "CARRY_FORWARD",
-  }, baseInput,);
-  assertEquals(carried.closingLossCarryForwardMinor, 0n);
+  }, { ...lossInput, priorLossCarryForwardMinor: 1_000n });
+  assertEquals(carriedLoss.effectiveGgrMinor, 0n);
+  assertEquals(carriedLoss.closingLossCarryForwardMinor, 3_000n);
 });
 
 Deno.test("carry-forward offsets positive GGR and preserves unused loss", async () => {
