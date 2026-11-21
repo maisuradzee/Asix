@@ -92,13 +92,13 @@ VALUES
   '00000000-0000-4000-8000-000000000103',
   '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-player-opaque', 'ci-session-launch', 'ASIX_CI_GAME',
-  'GE', 'GEL', 2, 'en-GB', 'CREATED', 1
+  'GE', 'GEL', 2, 'en-GB', 'CREATED', 'policy-1'
 ),
 (
   '00000000-0000-4000-8000-000000000104'::uuid,
   '00000000-0000-4000-8000-000000000101'::uuid,
   'ci-player-opaque', 'ci-session-wallet', 'ASIX_CI_GAME',
-  'GE', 'GEL', 2, 'en-GB', 'ACTIVE', 1
+  'GE', 'GEL', 2, 'en-GB', 'ACTIVE', 'policy-1'
 );
 
 INSERT INTO provider_internal.rounds(
@@ -112,11 +112,12 @@ VALUES (
 );
 
 INSERT INTO provider_internal.launch_tokens(
-  partner_id, session_id, token_hash, expires_at
+  partner_id, session_id, key_id, protocol_version, token_hash, expires_at
 )
 VALUES (
   '00000000-0000-4000-8000-000000000101'::uuid,
   '00000000-0000-4000-8000-000000000103',
+  'ci-key-1', 'provider-v1',
   pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex'),
   pg_catalog.clock_timestamp() + interval '2 minutes'
 );
@@ -172,12 +173,20 @@ BEGIN
     RAISE EXCEPTION 'NONCE_CONSUMPTION_NOT_ONE_TIME';
   END IF;
 
-  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_id::text)
     INTO v_launch_count, v_launch_status
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
   ) AS q;
-  IF v_launch_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+  IF v_launch_count <> 1 THEN
+    RAISE EXCEPTION 'LAUNCH_TOKEN_FIRST_USE_FAILED';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM provider_internal.sessions
+    WHERE id = '00000000-0000-4000-8000-000000000103'::uuid
+      AND status = 'ACTIVE'
+  ) THEN
     RAISE EXCEPTION 'LAUNCH_TOKEN_DID_NOT_ATOMICALLY_ACTIVATE_SESSION';
   END IF;
 
@@ -192,6 +201,10 @@ BEGIN
     INTO v_new_session_id, v_launch_status, v_token_issued, v_token_expiry
   FROM provider_internal.create_launch_session(
     '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000109'::uuid,
+    '00000000-0000-4000-8000-000000000110'::uuid,
     'ci-created-player'::text,
     'ci-created-session'::text,
     'ASIX_CI_GAME'::text,
@@ -199,7 +212,7 @@ BEGIN
     'GEL'::text,
     2::smallint,
     'en-GB'::text,
-    1::integer,
+    'policy-1'::text,
     pg_catalog.decode(pg_catalog.repeat('23', 32), 'hex'),
     pg_catalog.clock_timestamp() + interval '2 minutes'
   ) AS q;
@@ -213,6 +226,10 @@ BEGIN
     INTO v_reissued_session_id, v_token_issued
   FROM provider_internal.create_launch_session(
     '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000111'::uuid,
+    '00000000-0000-4000-8000-000000000112'::uuid,
     'ci-created-player'::text,
     'ci-created-session'::text,
     'ASIX_CI_GAME'::text,
@@ -220,7 +237,7 @@ BEGIN
     'GEL'::text,
     2::smallint,
     'en-GB'::text,
-    1::integer,
+    'policy-1'::text,
     pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex'),
     pg_catalog.clock_timestamp() + interval '2 minutes'
   ) AS q;
@@ -234,12 +251,14 @@ BEGIN
   );
   IF v_old_token_count <> 0 THEN RAISE EXCEPTION 'SUPERSEDED_LAUNCH_TOKEN_WAS_ACCEPTED'; END IF;
 
-  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
-    INTO v_new_token_count, v_launch_status
+  SELECT pg_catalog.count(*) INTO v_new_token_count
   FROM provider_internal.consume_launch_token(
     pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex')
-  ) AS q;
-  IF v_new_token_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+  );
+  IF v_new_token_count <> 1 OR NOT EXISTS (
+    SELECT 1 FROM provider_internal.sessions
+    WHERE id = v_new_session_id AND status = 'ACTIVE'
+  ) THEN
     RAISE EXCEPTION 'REISSUED_LAUNCH_TOKEN_FAILED_TO_ACTIVATE';
   END IF;
 
@@ -248,6 +267,10 @@ BEGIN
     INTO v_token_issued, v_launch_status
   FROM provider_internal.create_launch_session(
     '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000113'::uuid,
+    '00000000-0000-4000-8000-000000000114'::uuid,
     'ci-created-player'::text,
     'ci-created-session'::text,
     'ASIX_CI_GAME'::text,
@@ -255,7 +278,7 @@ BEGIN
     'GEL'::text,
     2::smallint,
     'en-GB'::text,
-    1::integer,
+    'policy-1'::text,
     pg_catalog.decode(pg_catalog.repeat('25', 32), 'hex'),
     pg_catalog.clock_timestamp() + interval '2 minutes'
   ) AS q;
@@ -267,6 +290,10 @@ BEGIN
   BEGIN
     PERFORM * FROM provider_internal.create_launch_session(
       '00000000-0000-4000-8000-000000000101'::uuid,
+      'ci-key-1'::text,
+      'provider-v1'::text,
+      '00000000-0000-4000-8000-000000000115'::uuid,
+      '00000000-0000-4000-8000-000000000116'::uuid,
       'different-player'::text,
       'ci-created-session'::text,
       'ASIX_CI_GAME'::text,
@@ -274,7 +301,7 @@ BEGIN
       'GEL'::text,
       2::smallint,
       'en-GB'::text,
-      1::integer,
+      'policy-1'::text,
       pg_catalog.decode(pg_catalog.repeat('26', 32), 'hex'),
       pg_catalog.clock_timestamp() + interval '2 minutes'
     );
