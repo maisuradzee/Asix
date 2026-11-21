@@ -14,6 +14,7 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Provider Autopilot Policy v1.0](PROVIDER_AUTOPILOT_POLICY_v1.0.md)
 - [Stage 2 Build Plan](PROVIDER_STAGE2_BUILD_PLAN.md)
 - [Threat Model](PROVIDER_THREAT_MODEL_v1.0.md)
+- [Partner Key Management and Rotation](PROVIDER_KEY_MANAGEMENT_AND_ROTATION_v1.0.md)
 - [SLO and Observability](PROVIDER_SLO_AND_OBSERVABILITY_v1.0.md)
 - [Incident and Recovery Runbooks](PROVIDER_RUNBOOKS_v1.0.md)
 - [Partner Onboarding](PROVIDER_PARTNER_ONBOARDING_v1.0.md)
