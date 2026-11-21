@@ -87,3 +87,5 @@ The disposable PostgreSQL 17 CI job now runs a two-connection race test:
 - simultaneous partial Refunds against the same confirmed original Bet; only one may consume the remaining refundable amount.
 
 Latest verified CI: 73 Deno tests passed, 0 failed; schema smoke and both concurrency assertions passed on the disposable PostgreSQL 17 service. This is not a V154 restore or a live Supabase test.
+
+- `record_wallet_partner_response` is the proposed DB function for persisting DISPATCH and STATUS_QUERY responses. It checks the transaction state/generation, stores response hashes and attempt evidence, handles repeated persistence idempotently, and schedules bounded read-only status queries for PENDING/UNKNOWN responses.
