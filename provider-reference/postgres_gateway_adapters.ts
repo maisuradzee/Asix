@@ -62,8 +62,11 @@ function decodeSha256TokenHash(value: string): Uint8Array {
   return bytes;
 }
 
-function encodeSha256Bytes(value: string): Uint8Array {
-  return new TextEncoder().encode(value);
+function encodeSha256Bytes(value: string): ArrayBuffer {
+  const bytes = new TextEncoder().encode(value);
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }
 
 /**
