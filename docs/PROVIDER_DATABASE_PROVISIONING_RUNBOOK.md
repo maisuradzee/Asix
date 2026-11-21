@@ -40,9 +40,10 @@ Initial routines:
 3. create_wallet_transaction — partner/session/config validation, scoped idempotency and outbox insert in one transaction.
 4. claim_outbox_events — bounded worker lease claims.
 5. mark_expired_wallet_dispatches_unknown — uncertain dispatch becomes UNKNOWN and queues a read-only status query, never a new debit.
-6. record_wallet_partner_response — requires the relevant outbox lease, the worker ID that owns that lease, an unexpired lease and the exact response generation; persists a partner DISPATCH/STATUS_QUERY response idempotently, stores attempt evidence, closes the lease and schedules a bounded next status query when still pending/unknown.
+6. record_wallet_partner_response — requires the relevant outbox lease, the worker ID that owns that lease, its one-time lease token, an unexpired lease and the exact response generation; persists a partner DISPATCH/STATUS_QUERY response idempotently, stores attempt evidence, closes the lease and schedules a bounded next status query when still pending/unknown.
 7. get_wallet_transaction_status — returns only scoped transaction status fields for an authenticated partner context.
 8. post_ledger_journal — validates a same-currency balanced journal before posting.
+9. recover_expired_wallet_status_query_leases — returns expired read-only status checks to RETRY with bounded backoff, or moves events at max_attempts to DEAD_LETTER.
 
 Append-only/integrity controls freeze completed/voided rounds, wallet financial identity fields, wallet attempt evidence, commercial contract versions, audit/approval history and posted ledger journals/entries. Financial status updates must use approved state-transition routines.
 
@@ -77,7 +78,7 @@ Do not copy auth.uid() policies onto Provider tables: casino partner identities 
 10. Record migration ID, schema diff, test output, advisor results and rollback/forward-repair plan.
 11. Only after a separate release gate should production deployment be considered.
 
-Current CI evidence: the draft schema and smoke suite pass in a disposable PostgreSQL 17 container, and concurrent Bet-exposure plus Refund-cap races pass with two simultaneous database clients. This is not a substitute for the same checks on an isolated restored V154 Supabase staging project.
+Latest verified GitHub Actions run #281: 78 Deno tests passed, 0 failed; PostgreSQL 17 disposable-container checks passed for schema security/smoke, wallet response persistence, concurrent Bet/Refund limits and expired read-only status-query lease recovery. This is not a substitute for the same checks on an isolated restored V154 Supabase staging project.
 
 ## 8. Rollback and recovery
 
@@ -89,3 +90,11 @@ Do not drop provider tables or erase transactions after Provider has accepted li
 - Supabase CLI is not installed in the current authoring environment; no Supabase-generated migration has been created.
 - No dedicated Provider database LOGIN credential or secret has been provisioned.
 - No Provider schema, role, function, trigger or table has been created in the live project.
+
+
+### Wallet and status-query timeout handling
+
+- Expired \`WALLET_DISPATCH\`: transition the transaction to \`UNKNOWN\`, retire the dispatch event and enqueue a read-only \`WALLET_STATUS_QUERY\`. Do not send the original debit/credit again.
+- Expired \`WALLET_STATUS_QUERY\`: return only that read-only event to \`RETRY\` with bounded backoff and clear the expired lease owner/token. A new claim issues a new one-time token.
+- At \`max_attempts\`: move the status-query event to \`DEAD_LETTER\`; surface it for controlled exception handling rather than polling forever.
+- Response persistence must match worker ID + lease token + unexpired lease + response generation.
