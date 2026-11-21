@@ -167,6 +167,13 @@ export async function calculateProviderSettlement(
   const canonical = JSON.stringify({
     contractId: contract.contractId,
     contractVersion: contract.contractVersion,
+    currency: contract.currency,
+    feeModel: contract.feeModel,
+    revenueShareBps: contract.revenueShareBps,
+    fixedFeeMinor: contract.fixedFeeMinor.toString(),
+    roundingMode: contract.roundingMode,
+    negativeGgrPolicy: contract.negativeGgrPolicy,
+    allowedComponentCodes: [...contract.allowedComponentCodes].sort(),
     partnerCode: input.partnerCode,
     periodStart: input.periodStart,
     periodEnd: input.periodEnd,
