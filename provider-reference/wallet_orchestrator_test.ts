@@ -7,7 +7,11 @@ import type {
   IsoCurrencyCode,
   MinorUnits,
 } from "./contracts.ts";
-import { WalletOrchestrator, IdempotencyConflictError } from "./wallet_orchestrator.ts";
+import {
+  WalletOrchestrator,
+  IdempotencyConflictError,
+  computeWalletRequestHash,
+} from "./wallet_orchestrator.ts";
 import { InMemoryWalletTransactionRepository } from "./testing/in_memory_repository.ts";
 
 const partner = "operator-demo" as PartnerCode;
