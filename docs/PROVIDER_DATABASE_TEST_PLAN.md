@@ -32,7 +32,13 @@ Target: disposable PostgreSQL 17 CI container for current automated smoke checks
 ## D. Launch and session
 - Session uniqueness is partner_id + partner_session_ref.
 - Partner A cannot consume Partner B launch token.
+- Launch session creation validates the active partner and exact enabled game/jurisdiction/currency/exponent configuration.
+- partner_session_ref is idempotent within a partner; retry with the same immutable session identity reuses CREATED session, revokes older unconsumed token and issues one fresh token hash.
+- Reuse of a partner session reference with a changed player/game/currency/policy identity is rejected.
+- Concurrent launch retries for the same partner/session reference serialize and produce exactly one session and one currently valid token.
 - Only token hashes are stored; token can be consumed once and only before expiry.
+- Token consumption atomically advances session CREATED → ACTIVE; a replay, revoked token, expired token, inactive partner or disabled config returns no session context.
+- Repeating Launch after the session is ACTIVE does not issue another token.
 - Expired or already consumed token returns no session context.
 - Disabled game, currency or jurisdiction cannot create a launch.
 - Session currency and exponent cannot be changed by a wallet request.
@@ -132,3 +138,15 @@ This validates the draft SQL and those specific concurrent paths on vanilla Post
 - Status-query lease recovery does not change the wallet transaction state or create a BET/WIN/REFUND transaction.
 - Response persistence requires the exact worker ID, one-time lease token and unexpired lease. Stale workers/tokens are rejected.
 - CI test marker: \`PROVIDER_STATUS_QUERY_LEASE_RECOVERY_PASSED\`.
+
+
+## M. Launch session creation and activation (21 November 2026)
+
+- \`create_launch_session\` validates partner status, exact game configuration, jurisdiction, currency/exponent, locale, policy version, token hash and a maximum five-minute token lifetime.
+- \`partner_session_ref\` provides partner-scoped idempotency. Same immutable identity reuses the CREATED session; prior unused token hashes are revoked before a new one is issued. Changed identity is an integrity conflict.
+- \`consume_launch_token\` locks the same partner/session advisory key, checks the active partner/config, consumes the one-use token and activates the session in one transaction.
+- After activation, the same Launch request returns the existing ACTIVE session without minting another token.
+- A two-client CI race test calls \`create_launch_session\` concurrently with the same partner/session reference and different token hashes. Expected result: 1 session, 1 unconsumed/unrevoked token and 1 revoked earlier token.
+- Latest verified GitHub Actions run #307: 80 Deno tests passed, 0 failed; SQL schema, smoke, concurrent launch, concurrent Bet exposure, concurrent Refund cap, response lifecycle and status-query recovery checks passed on disposable PostgreSQL 17.
+
+This validates the proposed SQL on vanilla PostgreSQL 17. It does not establish a verified V154 restore, Supabase staging compatibility, production throughput or partner UAT.
