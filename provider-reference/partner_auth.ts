@@ -51,6 +51,12 @@ export type PartnerSignatureResult =
 
 const encoder = new TextEncoder();
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
@@ -65,7 +71,7 @@ function decodeBase64(value: string): Uint8Array | null {
 }
 
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  const digest = await crypto.subtle.digest("SHA-256", toArrayBuffer(bytes));
   return toHex(new Uint8Array(digest));
 }
 
@@ -148,8 +154,8 @@ export async function verifyPartnerRequest(
   const valid = await crypto.subtle.verify(
     "HMAC",
     resolved.key,
-    signature,
-    encoder.encode(canonical),
+    toArrayBuffer(signature),
+    toArrayBuffer(encoder.encode(canonical)),
   );
   if (!valid) return { ok: false, error: "SIGNATURE_INVALID" };
 
