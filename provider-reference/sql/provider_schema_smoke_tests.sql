@@ -1,0 +1,669 @@
+\set ON_ERROR_STOP on
+
+-- This test suite runs only inside a disposable PostgreSQL 17 CI container.
+-- It is not a production migration test and does not connect to Supabase.
+
+DO $security$
+DECLARE
+  v_total integer;
+  v_rls integer;
+BEGIN
+  IF pg_catalog.has_schema_privilege('anon', 'provider_internal', 'USAGE')
+     OR pg_catalog.has_schema_privilege('authenticated', 'provider_internal', 'USAGE')
+     OR pg_catalog.has_schema_privilege('service_role', 'provider_internal', 'USAGE') THEN
+    RAISE EXCEPTION 'UNTRUSTED_ROLE_HAS_PROVIDER_SCHEMA_USAGE';
+  END IF;
+
+  IF NOT pg_catalog.has_schema_privilege('provider_runtime', 'provider_internal', 'USAGE') THEN
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_SCHEMA_USAGE_MISSING';
+  END IF;
+
+  IF pg_catalog.has_table_privilege('provider_runtime', 'provider_internal.partners', 'SELECT')
+     OR pg_catalog.has_table_privilege('provider_runtime', 'provider_internal.wallet_transactions', 'INSERT')
+     OR pg_catalog.has_table_privilege('provider_runtime', 'provider_internal.ledger_entries', 'UPDATE') THEN
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_HAS_DIRECT_TABLE_PRIVILEGE';
+  END IF;
+
+  IF NOT pg_catalog.has_function_privilege(
+    'provider_runtime',
+    'provider_internal.consume_partner_nonce(uuid,text,bytea,timestamp with time zone)',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_APPROVED_FUNCTION_GRANT_MISSING';
+  END IF;
+
+  IF pg_catalog.has_function_privilege(
+    'provider_runtime',
+    'provider_internal.guard_append_only_history()',
+    'EXECUTE'
+  ) THEN
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_CAN_EXECUTE_INTERNAL_TRIGGER_FUNCTION';
+  END IF;
+
+  IF pg_catalog.pg_has_role('provider_runtime', 'service_role', 'MEMBER')
+     OR pg_catalog.pg_has_role('provider_runtime', 'authenticated', 'MEMBER') THEN
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_INHERITS_UNTRUSTED_ROLE';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_total
+  FROM pg_catalog.pg_class c
+  JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'provider_internal' AND c.relkind = 'r';
+
+  SELECT pg_catalog.count(*) INTO v_rls
+  FROM pg_catalog.pg_class c
+  JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+  WHERE n.nspname = 'provider_internal' AND c.relkind = 'r'
+    AND c.relrowsecurity AND c.relforcerowsecurity;
+
+  IF v_total = 0 OR v_rls <> v_total THEN
+    RAISE EXCEPTION 'PROVIDER_TABLE_RLS_NOT_FULLY_FORCED total %, protected %', v_total, v_rls;
+  END IF;
+END
+$security$;
+
+INSERT INTO provider_internal.partners(id, partner_code, display_name, status)
+VALUES ('00000000-0000-4000-8000-000000000101'::uuid, 'ci-operator', 'CI Operator', 'ACTIVE');
+
+INSERT INTO provider_internal.partner_keys(
+  id, partner_id, key_id, auth_profile, protocol_version, secret_reference, status
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000102',
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'ci-key-1', 'ASIX_HMAC_SHA256_V1', 'provider-v1', 'kms://ci/partner-key', 'ACTIVE'
+);
+
+INSERT INTO provider_internal.partner_game_configs(
+  partner_id, game_code, jurisdiction, currency, currency_exponent,
+  min_bet_minor, max_bet_minor, max_win_minor, max_open_exposure_minor, enabled
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'ASIX_CI_GAME', 'GE', 'GEL', 2, 100, 2000, 5000, 3000, true
+);
+
+INSERT INTO provider_internal.sessions(
+  id, partner_id, partner_player_ref, partner_session_ref, game_code,
+  jurisdiction, currency, currency_exponent, locale, status, policy_version
+)
+VALUES
+(
+  '00000000-0000-4000-8000-000000000103',
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'ci-player-opaque', 'ci-session-launch', 'ASIX_CI_GAME',
+  'GE', 'GEL', 2, 'en-GB', 'CREATED', 'policy-1'
+),
+(
+  '00000000-0000-4000-8000-000000000104'::uuid,
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'ci-player-opaque', 'ci-session-wallet', 'ASIX_CI_GAME',
+  'GE', 'GEL', 2, 'en-GB', 'ACTIVE', 'policy-1'
+);
+
+INSERT INTO provider_internal.rounds(
+  id, partner_id, session_id, round_number, game_version, rules_hash, status
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000105'::uuid,
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  '00000000-0000-4000-8000-000000000104'::uuid,
+  1, 'ci-game-v1', pg_catalog.decode(pg_catalog.repeat('11', 32), 'hex'), 'OPEN'
+);
+
+INSERT INTO provider_internal.launch_tokens(
+  partner_id, session_id, key_id, protocol_version, token_hash, expires_at
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  '00000000-0000-4000-8000-000000000103',
+  'ci-key-1', 'provider-v1',
+  pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex'),
+  pg_catalog.clock_timestamp() + interval '2 minutes'
+);
+
+SET ROLE provider_runtime;
+
+DO $nonce_and_launch$
+DECLARE
+  v_first boolean;
+  v_second boolean;
+  v_launch_count integer;
+  v_key_count integer;
+  v_resolved_partner_id uuid;
+  v_auth_profile text;
+  v_secret_reference text;
+  v_launch_status text;
+  v_new_session_id uuid;
+  v_reissued_session_id uuid;
+  v_token_issued boolean;
+  v_token_expiry timestamptz;
+  v_old_token_count integer;
+  v_new_token_count integer;
+BEGIN
+  SELECT q.partner_id, q.auth_profile, q.secret_reference
+    INTO v_resolved_partner_id, v_auth_profile, v_secret_reference
+  FROM provider_internal.resolve_partner_key('ci-operator'::text, 'ci-key-1'::text) AS q;
+
+  IF v_resolved_partner_id <> '00000000-0000-4000-8000-000000000101'::uuid
+     OR v_auth_profile <> 'ASIX_HMAC_SHA256_V1'
+     OR v_secret_reference <> 'kms://ci/partner-key' THEN
+    RAISE EXCEPTION 'PARTNER_KEY_METADATA_RESOLUTION_FAILED';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_key_count
+  FROM provider_internal.resolve_partner_key('ci-operator'::text, 'missing-key'::text);
+  IF v_key_count <> 0 THEN
+    RAISE EXCEPTION 'UNKNOWN_PARTNER_KEY_WAS_RESOLVED';
+  END IF;
+
+  v_first := provider_internal.consume_partner_nonce(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1',
+    pg_catalog.decode(pg_catalog.repeat('33', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '5 minutes'
+  );
+  v_second := provider_internal.consume_partner_nonce(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1',
+    pg_catalog.decode(pg_catalog.repeat('33', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '5 minutes'
+  );
+  IF NOT v_first OR v_second THEN
+    RAISE EXCEPTION 'NONCE_CONSUMPTION_NOT_ONE_TIME';
+  END IF;
+
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+    INTO v_launch_count, v_launch_status
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
+  ) AS q;
+  IF v_launch_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'LAUNCH_TOKEN_DID_NOT_ATOMICALLY_ACTIVATE_SESSION';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_launch_count
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('22', 32), 'hex')
+  );
+  IF v_launch_count <> 0 THEN RAISE EXCEPTION 'LAUNCH_TOKEN_REPLAY_ACCEPTED'; END IF;
+
+  -- New session and one-time token are created through the approved function.
+  SELECT q.session_id, q.session_status, q.token_issued, q.token_expires_at
+    INTO v_new_session_id, v_launch_status, v_token_issued, v_token_expiry
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000109'::uuid,
+    '00000000-0000-4000-8000-000000000110'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    'policy-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('23', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_new_session_id IS NULL OR v_launch_status <> 'CREATED' OR NOT v_token_issued OR v_token_expiry IS NULL THEN
+    RAISE EXCEPTION 'LAUNCH_SESSION_CREATE_FAILED';
+  END IF;
+
+  -- Retry with identical partner/session identity reuses the session and
+  -- revokes the previously issued but still unconsumed token.
+  SELECT q.session_id, q.token_issued
+    INTO v_reissued_session_id, v_token_issued
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000111'::uuid,
+    '00000000-0000-4000-8000-000000000112'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    'policy-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_reissued_session_id <> v_new_session_id OR NOT v_token_issued THEN
+    RAISE EXCEPTION 'LAUNCH_SESSION_RETRY_NOT_IDEMPOTENT';
+  END IF;
+
+  SELECT pg_catalog.count(*) INTO v_old_token_count
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('23', 32), 'hex')
+  );
+  IF v_old_token_count <> 0 THEN RAISE EXCEPTION 'SUPERSEDED_LAUNCH_TOKEN_WAS_ACCEPTED'; END IF;
+
+  SELECT pg_catalog.count(*), pg_catalog.min(q.session_status)
+    INTO v_new_token_count, v_launch_status
+  FROM provider_internal.consume_launch_token(
+    pg_catalog.decode(pg_catalog.repeat('24', 32), 'hex')
+  ) AS q;
+  IF v_new_token_count <> 1 OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'REISSUED_LAUNCH_TOKEN_FAILED_TO_ACTIVATE';
+  END IF;
+
+  -- A replay after ACTIVE does not mint another token.
+  SELECT q.token_issued, q.session_status
+    INTO v_token_issued, v_launch_status
+  FROM provider_internal.create_launch_session(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-key-1'::text,
+    'provider-v1'::text,
+    '00000000-0000-4000-8000-000000000113'::uuid,
+    '00000000-0000-4000-8000-000000000114'::uuid,
+    'ci-created-player'::text,
+    'ci-created-session'::text,
+    'ASIX_CI_GAME'::text,
+    'GE'::text,
+    'GEL'::text,
+    2::smallint,
+    'en-GB'::text,
+    'policy-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('25', 32), 'hex'),
+    pg_catalog.clock_timestamp() + interval '2 minutes'
+  ) AS q;
+  IF v_token_issued OR v_launch_status <> 'ACTIVE' THEN
+    RAISE EXCEPTION 'ACTIVE_SESSION_WAS_RELAUNCHED';
+  END IF;
+
+  -- Reusing a partner session reference for a different player is a conflict.
+  BEGIN
+    PERFORM * FROM provider_internal.create_launch_session(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      'ci-key-1'::text,
+      'provider-v1'::text,
+      '00000000-0000-4000-8000-000000000115'::uuid,
+      '00000000-0000-4000-8000-000000000116'::uuid,
+      'different-player'::text,
+      'ci-created-session'::text,
+      'ASIX_CI_GAME'::text,
+      'GE'::text,
+      'GEL'::text,
+      2::smallint,
+      'en-GB'::text,
+      'policy-1'::text,
+      pg_catalog.decode(pg_catalog.repeat('26', 32), 'hex'),
+      pg_catalog.clock_timestamp() + interval '2 minutes'
+    );
+    RAISE EXCEPTION 'PARTNER_SESSION_IDENTITY_CONFLICT_NOT_REJECTED';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
+END
+$nonce_and_launch$;
+
+DO $wallet$
+DECLARE
+  v_tx uuid;
+  v_status text;
+  v_created boolean;
+  v_existing_count integer;
+  v_existing_tx uuid;
+BEGIN
+  -- Direct table reads are denied even though the SECURITY DEFINER functions work.
+  BEGIN
+    PERFORM 1 FROM provider_internal.partners;
+    RAISE EXCEPTION 'PROVIDER_RUNTIME_DIRECT_TABLE_READ_SUCCEEDED';
+  EXCEPTION WHEN insufficient_privilege THEN
+    NULL;
+  END;
+
+  SELECT t.transaction_id, t.transaction_status, t.was_created
+    INTO v_tx, v_status, v_created
+  FROM provider_internal.create_wallet_transaction(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-bet-idempotency-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('44', 32), 'hex'),
+    'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+  ) AS t;
+
+  IF v_tx IS NULL OR v_status <> 'CREATED' OR NOT v_created THEN
+    RAISE EXCEPTION 'WALLET_BET_CREATE_FAILED';
+  END IF;
+
+  SELECT t.transaction_id, t.transaction_status, t.was_created
+    INTO v_existing_tx, v_status, v_created
+  FROM provider_internal.create_wallet_transaction(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-bet-idempotency-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('44', 32), 'hex'),
+    'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+  ) AS t;
+
+  IF v_existing_tx <> v_tx OR v_created THEN
+    RAISE EXCEPTION 'WALLET_IDEMPOTENCY_REPLAY_FAILED';
+  END IF;
+
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-bet-idempotency-1'::text,
+      pg_catalog.decode(pg_catalog.repeat('55', 32), 'hex'),
+      'BET'::text, 1000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+    );
+    RAISE EXCEPTION 'IDEMPOTENCY_DIFFERENT_HASH_WAS_ACCEPTED';
+  EXCEPTION WHEN unique_violation THEN
+    NULL;
+  END;
+
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-bet-idempotency-over-limit'::text,
+      pg_catalog.decode(pg_catalog.repeat('66', 32), 'hex'),
+      'BET'::text, 2500::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+    );
+    RAISE EXCEPTION 'OPEN_EXPOSURE_LIMIT_WAS_BYPASSED';
+  EXCEPTION WHEN SQLSTATE '22003' THEN
+    NULL;
+  END;
+
+  -- Claim dispatch once; an expired wallet dispatch is converted to UNKNOWN,
+  -- never resent, and produces a read-only status-query outbox item.
+  SELECT pg_catalog.count(*) INTO v_existing_count
+  FROM provider_internal.claim_outbox_events(
+    '00000000-0000-4000-8000-000000000199', 10, 5
+  );
+  IF v_existing_count <> 1 THEN RAISE EXCEPTION 'OUTBOX_DISPATCH_CLAIM_FAILED'; END IF;
+END
+$wallet$;
+
+RESET ROLE;
+
+-- Simulate the worker crash after dispatch and before response persistence.
+UPDATE provider_internal.wallet_transactions
+SET dispatch_lease_until = pg_catalog.clock_timestamp() - interval '1 minute'
+WHERE id = '00000000-0000-4000-8000-000000000106';
+
+-- The actual transaction id is obtained through the idempotency key above.
+UPDATE provider_internal.wallet_transactions
+SET dispatch_lease_until = pg_catalog.clock_timestamp() - interval '1 minute'
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND idempotency_key = 'ci-bet-idempotency-1'::text;
+
+SET ROLE provider_runtime;
+DO $recovery$
+DECLARE
+  v_count integer;
+  v_status text;
+  v_query_events integer;
+  v_lease_token uuid;
+  v_was_recorded boolean;
+BEGIN
+  v_count := provider_internal.mark_expired_wallet_dispatches_unknown();
+  IF v_count <> 1 THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_RECOVERY_FAILED'; END IF;
+
+  SELECT q.transaction_status INTO v_status
+  FROM provider_internal.get_wallet_transaction_status(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-bet-idempotency-1'::text
+  ) AS q;
+  IF v_status <> 'UNKNOWN' THEN RAISE EXCEPTION 'EXPIRED_DISPATCH_NOT_UNKNOWN'; END IF;
+
+  SELECT pg_catalog.count(*), (pg_catalog.array_agg(e.lease_token))[1]
+    INTO v_query_events, v_lease_token
+  FROM provider_internal.claim_outbox_events(
+    '00000000-0000-4000-8000-000000000198'::uuid, 10, 5
+  ) AS e;
+  IF v_query_events <> 1 THEN RAISE EXCEPTION 'STATUS_QUERY_OUTBOX_NOT_CLAIMABLE'; END IF;
+
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000198'::uuid,
+    v_lease_token,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 1, 1,
+    pg_catalog.decode(pg_catalog.repeat('d1', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d2', 32), 'hex'),
+    'PENDING'::text, 'PENDING'::text, NULL::text,
+    pg_catalog.clock_timestamp() + interval '100 milliseconds'
+  ) AS r;
+  IF v_status <> 'PENDING' OR NOT v_was_recorded THEN
+    RAISE EXCEPTION 'PENDING_WALLET_RESPONSE_NOT_RECORDED';
+  END IF;
+
+  -- Replaying the same persistence attempt is idempotent.
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000198'::uuid,
+    v_lease_token,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 1, 1,
+    pg_catalog.decode(pg_catalog.repeat('d1', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d2', 32), 'hex'),
+    'PENDING'::text, 'PENDING'::text, NULL::text,
+    pg_catalog.clock_timestamp() + interval '100 milliseconds'
+  ) AS r;
+  IF v_status <> 'PENDING' OR v_was_recorded THEN
+    RAISE EXCEPTION 'WALLET_RESPONSE_REPLAY_WAS_NOT_IDEMPOTENT';
+  END IF;
+
+  PERFORM pg_catalog.pg_sleep(0.2);
+  SELECT pg_catalog.count(*), (pg_catalog.array_agg(e.lease_token))[1]
+    INTO v_query_events, v_lease_token
+  FROM provider_internal.claim_outbox_events(
+    '00000000-0000-4000-8000-000000000197'::uuid, 10, 5
+  ) AS e;
+  IF v_query_events <> 1 THEN RAISE EXCEPTION 'NEXT_STATUS_QUERY_NOT_SCHEDULED'; END IF;
+
+  SELECT r.transaction_status, r.was_recorded
+    INTO v_status, v_was_recorded
+  FROM provider_internal.record_wallet_partner_response(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000197'::uuid,
+    v_lease_token,
+    (
+      SELECT q.transaction_id
+      FROM provider_internal.get_wallet_transaction_status(
+        '00000000-0000-4000-8000-000000000101'::uuid,
+        'ci-bet-idempotency-1'::text
+      ) AS q
+    ),
+    'STATUS_QUERY'::text, 2, 2,
+    pg_catalog.decode(pg_catalog.repeat('d3', 32), 'hex'),
+    pg_catalog.decode(pg_catalog.repeat('d4', 32), 'hex'),
+    'CONFIRMED'::text, 'OK'::text, 'ci-partner-bet-ref'::text, NULL::timestamptz
+  ) AS r;
+  IF v_status <> 'CONFIRMED' OR NOT v_was_recorded THEN
+    RAISE EXCEPTION 'CONFIRMED_WALLET_RESPONSE_NOT_RECORDED';
+  END IF;
+END
+$recovery$;
+
+RESET ROLE;
+
+
+UPDATE provider_internal.rounds
+SET status = 'COMPLETED', completed_at = pg_catalog.clock_timestamp()
+WHERE id = '00000000-0000-4000-8000-000000000105'::uuid;
+
+-- Simulate partner suspension, closed session and disabled game config after
+-- the confirmed Bet. New Bets must stop; already incurred Win/Refund duties
+-- must remain processable.
+UPDATE provider_internal.partners
+SET status = 'SUSPENDED'
+WHERE id = '00000000-0000-4000-8000-000000000101'::uuid;
+
+UPDATE provider_internal.sessions
+SET status = 'COMPLETED', closed_at = pg_catalog.clock_timestamp()
+WHERE id = '00000000-0000-4000-8000-000000000104'::uuid;
+
+UPDATE provider_internal.partner_game_configs
+SET enabled = false
+WHERE partner_id = '00000000-0000-4000-8000-000000000101'::uuid
+  AND game_code = 'ASIX_CI_GAME';
+
+SET ROLE provider_runtime;
+DO $refund_and_win$
+DECLARE
+  v_original uuid;
+  v_refund uuid;
+  v_created boolean;
+BEGIN
+  -- Partner suspension and session closure prohibit new Bets.
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      NULL::uuid,
+      'ci-new-bet-after-suspension'::text,
+      pg_catalog.decode(pg_catalog.repeat('71', 32), 'hex'),
+      'BET'::text, 100::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+    );
+    RAISE EXCEPTION 'SUSPENDED_PARTNER_ACCEPTED_NEW_BET';
+  EXCEPTION WHEN SQLSTATE '42501' THEN
+    NULL;
+  END;
+
+  SELECT q.transaction_id INTO v_original
+  FROM provider_internal.get_wallet_transaction_status(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    'ci-bet-idempotency-1'::text
+  ) AS q;
+
+  SELECT t.transaction_id, t.was_created INTO v_refund, v_created
+  FROM provider_internal.create_wallet_transaction(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-refund-idempotency-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('77', 32), 'hex'),
+    'REFUND'::text, 600::bigint, 'GEL'::text, 2::smallint, v_original
+  ) AS t;
+  IF v_refund IS NULL OR NOT v_created THEN RAISE EXCEPTION 'VALID_REFUND_CREATE_FAILED'; END IF;
+
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-refund-over-idempotency'::text,
+      pg_catalog.decode(pg_catalog.repeat('88', 32), 'hex'),
+      'REFUND'::text, 500::bigint, 'GEL'::text, 2::smallint, v_original
+    );
+    RAISE EXCEPTION 'OVER_REFUND_WAS_ACCEPTED';
+  EXCEPTION WHEN SQLSTATE '22003' THEN
+    NULL;
+  END;
+
+  -- Wins are allowed only for completed rounds; cumulative win cap is enforced.
+  PERFORM * FROM provider_internal.create_wallet_transaction(
+    '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000104'::uuid,
+    '00000000-0000-4000-8000-000000000105'::uuid,
+    'ci-win-idempotency-1'::text,
+    pg_catalog.decode(pg_catalog.repeat('99', 32), 'hex'),
+    'WIN'::text, 3000::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+  );
+
+  BEGIN
+    PERFORM * FROM provider_internal.create_wallet_transaction(
+      '00000000-0000-4000-8000-000000000101'::uuid,
+      '00000000-0000-4000-8000-000000000104'::uuid,
+      '00000000-0000-4000-8000-000000000105'::uuid,
+      'ci-win-over-idempotency'::text,
+      pg_catalog.decode(pg_catalog.repeat('aa', 32), 'hex'),
+      'WIN'::text, 2500::bigint, 'GEL'::text, 2::smallint, NULL::uuid
+    );
+    RAISE EXCEPTION 'CUMULATIVE_ROUND_WIN_LIMIT_WAS_BYPASSED';
+  EXCEPTION WHEN SQLSTATE '22003' THEN
+    NULL;
+  END;
+END
+$refund_and_win$;
+
+RESET ROLE;
+
+-- Ledger posting, balance validation and immutability.
+INSERT INTO provider_internal.ledger_accounts(id, partner_id, account_code, account_type, currency)
+VALUES
+('00000000-0000-4000-8000-000000000201','00000000-0000-4000-8000-000000000101'::uuid,'CLEARING','CLEARING','GEL'),
+('00000000-0000-4000-8000-000000000202','00000000-0000-4000-8000-000000000101'::uuid,'PROVIDER_PAYABLE','LIABILITY','GEL');
+
+INSERT INTO provider_internal.ledger_journals(
+  id, partner_id, source_type, source_ref, journal_type, currency, status
+)
+VALUES (
+  '00000000-0000-4000-8000-000000000203',
+  '00000000-0000-4000-8000-000000000101'::uuid,
+  'WALLET_TRANSACTION', 'ci-ledger-source-1', 'TEST_POST', 'GEL', 'DRAFT'
+);
+
+INSERT INTO provider_internal.ledger_entries(
+  journal_id, partner_id, account_id, currency, direction, amount_minor
+)
+VALUES
+('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101'::uuid,'00000000-0000-4000-8000-000000000201','GEL','DEBIT',1000),
+('00000000-0000-4000-8000-000000000203','00000000-0000-4000-8000-000000000101'::uuid,'00000000-0000-4000-8000-000000000202','GEL','CREDIT',1000);
+
+SET ROLE provider_runtime;
+DO $ledger$
+DECLARE v_posted boolean;
+BEGIN
+  v_posted := provider_internal.post_ledger_journal(
+    '00000000-0000-4000-8000-000000000203',
+    pg_catalog.decode(pg_catalog.repeat('bb', 32), 'hex')
+  );
+  IF NOT v_posted THEN RAISE EXCEPTION 'BALANCED_JOURNAL_NOT_POSTED'; END IF;
+END
+$ledger$;
+RESET ROLE;
+
+DO $ledger_immutability$
+BEGIN
+  BEGIN
+    UPDATE provider_internal.ledger_journals
+    SET source_ref = 'mutated'
+    WHERE id = '00000000-0000-4000-8000-000000000203';
+    RAISE EXCEPTION 'POSTED_JOURNAL_HEADER_MUTATED';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    NULL;
+  END;
+
+  BEGIN
+    UPDATE provider_internal.ledger_entries
+    SET amount_minor = 999
+    WHERE journal_id = '00000000-0000-4000-8000-000000000203';
+    RAISE EXCEPTION 'POSTED_JOURNAL_ENTRY_MUTATED';
+  EXCEPTION WHEN SQLSTATE '55000' THEN
+    NULL;
+  END;
+END
+$ledger_immutability$;
+
+-- Successful completion prints one final marker for CI logs.
+SELECT 'PROVIDER_DATABASE_SMOKE_TESTS_PASSED' AS result;
