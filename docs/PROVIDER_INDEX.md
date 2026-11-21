@@ -33,6 +33,8 @@ This directory describes the planned B2B provider layer. None of these documents
 - [Partner HMAC authentication reference](../provider-reference/partner_auth.ts)
 - [One-time launch service](../provider-reference/launch_service.ts)
 - [Partner circuit breaker and status-query backoff](../provider-reference/resilience.ts)
+- [Partner Provider Gateway handler](../provider-reference/provider_gateway.ts)
+- [Gateway integration tests](../provider-reference/provider_gateway_test.ts)
 - [Circuit breaker tests](../provider-reference/resilience_test.ts)
 - [Launch service tests](../provider-reference/launch_service_test.ts)
 - [Partner authentication tests](../provider-reference/partner_auth_test.ts)
