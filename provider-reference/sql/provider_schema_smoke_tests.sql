@@ -284,6 +284,7 @@ BEGIN
     INTO v_status, v_was_recorded
   FROM provider_internal.record_wallet_partner_response(
     '00000000-0000-4000-8000-000000000101'::uuid,
+    '00000000-0000-4000-8000-000000000197'::uuid,
     (
       SELECT q.transaction_id
       FROM provider_internal.get_wallet_transaction_status(
