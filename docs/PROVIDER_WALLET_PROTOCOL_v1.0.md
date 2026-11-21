@@ -65,7 +65,7 @@ The game result and the wallet credit are separate facts:
 ## 5. Refund and rollback
 
 A refund must include:
-- a reference to the original debit;
+- the original ASIX wallet transaction ID and the original partner transaction reference;
 - a unique new transaction ID and idempotency key;
 - amount and currency;
 - reason code;
