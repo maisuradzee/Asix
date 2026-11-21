@@ -5,7 +5,7 @@
 
 ## 1. Critical API direction distinction
 
-The public ST8 document identifies ST8 as a Game Aggregator and explicitly labels its public API as an **Operator API**. It describes APIs for casino Operators: Game Launch, Query, Bonus and Transfer Wallet. If the Operator selects Seamless Wallet, the Operator must implement the Seamless Wallet API callbacks.
+The public ST8 document identifies ST8 as a Game Aggregator and explicitly labels its public API as an **Operator API**. The documentation reviewed was published as Operator API v1; its changelog includes updates through 2026-06-29. It describes APIs for casino Operators: Game Launch, Query, Bonus and Transfer Wallet. If the Operator selects Seamless Wallet, the Operator must implement the Seamless Wallet API callbacks.
 
 This is not, by itself, the technical specification for a Game Developer/Provider to submit games to ST8. ASIX must request the current provider/developer integration pack directly from ST8 before implementing a provider-side adapter.
 
@@ -28,7 +28,7 @@ This is a different custody/operating model. ASIX must not silently adopt it. An
 
 ## 3. Security and signing profile observations
 
-The public ST8 Operator API documentation describes ECDSA request signatures:
+The public ST8 Operator API documentation describes ECDSA request signatures using its `x-st8-sign` header:
 - the requester signs the payload with a private key;
 - the receiver verifies it with the corresponding public key;
 - the public example uses an EC P-256 key and SHA-256;
