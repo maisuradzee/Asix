@@ -36,7 +36,8 @@ Never connect Provider using the broad postgres credential or Supabase service_r
 
 Initial routines:
 1. consume_partner_nonce — atomic partner/key/nonce-hash uniqueness.
-2. consume_launch_token — atomic one-time token consumption by hash.
+2. create_launch_session — partner/game/currency eligibility, partner-scoped launch idempotency, revocation of superseded token hashes and fresh one-use launch token issuance.
+3. consume_launch_token — atomic one-time token consumption by hash and CREATED → ACTIVE session transition.
 3. create_wallet_transaction — partner/session/config validation, scoped idempotency and outbox insert in one transaction.
 4. claim_outbox_events — bounded worker lease claims.
 5. mark_expired_wallet_dispatches_unknown — uncertain dispatch becomes UNKNOWN and queues a read-only status query, never a new debit.
@@ -46,6 +47,8 @@ Initial routines:
 9. recover_expired_wallet_status_query_leases — returns expired read-only status checks to RETRY with bounded backoff, or moves events at max_attempts to DEAD_LETTER.
 
 Append-only/integrity controls freeze completed/voided rounds, wallet financial identity fields, wallet attempt evidence, commercial contract versions, audit/approval history and posted ledger journals/entries. Financial status updates must use approved state-transition routines.
+
+Launch creation/reissue and token consumption share a partner/session advisory transaction lock. This serializes concurrent retries against the same operator session reference and prevents token consumption racing with reissue.
 
 Runtime must not be granted direct access to provider tables. Add routines only after unit, SQL, concurrency and security review.
 
@@ -86,7 +89,7 @@ The current source snapshot is useful for inspection but is not a proven restore
 
 Supabase CLI v3 runs database commands against the local stack by default unless --remote is supplied. The export script pins the exact project reference so it cannot silently dump whichever project happens to be linked. The CLI dump is read-only; it exports schema and roles separately and does not export data.
 
-Latest verified Provider GitHub Actions run #285: 78 Deno tests passed, 0 failed; disposable PostgreSQL 17 checks passed for schema security/smoke, wallet response persistence, concurrent Bet/Refund limits and expired read-only status-query lease recovery. This is not a V154 restore or a Supabase staging test.
+Latest verified Provider GitHub Actions run #307: 80 Deno tests passed, 0 failed. The consolidated schema and SQL smoke suite passed on disposable PostgreSQL 17, including concurrent Launch session idempotency/token supersession, concurrent Bet exposure limits, concurrent Refund caps, wallet response persistence and expired read-only status-query lease recovery. This is not a V154 restore or a Supabase staging test.
 
 ## 8. Rollback and recovery
 
