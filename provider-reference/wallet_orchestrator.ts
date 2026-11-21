@@ -129,7 +129,8 @@ export class WalletOrchestrator {
 
     const now = this.now();
     const created = await this.repository.createOrGet(command, now.toISOString());
-    if (created.record.requestHash !== command.requestHash) {
+    if (created.record.requestHash !== command.requestHash ||
+        created.record.transactionId !== command.transactionId) {
       throw new IdempotencyConflictError();
     }
 
@@ -150,8 +151,8 @@ export class WalletOrchestrator {
       return current;
     }
 
-    const adapter = this.resolveAdapter(command.partnerCode);
     try {
+      const adapter = this.resolveAdapter(command.partnerCode);
       const result = await this.dispatch(adapter, command);
       validatePartnerResult(command, result);
       await this.repository.updateFromStates(command.transactionId, ["DISPATCHING"], {
