@@ -565,16 +565,29 @@ BEGIN
     RETURN;
   END IF;
 
-  IF NOT EXISTS (SELECT 1 FROM provider_internal.partners AS p WHERE p.id = p_partner_id AND p.status = 'ACTIVE') THEN
-    RAISE EXCEPTION 'PARTNER_NOT_ACTIVE' USING ERRCODE = '42501';
+  IF NOT EXISTS (
+    SELECT 1
+    FROM provider_internal.partners AS p
+    WHERE p.id = p_partner_id
+      AND (
+        (p_operation = 'BET' AND p.status = 'ACTIVE')
+        OR
+        (p_operation IN ('WIN','REFUND') AND p.status IN ('ACTIVE','SUSPENDED'))
+      )
+  ) THEN
+    RAISE EXCEPTION 'PARTNER_NOT_AUTHORIZED_FOR_WALLET_OPERATION' USING ERRCODE = '42501';
   END IF;
 
   SELECT s.* INTO v_session
   FROM provider_internal.sessions AS s
   WHERE s.id = p_session_id AND s.partner_id = p_partner_id
   FOR UPDATE;
-  IF NOT FOUND OR v_session.status <> 'ACTIVE'
-     OR v_session.currency <> p_currency OR v_session.currency_exponent <> p_currency_exponent THEN
+  IF NOT FOUND
+     OR v_session.currency <> p_currency
+     OR v_session.currency_exponent <> p_currency_exponent
+     OR (p_operation = 'BET' AND v_session.status <> 'ACTIVE')
+     OR (p_operation = 'WIN' AND v_session.status NOT IN ('ACTIVE','COMPLETED'))
+     OR (p_operation = 'REFUND' AND v_session.status NOT IN ('ACTIVE','PAUSED','COMPLETED','CANCELLED')) THEN
     RAISE EXCEPTION 'SESSION_OR_CURRENCY_INVALID' USING ERRCODE = '23514';
   END IF;
 
@@ -602,7 +615,8 @@ BEGIN
   FROM provider_internal.partner_game_configs AS c
   WHERE c.partner_id = p_partner_id AND c.game_code = v_session.game_code
     AND c.jurisdiction = v_session.jurisdiction AND c.currency = p_currency
-    AND c.currency_exponent = p_currency_exponent AND c.enabled = true
+    AND c.currency_exponent = p_currency_exponent
+    AND (p_operation <> 'BET' OR c.enabled = true)
   FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'PARTNER_GAME_CONFIGURATION_NOT_ENABLED' USING ERRCODE = '42501';
