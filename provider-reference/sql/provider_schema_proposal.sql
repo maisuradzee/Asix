@@ -704,7 +704,8 @@ RETURNS TABLE (
   protocol_version text,
   policy_version text,
   issued_at timestamptz,
-  expires_at timestamptz
+  expires_at timestamptz,
+  session_status text
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -790,7 +791,7 @@ BEGIN
   SELECT x.launch_id, a.id, a.partner_id, p.partner_code,
          a.partner_player_ref, a.partner_session_ref, a.game_code,
          a.currency, a.jurisdiction, a.locale, x.key_id, x.protocol_version,
-         a.policy_version, x.issued_at, x.expires_at
+         a.policy_version, x.issued_at, x.expires_at, a.status
   FROM activated AS a
   JOIN consumed AS x ON x.session_id = a.id AND x.partner_id = a.partner_id
   JOIN provider_internal.partners AS p ON p.id = a.partner_id;
