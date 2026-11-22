@@ -5,7 +5,7 @@
 ## Verified staging state
 
 - Project: Asix #2, ref `liiowoclsddlywabvmcg`, PostgreSQL 17.12, ACTIVE_HEALTHY.
-- Applied migrations: `20261121000100_st8_seamless_wallet`, `20261121000200_st8_st8_reconciliation_snapshot`, `20261121000300_st8_foreign_key_indexes`.
+- Applied migrations: `20261121000100_st8_seamless_wallet`, `20261121000200_st8_reconciliation_snapshot`, `20261121000300_st8_foreign_key_indexes`.
 - Ten private `provider_internal.st8_*` tables have RLS and FORCE RLS. Client roles have no direct private schema/table access. ST8 RPC execution is restricted to `service_role`.
 - ST8 wallet and ledger remain isolated from ASIX demo wallet and QCard.
 - All ten ST8 tables have zero rows; no Edge Functions are currently deployed to this staging project.
