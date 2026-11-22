@@ -18,9 +18,10 @@
 - TypeScript 5.8.3 strict compile: PASS.
 - All 12 operational/test `.mjs` syntax checks: PASS.
 - Inner SHA-256 manifest: 46 files verified.
-- ZIP integrity: PASS; outer SHA-256 is recorded in the separately attached artifact checksum file.
-- Live catalog-sync RPC smoke test: PASS inside a transaction followed by ROLLBACK. It confirmed that new ST8 games remain disabled for ASIX manual approval, provider disablement is respected, and existing manual approval is preserved.
+- Exact v0.5.7 ZIP extracted and verified in-place: `VERIFY_SUMMARY: 16 PASS, 0 FAIL`. ZIP integrity and external checksum also PASS.
+- Full live catalog-sync transactional SQL regression suite: `ST8_CATALOG_SYNC_TRANSACTIONAL_TEST_PASSED`. Covered manual approval preservation, provider disablement/removal, normalized duplicate game IDs, case-insensitive duplicate developer IDs, empty snapshot rejection without partial disablement, stale snapshot rejection, and active multi-site guard. Entire transaction was rolled back.
 - Live read-only blank-staging verifier: `ASIX2_ST8_BLANK_STAGING_VERIFICATION_PASSED`. It checks 10 forced-RLS tables, no direct private schema/table grants, service-role-only RPCs, fail-closed provider catalog default, zero-balance wallet, append-only ledger/audit guards, no cross-product triggers, no ASIX/QCard wallet references, and no fixture/user/wallet data.
+- A separate read-only count after rollback confirmed that all ten ST8 tables remain at zero rows.
 - v0.5.7 additionally prefers Supabase's platform-injected `SUPABASE_PUBLISHABLE_KEYS.default` and `SUPABASE_SECRET_KEYS.default` maps; legacy anon/service-role aliases are transition fallbacks only. Malformed key maps fail closed. Two preflight regression tests cover these cases.
 - The deployment preflight with only the approved staging target variables reports target PASS, Gateway credentials BLOCKED, ST8 acceptance BLOCKED, and Deno CLI NOT_INSTALLED. Secret values are not printed.
 - A full wallet/callback E2E test requiring a temporary `auth.users` row was not executed: the database write was blocked by tool safety controls. No workaround was attempted and no synthetic user was created.
@@ -36,4 +37,4 @@ KYC/AML, trusted age/geolocation checks, self-exclusion provider, PSP/settlement
 
 No production migration, Edge Function deployment, secret change, wallet mutation, synthetic user, or funding transaction was performed. Existing ASIX Production and `super-worker V25` remain unchanged.
 
-The v0.5.7 candidate ZIP, Georgian staging report, and SHA-256 checksum are attached separately in the ChatGPT response. This PR is documentation-only and does not represent a deployed ST8 integration.
+The v0.5.7 candidate ZIP, Georgian staging report, and SHA-256 checksum are attached separately in the ChatGPT response. ZIP SHA-256: `83dbb420d07de0a3f91cf3cf39cf3f060a3ca620a1e383113e4a20f922d82a3c`. This PR is documentation-only and does not represent a deployed ST8 integration.
