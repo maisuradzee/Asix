@@ -38,9 +38,25 @@
 7. deadlock/serialization retry არ იმეორებს უკვე დადასტურებულ movement-ს.
 
 ## მიმდინარე კოდის წინასწარი სტატიკური დაკვირვება
-Wallet callback SQL იყენებს transaction/cancel advisory locks-ს, შემდეგ wallet row lock-ს და player-debt advisory/row lock-ს. Daily wager aggregation სრულდება debt lock-ის შემდეგ, რაც ერთ user/currency-ზე wager limit-ის სერიალიზაციას უწყობს ხელს. Trusted funding-ს აქვს ცალკე idempotency-key lock და wallet/debt lock.
+Wallet callback SQL იყენებს transaction/cancel advisory locks-ს, შემდეგ wallet row lock-ს და player-debt advisory/row lock-ს. Daily wager aggregation სრულდება debt lock-ის შემდეგ, რაც ერთ user/currency-ზე wager limit-ის სერიალიზაციას უწყობს ხელს. Trusted funding-ს აქვს ცალკე funding-key lock და wallet/debt lock.
 
 ეს არის კოდის დონის დაკვირვება და არა concurrency ტესტის მტკიცებულება.
+
+## Lock-order review — v0.9.0 სტატიკური გაფართოება
+ქვემოთ ჩამოთვლილი მიმდევრობა გადამოწმებულია v0.8.0-ის `20261121000100_st8_seamless_wallet.sql` მიგრაციაში. ეს აღწერს SQL-ში მოთხოვნილ lock-ებს და არა რეალურ runtime timing-ს.
+
+| ოპერაცია | lock-ების მიმდევრობა |
+|---|---|
+| ჩვეულებრივი callback | advisory `st8:transaction:<transaction_id>` → transaction row `FOR UPDATE` → wallet account row `FOR UPDATE` → player-debt advisory lock → debt row `FOR UPDATE` |
+| cancel callback | advisory `st8:cancel:<cancel_id>` → advisory `st8:transaction:<reference_transaction_id>` → cancel/reference rows → wallet account row `FOR UPDATE` → player-debt advisory lock → debt row `FOR UPDATE` |
+| trusted funding | advisory `st8:funding-key:<idempotency_key>` → idempotency ledger lookup → wallet account row `FOR UPDATE` → player-debt advisory lock → debt row `FOR UPDATE` |
+
+დამატებითი დაკვირვებები:
+- Original callback და cancel callback reference transaction-ის ერთსა და იმავე `st8:transaction:<ID>` advisory lock-ს იყენებს. ეს განზრახული საერთო serialization point-ია late-original/tombstone race-ისთვის.
+- Cancel-ის საკუთარი ID ცალკე იკეტება, ამიტომ იდენტური cancellation replay-ები ერთმანეთს ვერ ასწრებს.
+- ერთი user/currency-ის wager aggregation სრულდება player-debt advisory lock-ის მიღების შემდეგ; ეს უნდა დადასტურდეს C04-ის პარალელური ტესტით.
+- Callback, cancel და trusted funding wallet account row-ს debt row-მდე კეტავს. განსხვავებული funding keys ერთი wallet row-ზე საბოლოოდ სერიალიზდება.
+- Advisory hash collision შეიძლება ზედმეტ სერიალიზაციას იწვევდეს, მაგრამ თვითონ არ უნდა იწვევდეს ფინანსური მონაცემების დაკარგვას.
 
 ## Release gate
 - PostgreSQL 17.12 ან შესაბამისი Supabase staging clone;
