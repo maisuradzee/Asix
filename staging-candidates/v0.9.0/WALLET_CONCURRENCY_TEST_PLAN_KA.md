@@ -1,14 +1,14 @@
 # ASIX × ST8 — v0.9.0 Wallet lifecycle და concurrency ტესტირების გეგმა
 
-**სტატუსი:** დაგეგმილია; PostgreSQL მრავალსესიური ტესტი ჯერ არ გაშვებულა.
-**სამიზნე:** მხოლოდ disposable Asix #2 staging clone ან იზოლირებული PostgreSQL 17 test instance.
-**Production:** აკრძალულია.
+**სტატუსი:** runner მომზადებულია; C01–C12 მრავალსესიური DB ტესტები ჯერ არ გაშვებულა.
+**სამიზნე:** მხოლოდ ცალკე disposable Supabase development branch ან იზოლირებული PostgreSQL 17 test instance.
+**Production და ძირითადი Asix #2 staging:** აკრძალულია.
 
 ## წინასწარი კონტროლი
-- გამოიყენე სინთეზური auth user, pseudonymous ST8 player ID, test site/game და ცალკე wallet.
+- გამოიყენე მხოლოდ სინთეზური auth user, pseudonymous ST8 player ID, test site/game და ცალკე wallet.
 - თითოეული ტესტი დაიწყე wallet/debt/ledger/transaction snapshot-ით.
 - გაუშვი ორ ან მეტ დამოუკიდებელ DB session-ში, არა ერთ SQL transaction-ში.
-- თითოეული შემთხვევა დაასრულე rollback-ით ან disposable DB reset-ით.
+- გამოიყენე ცარიელი schema; runner უარს ამბობს, თუ ST8 ცხრილებში ჩანაწერები უკვე არსებობს.
 - არ გამოიყენო რეალური მოთამაშე, თანხა, PSP ან ST8 live credential.
 
 ## აუცილებელი მრავალსესიური შემთხვევები
@@ -22,10 +22,10 @@
 | C05 | ერთი debit და მის reference-ზე cancel ერთდროულად | სერიალიზებული საბოლოო მდგომარეობა; ერთი refund მაქსიმუმ |
 | C06 | ერთი cancel ID-ის ორი იდენტური callback | ერთი cancellation ledger movement; მეორე duplicate |
 | C07 | ერთი cancel ID სხვადასხვა payload/hash-ით | IDEMPOTENCY_CONFLICT; დამატებითი movement არ იქმნება |
-| C08 | payout reversal და სხვა payout/debit ერთ საფულეზე | balance >= 0; shortfall მხოლოდ ST8 debt-ში |
+| C08 | payout reversal და სხვა debit ერთ საფულეზე | balance >= 0; shortfall მხოლოდ ST8 debt-ში |
 | C09 | trusted funding იგივე idempotency key-ით ორჯერ | ერთი funding ledger row; მეორე duplicate |
 | C10 | trusted funding ერთი key-ით განსხვავებული თანხით | IDEMPOTENCY_CONFLICT; balance უცვლელი |
-| C11 | cancel მოვიდა original debit-მდე; original შემოვიდა პარალელურად | ერთი tombstone; original cash movement 0; tombstone enriched |
+| C11 | ჯერ cancel, შემდეგ late original debit | ერთი tombstone; original cash movement 0; tombstone enriched |
 | C12 | 20–100 ერთდროული სხვადასხვა transaction ID ერთ user-ზე | ledger balance chain უწყვეტი; არ არის duplicate key ან lost update |
 
 ## ინვარიანტები
@@ -58,11 +58,25 @@ Wallet callback SQL იყენებს transaction/cancel advisory locks-ს,
 - Callback, cancel და trusted funding wallet account row-ს debt row-მდე კეტავს. განსხვავებული funding keys ერთი wallet row-ზე საბოლოოდ სერიალიზდება.
 - Advisory hash collision შეიძლება ზედმეტ სერიალიზაციას იწვევდეს, მაგრამ თვითონ არ უნდა იწვევდეს ფინანსური მონაცემების დაკარგვას.
 
+## Runner
+მზადაა `staging-candidates/v0.9.0/concurrency-runner/`:
+
+- Node.js 22.16+ და ზუსტად pin-ული `pg@8.16.3`.
+- თითოეული callback დამოუკიდებელ PostgreSQL pool connection-ზე სრულდება.
+- Runner ითხოვს explicit disposable-DB acknowledgement-ს, უარყოფს Production და ძირითადი Asix #2 staging ref-ებს, ამოწმებს PostgreSQL 17.x-ს, 14/14 table RLS + FORCE RLS-ს, ცარიელ ST8 სქემასა და private-schema grants-ს.
+- ქმნის მხოლოდ synthetic fixtures-ს; C01–C12-ის შედეგებს JSON report-ში ინახავს.
+- ფინანსური ledger და audit trail append-only არის; cleanup-ის ნაცვლად report-ის ექსპორტის შემდეგ მთლიანად disposable branch უნდა წაიშალოს.
+
+## გაშვების ბლოკერი
+Supabase development branch-ის შექმნას აქვს პლატფორმის მიერ დაბრუნებული საათობრივი ხარჯი: **0.01344 / საათში**. Branch ჯერ არ შექმნილა; საჭიროა მომხმარებლის პირდაპირი თანხმობა ამ ხარჯზე. Branch-ის შექმნის გარეშე არსებული ძირითადი staging-ის გამოყენება დაუშვებელია.
+
 ## Release gate
-- PostgreSQL 17.12 ან შესაბამისი Supabase staging clone;
-- მინიმუმ 2 დამოუკიდებელი connection, სასურველია 20+ worker;
-- Deno CLI და Supabase Edge Function test harness;
+- disposable PostgreSQL 17.12 branch ან ადგილობრივი იზოლირებული DB;
+- მინიმუმ 2 დამოუკიდებელი connection, C12-სთვის 20–100 worker;
 - raw request hash, SQLSTATE, response, before/after account/debt/ledger snapshots;
-- deadlock/serialization logs და repeat run evidence.
+- deadlock/serialization logs და repeat run evidence;
+- ცალკე Deno Gateway runtime tests და ST8 partner Testing Tool acceptance.
+
+ეს Node runner ამოწმებს მხოლოდ DB-level RPC concurrency-ს. ის არ ამოწმებს ST8-ის რეალურ signature verification-ს, HTTP Gateway-ს ან partner certification-ს.
 
 **v0.9.0 concurrency acceptance გავლილად არ ჩაითვალოს**, სანამ C01–C12 რეალურად არ შესრულდება disposable DB-ზე და evidence არ შეინახება.
