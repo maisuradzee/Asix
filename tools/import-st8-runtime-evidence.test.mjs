@@ -131,3 +131,17 @@ test("portal status generation validates API JSON explicitly before deployment",
   assert.doesNotMatch(portalWorkflow, /jq -n/);
   assert.ok(portalWorkflow.includes('JSON.stringify(status, null, 2) + "\\n"'));
 });
+
+
+test("runtime evidence documentation matches the workflow-only publication boundary", () => {
+  const guide = readFileSync(new URL("./README_ST8_RUNTIME_EVIDENCE_KA.md", import.meta.url), "utf8");
+  assert.match(guide, /ASIX ST8 Autonomous Progression/);
+  assert.match(guide, /disposable PostgreSQL 17\.12/);
+  assert.match(guide, /20 independent workers/);
+  assert.match(guide, /same GitHub repository/);
+  assert.match(guide, /main.*branch/s);
+  assert.match(guide, /Caller-supplied JSON/);
+  assert.match(guide, /not runtime acceptance/);
+  assert.doesNotMatch(guide, /Submit-ST8-Runtime-Evidence\.ps1/);
+  assert.doesNotMatch(guide, /summary_gzip_base64/);
+});
