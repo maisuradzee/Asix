@@ -87,7 +87,7 @@ Supabase development branch-ის შექმნას აქვს პლა�
 - მრავალსესიური Node.js runner და PowerShell launcher მზად არის.
 - Runner ყველა RPC call-ს უშვებს `SET LOCAL ROLE service_role`-ის ქვეშ; preflight დამატებით ამოწმებს callback/funding RPC-ების EXECUTE grant-ებს. `anon` და `authenticated`-ს ამ RPC-ებზე EXECUTE არ უნდა ჰქონდეთ.
 - GitHub Actions workflow ამოწმებს Node.js syntax-ს, PowerShell launcher syntax-ს, pinned dependency-სა და service-role execution safety contract-ს.
-- Static workflow run #16 წარმატებით დასრულდა, მაგრამ ის შესრულდა service-role assertion-ის workflow step-ის დამატებამდე. ახალი assertion-ის გაშვებული შედეგი ცალკე უნდა დაფიქსირდეს.
+- Static workflow run #20 წარმატებით დასრულდა: Node syntax, PowerShell launcher syntax, service-role execution boundary assertion და dependency pin ყველა PASS.
 - Supabase development branch-ის შესაქმნელად მომხმარებელმა საათობრივი ფასი დაადასტურა; API-მ შემდეგ დააბრუნა `Branching is supported only on the Pro plan or above`. Branch არ შექმნილა და ხარჯი არ დარიცხულა.
 - ალტერნატიული local launcher იყენებს მხოლოდ localhost-ზე მიბმულ PostgreSQL 17.12 Docker container-ს და 9 reviewed migration-ს v0.8.0 archive-იდან.
 - მიმდინარე ChatGPT execution გარემოში Docker CLI/daemon და PowerShell არ არის. ამიტომ ამ გარემოში C01–C12 runtime შედეგები არ არსებობს.
