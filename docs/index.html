@@ -102,7 +102,7 @@ function renderLiveStatus(){
     rs.textContent=lang==='ka'?'12/12 PASS · ლოკალური PostgreSQL 17':'12/12 PASS · local PostgreSQL 17';
     const tested=new Date(runtime.testedAt).toLocaleString(lang==='ka'?'ka-GE':'en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'});
     const hash=String(runtime.sourceReportSha256||'').slice(0,12);
-    rd.textContent=lang==='ka'?'გაშვებულია '+tested+' UTC · '+runtime.workers+' worker · იმპორტი შემოწმებულია სტრუქტურულად בלבד · SHA-256 '+hash:'Run '+tested+' UTC · '+runtime.workers+' workers · structural validation only · SHA-256 '+hash;
+    rd.textContent=lang==='ka'?'გაშვებულია '+tested+' UTC · '+runtime.workers+' worker · იმპორტირებული ანგარიში სტრუქტურულად არის შემოწმებული · SHA-256 '+hash:'Run '+tested+' UTC · '+runtime.workers+' workers · structural validation only · SHA-256 '+hash;
   }else{
     rs.className='status block';
     rs.textContent=lang==='ka'?'არ გაშვებულა':'Not run';
