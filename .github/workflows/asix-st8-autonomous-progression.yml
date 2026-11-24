@@ -2,6 +2,11 @@
 name: ASIX ST8 Autonomous Progression
 
 on:
+  pull_request:
+    paths:
+      - ".github/workflows/asix-st8-autonomous-progression.yml"
+      - ".github/workflows/asix-st8-progression-lint.yml"
+      - "docs/ASIX_ST8_AUTONOMOUS_PROGRESSION_KA.md"
   workflow_run:
     workflows:
       - "ASIX ST8 v0.9 Static Validation"
@@ -22,7 +27,7 @@ concurrency:
 jobs:
   static:
     name: Stage 1 — static and safety gates
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.head_branch == 'integration/st8-v0.7.1-alert-ops-hardening' && github.event.workflow_run.conclusion == 'success')
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'integration/st8-v0.7.1-alert-ops-hardening'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -33,13 +38,30 @@ jobs:
       - name: Checkout ST8 candidate branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_sha || 'integration/st8-v0.7.1-alert-ops-hardening' }}
+          ref: ${{ github.event.pull_request.head.sha || github.event.workflow_run.head_sha || 'integration/st8-v0.7.1-alert-ops-hardening' }}
           path: candidate
 
       - name: Record candidate SHA
         id: sha
         working-directory: candidate
         run: echo "value=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout orchestrator source for validation
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          path: orchestrator
+
+      - name: Validate orchestrator workflow YAML
+        run: |
+          python -m pip install --quiet PyYAML
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          workflow = Path("orchestrator/.github/workflows/asix-st8-autonomous-progression.yml")
+          yaml.load(workflow.read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+          print("AUTONOMOUS_PROGRESSION_WORKFLOW_YAML_PASS")
+          PY
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
