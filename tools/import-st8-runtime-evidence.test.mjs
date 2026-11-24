@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { validateAndSummarize } from "./import-st8-runtime-evidence.mjs";
+import { validateAndSummarize, validatePublicSummary } from "./import-st8-runtime-evidence.mjs";
 
 const ids = Array.from({ length: 12 }, (_, index) => "C" + String(index + 1).padStart(2, "0"));
 function validReport() {
@@ -67,4 +67,21 @@ test("rejects non-PostgreSQL-17 and worker counts outside 2..100", () => {
   const wrongWorkers = validReport();
   wrongWorkers.workers = 101;
   assert.throws(() => validateAndSummarize(wrongWorkers, Buffer.from("{}")), /worker count/);
+});
+
+test("validates restored public summaries and strips unexpected fields", () => {
+  const report = validReport();
+  const generated = validateAndSummarize(report, Buffer.from(JSON.stringify(report)), "2026-11-24T09:00:00.000Z");
+  generated.rawFixtureData = { userId: "must-not-survive" };
+  const restored = validatePublicSummary(generated);
+  assert.equal(restored.status, "PASS");
+  assert.equal("rawFixtureData" in restored, false);
+  assert.equal(restored.scenarios.length, 12);
+});
+
+test("rejects malformed persisted summaries", () => {
+  const report = validReport();
+  const generated = validateAndSummarize(report, Buffer.from(JSON.stringify(report)), "2026-11-24T09:00:00.000Z");
+  generated.sourceReportSha256 = "invalid";
+  assert.throws(() => validatePublicSummary(generated), /SHA-256/);
 });
