@@ -32,7 +32,7 @@ jobs:
   build:
     environment:
       name: github-pages
-      url: \${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,9 +47,9 @@ jobs:
         run: node --test tools/import-st8-runtime-evidence.test.mjs
 
       - name: Import and retain validated runtime evidence
-        if: \${{ github.event_name == 'workflow_dispatch' && inputs.report_gzip_base64 != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.report_gzip_base64 != '' }}
         env:
-          REPORT_GZIP_BASE64: \${{ inputs.report_gzip_base64 }}
+          REPORT_GZIP_BASE64: ${{ inputs.report_gzip_base64 }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
@@ -75,7 +75,7 @@ jobs:
 
       - name: Refresh verified GitHub status
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p docs/data
