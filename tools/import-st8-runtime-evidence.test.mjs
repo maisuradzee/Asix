@@ -129,4 +129,5 @@ test("portal status generation validates API JSON explicitly before deployment",
   assert.match(portalWorkflow, /pullRequest\.number !== 3/);
   assert.match(portalWorkflow, /PORTAL_STATUS_JSON_GENERATED/);
   assert.doesNotMatch(portalWorkflow, /jq -n/);
+  assert.ok(portalWorkflow.includes('JSON.stringify(status, null, 2) + "\\n"'));
 });
