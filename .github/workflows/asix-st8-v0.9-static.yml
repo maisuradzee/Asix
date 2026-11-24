@@ -32,6 +32,22 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check staging-candidates/v0.9.0/concurrency-runner/run-concurrency-tests.mjs
 
+      - name: Check PowerShell launcher syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "staging-candidates/v0.9.0/concurrency-runner/Start-Local-Postgres17-Test.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "LOCAL_POSTGRES_LAUNCHER_SYNTAX_PASSED"
+
       - name: Verify pinned dependency and package metadata
         run: |
           node --input-type=module -e '
