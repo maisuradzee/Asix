@@ -97,7 +97,7 @@ jobs:
             echo "No runtime evidence artifact was attached; existing published evidence will be retained."
           else
             echo "Unexpected files or layout in the runtime evidence artifact."
-            find "$directory" -type f -maxdepth 3 -print || true
+            find "$directory" -maxdepth 3 -type f -print || true
             exit 1
           fi
 
