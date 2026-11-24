@@ -1,0 +1,58 @@
+name: ASIX ST8 Evidence Importer Tests
+
+on:
+  pull_request:
+    paths:
+      - "tools/import-st8-runtime-evidence.mjs"
+      - "tools/import-st8-runtime-evidence.test.mjs"
+      - "tools/Submit-ST8-Runtime-Evidence.ps1"
+      - "tools/README_ST8_RUNTIME_EVIDENCE_KA.md"
+      - ".github/workflows/asix-development-portal-pages.yml"
+      - ".github/workflows/asix-evidence-importer-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test-importer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+      - name: Check importer syntax
+        run: node --check tools/import-st8-runtime-evidence.mjs
+      - name: Run importer unit tests
+        run: node --test tools/import-st8-runtime-evidence.test.mjs
+      - name: Check PowerShell helper syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/Submit-ST8-Runtime-Evidence.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "EVIDENCE_SUBMITTER_POWERSHELL_SYNTAX_PASSED"
+
+      - name: Validate YAML syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          for name in [
+              ".github/workflows/asix-development-portal-pages.yml",
+              ".github/workflows/asix-evidence-importer-tests.yml",
+          ]:
+              yaml.load(Path(name).read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
+              print(f"YAML syntax PASS: {name}")
+          PY

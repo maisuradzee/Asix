@@ -5,10 +5,16 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "tools/**"
       - ".github/workflows/asix-development-portal-pages.yml"
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+    inputs:
+      summary_gzip_base64:
+        description: "Optional gzip+base64 sanitized C01-C12 public summary (raw report stays local)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -30,26 +36,93 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+
+      - name: Test runtime evidence importer
+        run: node --test tools/import-st8-runtime-evidence.test.mjs
+
+      - name: Check PowerShell evidence helper syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/Submit-ST8-Runtime-Evidence.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "EVIDENCE_SUBMITTER_POWERSHELL_SYNTAX_PASSED"
+
+      - name: Import and retain validated runtime evidence
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.summary_gzip_base64 != '' }}
+        env:
+          SUMMARY_GZIP_BASE64: ${{ inputs.summary_gzip_base64 }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Runtime evidence can only be imported from the main branch workflow dispatch."
+            exit 1
+          fi
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { gunzipSync } from "node:zlib";
+            const encoded = process.env.SUMMARY_GZIP_BASE64 || "";
+            if (!encoded || encoded.length > 30000) throw new Error("Missing/oversized compressed report input.");
+            const raw = gunzipSync(Buffer.from(encoded, "base64"), { maxOutputLength: 1024 * 1024 });
+            fs.writeFileSync(process.env.RUNNER_TEMP + "/asix-st8-public-summary.json", raw, { mode: 0o600 });
+          '
+          mkdir -p docs/data
+          node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-summary.json" docs/data/runtime-evidence.json
+
+      - name: Restore previously published runtime evidence
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '' }}
+        run: |
+          set -euo pipefail
+          mkdir -p docs/data
+          status_code="$(curl -sS -L -H "Cache-Control: no-cache" --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json?nocache=$GITHUB_RUN_ID" || true)"
+          if [[ "$status_code" == "200" ]]; then
+            node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-evidence.json" docs/data/runtime-evidence.json
+          elif [[ "$status_code" == "404" ]]; then
+            echo "No previously published runtime evidence exists yet."
+          else
+            echo "Could not safely preserve existing runtime evidence (HTTP $status_code)."
+            exit 1
+          fi
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - name: Refresh verified GitHub status
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p docs/data
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=10")"
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
           pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/3")"
+          runtime_evidence="null"
+          if [[ -f docs/data/runtime-evidence.json ]]; then
+            runtime_evidence="$(cat docs/data/runtime-evidence.json)"
+          fi
           jq -n \
             --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             --argjson runs "$runs" \
             --argjson pr "$pr" \
+            --argjson runtime_evidence "$runtime_evidence" \
             '{
               generated_at: $generated_at,
               latest_ci: (
-                [$runs.workflow_runs[]? | {
+                [$runs.workflow_runs[]? | select(.name == "ASIX ST8 v0.9 Static Validation") | {
                   name, status, conclusion, html_url, updated_at, head_sha
                 }] | sort_by(.updated_at) | reverse | .[0] // null
               ),
@@ -59,12 +132,15 @@ jobs:
                 merged: $pr.merged,
                 html_url: $pr.html_url,
                 updated_at: $pr.updated_at
-              }
+              },
+              runtime_evidence: $runtime_evidence
             }' > docs/data/status.json
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
+
       - name: Deploy site
         id: deployment
         uses: actions/deploy-pages@v4
