@@ -17,7 +17,7 @@ on:
 
 permissions:
   contents: read
-  actions: write
+  contents: read
 
 concurrency:
   group: asix-st8-autonomous-progression
@@ -28,6 +28,7 @@ jobs:
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
        github.event.workflow_run.head_branch == 'integration/st8-v0.7.1-alert-ops-hardening')
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -202,18 +203,14 @@ jobs:
           test "\${#encoded}" -le 30000
           echo "summary_gzip_base64=$encoded" >> "$GITHUB_OUTPUT"
 
-      - name: Publish runtime result to the public portal
+      - name: Upload sanitized runtime evidence for the Pages workflow
         if: steps.archive.outputs.present == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SUMMARY_GZIP_BASE64: ${{ steps.evidence.outputs.summary_gzip_base64 }}
-        run: |
-          set -euo pipefail
-          gh workflow run asix-development-portal-pages.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref main \
-            --field "summary_gzip_base64=$SUMMARY_GZIP_BASE64"
-          echo "Portal deployment workflow dispatched with validated, sanitized runtime evidence."
+        uses: actions/upload-artifact@v4
+        with:
+          name: asix-st8-public-runtime-summary
+          path: ${{ runner.temp }}/asix-st8-public-summary.json
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Retain synthetic raw report briefly for failure diagnosis
         if: failure() && steps.archive.outputs.present == 'true'
@@ -233,6 +230,6 @@ jobs:
             echo "- Candidate static suite: executed before database concurrency tests."
             echo "- PostgreSQL: disposable GitHub-hosted PostgreSQL 17.12 service."
             echo "- C01-C12: run with 20 independent worker connections."
-            echo "- Public portal: dispatched only after the importer accepted a complete 12/12 PASS report."
+            echo "- Public portal: the Pages workflow receives the sanitized evidence artifact only after a complete 12/12 PASS."
             echo "- ST8 partner acceptance and live money movement: not part of this workflow."
           } >> "$GITHUB_STEP_SUMMARY"
