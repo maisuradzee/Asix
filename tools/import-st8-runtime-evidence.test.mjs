@@ -1,8 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { validateAndSummarize, validatePublicSummary } from "./import-st8-runtime-evidence.mjs";
 
 const ids = Array.from({ length: 12 }, (_, index) => "C" + String(index + 1).padStart(2, "0"));
+const portalWorkflowPath = new URL("../.github/workflows/asix-development-portal-pages.yml", import.meta.url);
+const legacySubmitterPath = new URL("./Submit-ST8-Runtime-Evidence.ps1", import.meta.url);
+const portalWorkflow = readFileSync(portalWorkflowPath, "utf8");
+
 function validReport() {
   return {
     schema: "asix-st8-v0.9.0-concurrency-report/v1",
@@ -59,7 +65,7 @@ test("rejects incomplete, duplicate, or failed scenarios", () => {
   assert.throws(() => validateAndSummarize(failed, Buffer.from("{}")), /did not pass/);
 });
 
-test("rejects non-PostgreSQL-17 and worker counts outside 2..100", () => {
+test("rejects non-PostgreSQL-17 and worker counts outside 20..100", () => {
   const wrongVersion = validReport();
   wrongVersion.target.serverVersionNum = 160000;
   assert.throws(() => validateAndSummarize(wrongVersion, Buffer.from("{}")), /PostgreSQL 17/);
@@ -95,4 +101,22 @@ test("rejects persisted summaries below the C12 concurrency floor", () => {
   const generated = validateAndSummarize(report, Buffer.from(JSON.stringify(report)), "2026-11-24T09:00:00.000Z");
   generated.workers = 19;
   assert.throws(() => validatePublicSummary(generated), /20..100 concurrent workers/);
+});
+
+test("portal accepts evidence only from a successful same-repository main-branch runtime workflow run", () => {
+  assert.match(portalWorkflow, /workflows:\s*\["ASIX ST8 Autonomous Progression"\]/);
+  assert.match(portalWorkflow, /workflow_run\.conclusion == 'success'/);
+  assert.match(portalWorkflow, /workflow_run\.name == 'ASIX ST8 Autonomous Progression'/);
+  assert.match(portalWorkflow, /workflow_run\.head_branch == 'main'/);
+  assert.match(portalWorkflow, /workflow_run\.head_repository\.full_name == github\.repository/);
+  assert.match(portalWorkflow, /run-id: \$\{\{ github\.event\.workflow_run\.id \}\}/);
+  assert.match(portalWorkflow, /node tools\/import-st8-runtime-evidence\.mjs --validate-public-summary/);
+});
+
+test("portal exposes no caller-supplied runtime evidence import path", () => {
+  assert.doesNotMatch(portalWorkflow, /summary_gzip_base64|SUMMARY_GZIP_BASE64/);
+  assert.doesNotMatch(portalWorkflow, /Import and retain validated runtime evidence/);
+  assert.doesNotMatch(portalWorkflow, /Submit-ST8-Runtime-Evidence\.ps1/);
+  assert.doesNotMatch(portalWorkflow, /workflow_dispatch:\s*\n\s*inputs:/);
+  assert.equal(existsSync(fileURLToPath(legacySubmitterPath)), false);
 });
