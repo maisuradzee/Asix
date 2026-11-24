@@ -27,8 +27,8 @@ try {
   $encoded = [Convert]::ToBase64String($memory.ToArray())
 }
 finally { $memory.Dispose() }
-if ($encoded.Length -gt 60000) {
-  throw "Compressed evidence is too large for workflow_dispatch (60,000-character safety limit)."
+if ($encoded.Length -gt 30000) {
+  throw "Compressed evidence is too large for workflow_dispatch (30,000-character safety limit)."
 }
 gh auth status --hostname github.com
 if ($LASTEXITCODE -ne 0) { throw "GitHub CLI authentication failed." }
