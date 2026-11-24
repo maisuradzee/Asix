@@ -1,0 +1,68 @@
+name: ASIX ST8 Archive Registration Helper Tests
+
+on:
+  pull_request:
+    paths:
+      - "tools/Register-ST8-V080-Archive.ps1"
+      - "tools/README_REGISTER_ST8_V080_ARCHIVE_KA.md"
+      - ".github/workflows/asix-st8-archive-registration-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate-helper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/Register-ST8-V080-Archive.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "ST8_ARCHIVE_REGISTRATION_HELPER_SYNTAX_PASS"
+
+      - name: Check pinned upload target and checksum
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const p = fs.readFileSync("tools/Register-ST8-V080-Archive.ps1", "utf8");
+            const required = [
+              "staging-candidates/v0.9.0/runtime-assets/ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip",
+              "50f5fda49025048f7e8a0218178cfbba8fc060f1b820be6c7188a99700c17f08",
+              "Get-FileHash",
+              "gh api --method PUT",
+              "Refusing to overwrite"
+            ];
+            for (const token of required) {
+              if (!p.includes(token)) throw new Error("Missing archive registration safety contract: " + token);
+            }
+            if (/gh api --method PUT[^\n]*--raw-field/.test(p)) {
+              throw new Error("Binary archive upload must use request-body input, not raw-field.");
+            }
+            console.log("ST8_ARCHIVE_REGISTRATION_CONTRACTS_PASS");
+          '
+
+      - name: Validate README command and pinned hash
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const r = fs.readFileSync("tools/README_REGISTER_ST8_V080_ARCHIVE_KA.md", "utf8");
+            if (!r.includes("Register-ST8-V080-Archive.ps1") ||
+                !r.includes("50f5fda49025048f7e8a0218178cfbba8fc060f1b820be6c7188a99700c17f08")) {
+              throw new Error("README is missing the registration command or archive checksum.");
+            }
+            console.log("ST8_ARCHIVE_REGISTRATION_README_PASS");
+          '
