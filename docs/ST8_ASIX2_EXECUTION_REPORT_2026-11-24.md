@@ -112,3 +112,19 @@ GitHub PR #1 `ASIX B2B Provider Integration Foundation` უფრო ახლ�
 - შერჩეული პირის RS Georgia/RSIG-ის გამოქვეყნებული GSP B2B პროცედურა ამჟამად მიუთითებს საქართველოში დაფუძნებული კომპანიის მოთხოვნაზე, 100,000 GEL წლიურ სანებართვო მოსაკრებელზე, თამაშებისა და კრიტიკული პროდუქტის აღწერაზე და შერჩეული პირის ავტორიზაციის სერტიფიკატზე. RSIG თავად აფრთხილებს, რომ ჩამონათვალი შეიძლება არ იყოს ამომწურავი და მიმართავს განმცხადებელს ადგილობრივ იურისტთან კონსულტაციისკენ; თანხა/პირობები განაცხადამდე უშუალოდ შემოსავლების სამსახურთან უნდა დადასტურდეს: https://rsig.ge/ge/permits-and-processes
 
 აღნიშნული წყაროები არის სამართლებრივი/ტექნიკური მიმართულების წინასწარი საფუძველი და არა ASIX-ის ნებართვა, სერტიფიკატი ან პარტნიორის მიღების დადასტურება.
+
+
+## Follow-up verification — 24 Nov 2026
+
+After this report was first committed, the separate B2B Provider foundation branch was independently checked:
+- PR #1 head `7a754a98199dbbeabadf6457c9cf078bc0eca27e`.
+- GitHub Actions run **#374**: SUCCESS. The `provider-reference` job completed Deno type-check and all Provider reference tests; the separate `provider-database-sql` job completed its disposable PostgreSQL 17 schema smoke, response lifecycle, status-query lease recovery, concurrent launch idempotency and concurrent financial exposure/refund tests.
+- This validates the separate Provider reference candidate, not the ST8 Operator-wallet C01–C12 runner. Do not transfer its PASS status to the ST8 wallet candidate.
+- The ST8 branch's latest static workflow run **#52** also completed SUCCESS on report commit `7e1fb5350544340bdf09aa107921a80c05b51baf`; it validates runner syntax, PowerShell syntax, role-boundary assertions and dependency pin only. It does not execute C01–C12.
+- The ST8 Deno test files referenced in the local v0.8.0 archive are not present at the corresponding `supabase/functions/st8-gateway/*_test.ts` paths in the current GitHub integration branch. Therefore an Actions run against that branch cannot execute those native tests until the exact candidate source/test tree is registered in GitHub.
+- The ST8 C01–C12 runner remains prepared but not executed. The local runner requires the nine exact v0.8.0 migrations and a disposable PostgreSQL 17.12 instance. No test has been run against the base staging or Production.
+
+Links:
+- PR #1: https://github.com/maisuradzee/Asix/pull/1
+- Provider CI run #374: https://github.com/maisuradzee/Asix/actions/runs/44916078807
+- ST8 static CI run #52: https://github.com/maisuradzee/Asix/actions/runs/45441760330
