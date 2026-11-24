@@ -9,6 +9,9 @@ on:
       - ".github/workflows/asix-development-portal-pages.yml"
   schedule:
     - cron: "17 5 * * *"
+  workflow_run:
+    workflows: ["ASIX ST8 Autonomous Progression"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       summary_gzip_base64:
@@ -29,6 +32,10 @@ concurrency:
 
 jobs:
   build:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main')
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -82,8 +89,34 @@ jobs:
           mkdir -p docs/data
           node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-summary.json" docs/data/runtime-evidence.json
 
+      - name: Download sanitized runtime evidence from the completed autopilot run
+        if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: asix-st8-public-runtime-summary
+          path: ${{ runner.temp }}/asix-st8-runtime-evidence
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Validate new runtime evidence artifact
+        id: runtime_evidence
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          set -euo pipefail
+          input="$RUNNER_TEMP/asix-st8-runtime-evidence/asix-st8-public-summary.json"
+          if [[ -f "$input" ]]; then
+            mkdir -p docs/data
+            node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$input" docs/data/runtime-evidence.json
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "No new runtime evidence artifact was attached; existing published evidence will be retained."
+          fi
+
       - name: Restore previously published runtime evidence
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '' }}
+        if: ${{ (github.event_name != 'workflow_run' && (github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '')) || (github.event_name == 'workflow_run' && steps.runtime_evidence.outputs.present != 'true') }}
         run: |
           set -euo pipefail
           mkdir -p docs/data

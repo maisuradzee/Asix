@@ -9,6 +9,7 @@ on:
       - "tools/README_ST8_RUNTIME_EVIDENCE_KA.md"
       - ".github/workflows/asix-development-portal-pages.yml"
       - ".github/workflows/asix-evidence-importer-tests.yml"
+      - ".github/workflows/asix-st8-autonomous-runtime.yml"
 
 permissions:
   contents: read
@@ -52,6 +53,7 @@ jobs:
           for name in [
               ".github/workflows/asix-development-portal-pages.yml",
               ".github/workflows/asix-evidence-importer-tests.yml",
+              ".github/workflows/asix-st8-autonomous-runtime.yml",
           ]:
               yaml.load(Path(name).read_text(encoding="utf-8"), Loader=yaml.BaseLoader)
               print(f"YAML syntax PASS: {name}")

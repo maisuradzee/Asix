@@ -1,0 +1,229 @@
+name: ASIX ST8 Autonomous Progression
+
+on:
+  workflow_run:
+    workflows: ["ASIX ST8 v0.9 Static Validation"]
+    types: [completed]
+  push:
+    branches: [main]
+    paths:
+      - "staging-candidates/v0.9.0/runtime-assets/**"
+      - ".github/workflows/asix-st8-autonomous-runtime.yml"
+      - "tools/import-st8-runtime-evidence.mjs"
+      - "tools/import-st8-runtime-evidence.test.mjs"
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asix-st8-autonomous-progression
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'integration/st8-v0.7.1-alert-ops-hardening')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17.12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: asix-ci-disposable-only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - name: Checkout automation and evidence importer
+        uses: actions/checkout@v4
+
+      - name: Check one-time migration archive registration
+        id: archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="staging-candidates/v0.9.0/runtime-assets/ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip"
+          if [[ ! -f "$archive" ]]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "## ASIX ST8 autonomous progression"
+              echo ""
+              echo "**Waiting for one-time archive registration.**"
+              echo ""
+              echo "Upload the exact v0.8.0 migration archive to:"
+              echo "$archive"
+              echo ""
+              echo "No database was changed and no runtime test was claimed."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::notice::Waiting for the one-time v0.8.0 archive upload. No ST8 runtime test was run."
+            exit 0
+          fi
+          echo "present=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout exact ST8 source revision
+        if: steps.archive.outputs.present == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: maisuradzee/Asix
+          ref: ${{ github.event.workflow_run.head_sha || 'integration/st8-v0.7.1-alert-ops-hardening' }}
+          path: st8-source
+          persist-credentials: false
+
+      - name: Setup Node.js
+        if: steps.archive.outputs.present == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+
+      - name: Setup Deno
+        if: steps.archive.outputs.present == 'true'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: "2.2.5"
+
+      - name: Install PostgreSQL client and TypeScript compiler
+        if: steps.archive.outputs.present == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          npm install --global typescript@5.8.3
+
+      - name: Verify archive checksum and extract reviewed package
+        if: steps.archive.outputs.present == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="staging-candidates/v0.9.0/runtime-assets/ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip"
+          echo "50f5fda49025048f7e8a0218178cfbba8fc060f1b820be6c7188a99700c17f08  $archive" | sha256sum --check -
+          mkdir -p "$RUNNER_TEMP/asix-v080"
+          unzip -q "$archive" -d "$RUNNER_TEMP"
+          test -d "$RUNNER_TEMP/asix-v080/supabase/migrations"
+          migration_count="$(find "$RUNNER_TEMP/asix-v080/supabase/migrations" -maxdepth 1 -type f -name '*.sql' | wc -l)"
+          test "$migration_count" -eq 9
+          cd "$RUNNER_TEMP/asix-v080"
+          grep '  ./supabase/migrations/' SHA256SUMS.txt | sha256sum --check -
+
+      - name: Run complete candidate validation suite
+        if: steps.archive.outputs.present == 'true'
+        working-directory: ${{ runner.temp }}/asix-v080
+        run: npm run verify -- --require-deno
+
+      - name: Bootstrap disposable PostgreSQL Auth compatibility layer
+        if: steps.archive.outputs.present == 'true'
+        env:
+          PGPASSWORD: asix-ci-disposable-only
+        run: |
+          set -euo pipefail
+          psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN; END IF;
+          END $$;
+          CREATE SCHEMA IF NOT EXISTS auth;
+          CREATE TABLE IF NOT EXISTS auth.users (
+            id uuid PRIMARY KEY,
+            aud text,
+            role text,
+            email text UNIQUE,
+            encrypted_password text,
+            email_confirmed_at timestamptz,
+            raw_app_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+            raw_user_meta_data jsonb NOT NULL DEFAULT '{}'::jsonb,
+            is_anonymous boolean NOT NULL DEFAULT false,
+            created_at timestamptz NOT NULL DEFAULT now(),
+            updated_at timestamptz NOT NULL DEFAULT now()
+          );
+          CREATE OR REPLACE FUNCTION auth.jwt()
+          RETURNS jsonb
+          LANGUAGE sql
+          STABLE
+          AS $function$
+            SELECT COALESCE(NULLIF(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
+          $function$;
+          GRANT USAGE ON SCHEMA auth TO service_role;
+          GRANT EXECUTE ON FUNCTION auth.jwt() TO service_role;
+          SQL
+
+      - name: Apply exactly nine reviewed ST8 migrations to disposable PostgreSQL
+        if: steps.archive.outputs.present == 'true'
+        env:
+          PGPASSWORD: asix-ci-disposable-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          for migration in "$RUNNER_TEMP"/asix-v080/supabase/migrations/*.sql; do
+            echo "Applying $(basename "$migration")"
+            psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -v ON_ERROR_STOP=1 -f "$migration"
+          done
+
+      - name: Install pinned PostgreSQL runner dependency
+        if: steps.archive.outputs.present == 'true'
+        working-directory: st8-source/staging-candidates/v0.9.0/concurrency-runner
+        run: npm install --ignore-scripts --no-audit --no-fund --no-package-lock
+
+      - name: Run C01-C12 against ephemeral PostgreSQL 17.12
+        if: steps.archive.outputs.present == 'true'
+        working-directory: st8-source/staging-candidates/v0.9.0/concurrency-runner
+        env:
+          ST8_TEST_PROJECT_REF: local-disposable-postgres17
+          ST8_TEST_DATABASE_URL: postgresql://postgres:asix-ci-disposable-only@127.0.0.1:5432/postgres
+          ST8_TEST_ALLOW_DISPOSABLE_DB: YES_I_UNDERSTAND_THIS_IS_A_DISPOSABLE_ST8_TEST_DATABASE
+          ST8_TEST_WORKERS: "20"
+          ST8_TEST_SSL: disable
+          ST8_TEST_OUTPUT_DIR: ${{ runner.temp }}/asix-st8-concurrency-results
+        run: npm run test:concurrency
+
+      - name: Build sanitized public runtime evidence
+        if: steps.archive.outputs.present == 'true'
+        env:
+          REPORT_DIR: ${{ runner.temp }}/asix-st8-concurrency-results
+        run: |
+          set -euo pipefail
+          report="$(find "$REPORT_DIR" -maxdepth 1 -type f -name '*.json' | sort | tail -n 1)"
+          test -n "$report"
+          node tools/import-st8-runtime-evidence.mjs "$report" "$RUNNER_TEMP/asix-st8-public-summary.json"
+
+      - name: Upload sanitized runtime evidence for the Pages workflow
+        if: steps.archive.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: asix-st8-public-runtime-summary
+          path: ${{ runner.temp }}/asix-st8-public-summary.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Retain synthetic raw report briefly for failure diagnosis
+        if: failure() && steps.archive.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: asix-st8-runtime-failure-evidence
+          path: ${{ runner.temp }}/asix-st8-concurrency-results/*.json
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Final progression summary
+        if: always() && steps.archive.outputs.present == 'true'
+        run: |
+          {
+            echo "## ASIX ST8 autonomous progression"
+            echo ""
+            echo "- Candidate static suite: executed before database concurrency tests."
+            echo "- PostgreSQL: disposable GitHub-hosted PostgreSQL 17.12 service."
+            echo "- C01-C12: run with 20 independent worker connections."
+            echo "- Public portal: the Pages workflow receives the sanitized evidence artifact only after a complete 12/12 PASS."
+            echo "- ST8 partner acceptance and live money movement: not part of this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
