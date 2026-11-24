@@ -79,8 +79,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p docs/data
-          runs="$(gh api "repos/\${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
-          pr="$(gh api "repos/\${GITHUB_REPOSITORY}/pulls/3")"
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
+          pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/3")"
           runtime_evidence="null"
           if [[ -f .github/asix-st8-runtime-evidence.json ]]; then
             runtime_evidence="$(cat .github/asix-st8-runtime-evidence.json)"
