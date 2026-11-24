@@ -36,7 +36,8 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $endpoint = "repos/$Repository/contents/$TargetPath"
-$lookupOutput = gh api $endpoint"?ref=main" 2>&1
+$lookupEndpoint = "${endpoint}?ref=main"
+$lookupOutput = gh api $lookupEndpoint 2>&1
 $lookupExitCode = $LASTEXITCODE
 
 if ($lookupExitCode -eq 0) {
