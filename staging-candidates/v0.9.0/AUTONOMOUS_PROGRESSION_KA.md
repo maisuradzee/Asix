@@ -8,7 +8,7 @@ This workflow automatically advances through the available local validation stag
 4. Creates a fresh disposable PostgreSQL 17.12 service in GitHub Actions.
 5. Bootstraps only the minimal Supabase Auth compatibility objects required by the migrations.
 6. Applies the nine reviewed migrations and runs C01-C12 with 20 independent connections.
-7. If and only if all twelve scenarios pass, creates a sanitized summary and dispatches the public Pages workflow.
+7. If and only if all twelve scenarios pass, creates a sanitized summary artifact; the trusted Pages workflow automatically downloads, validates, and publishes it.
 8. Keeps a synthetic raw report artifact for three days only if the run fails.
 
 Production and the primary Asix #2 staging project are never contacted. The PostgreSQL service is created fresh for each run and destroyed by GitHub when the job ends. The workflow does not use ST8 partner credentials or make live financial calls.
