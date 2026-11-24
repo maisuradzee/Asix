@@ -141,32 +141,33 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p docs/data
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
-          pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/3")"
-          runtime_evidence="null"
+          gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20" > "$RUNNER_TEMP/st8-runs.json"
+          gh api "repos/${GITHUB_REPOSITORY}/pulls/3" > "$RUNNER_TEMP/st8-pr.json"
           if [[ -f docs/data/runtime-evidence.json ]]; then
-            runtime_evidence="$(cat docs/data/runtime-evidence.json)"
+            cp docs/data/runtime-evidence.json "$RUNNER_TEMP/runtime-evidence.json"
+          else
+            printf 'null\n' > "$RUNNER_TEMP/runtime-evidence.json"
           fi
           jq -n \
             --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            --argjson runs "$runs" \
-            --argjson pr "$pr" \
-            --argjson runtime_evidence "$runtime_evidence" \
+            --slurpfile runs "$RUNNER_TEMP/st8-runs.json" \
+            --slurpfile pr "$RUNNER_TEMP/st8-pr.json" \
+            --slurpfile runtime_evidence "$RUNNER_TEMP/runtime-evidence.json" \
             '{
               generated_at: $generated_at,
               latest_ci: (
-                [$runs.workflow_runs[]? | select(.name == "ASIX ST8 v0.9 Static Validation") | {
+                [$runs[0].workflow_runs[]? | select(.name == "ASIX ST8 v0.9 Static Validation") | {
                   name, status, conclusion, html_url, updated_at, head_sha
                 }] | sort_by(.updated_at) | reverse | .[0] // null
               ),
               pr3: {
-                state: $pr.state,
-                draft: $pr.draft,
-                merged: $pr.merged,
-                html_url: $pr.html_url,
-                updated_at: $pr.updated_at
+                state: $pr[0].state,
+                draft: $pr[0].draft,
+                merged: $pr[0].merged,
+                html_url: $pr[0].html_url,
+                updated_at: $pr[0].updated_at
               },
-              runtime_evidence: $runtime_evidence
+              runtime_evidence: $runtime_evidence[0]
             }' > docs/data/status.json
 
       - name: Upload site
