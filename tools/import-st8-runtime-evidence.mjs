@@ -31,7 +31,7 @@ export function validateAndSummarize(report, rawBytes, importedAt = new Date().t
     "Runtime evidence must come from PostgreSQL 17.x.");
 
   const workers = Number(report.workers);
-  requireCondition(Number.isInteger(workers) && workers >= 2 && workers <= 100, "Invalid worker count.");
+  requireCondition(Number.isInteger(workers) && workers >= 20 && workers <= 100, "C12 publication requires 20..100 concurrent workers.");
   requireCondition(report.total === 12 && report.passed === 12 && report.failed === 0 && report.status === "PASS",
     "Only a complete 12/12 PASS report can be imported as a passed runtime run.");
   requireCondition(Array.isArray(report.results) && report.results.length === 12, "Expected exactly 12 scenario results.");
@@ -86,7 +86,7 @@ export function validatePublicSummary(summary) {
   requireCondition(typeof summary.runId === "string" && /^\d{17}-[a-f0-9]{8}$/.test(summary.runId), "Invalid public evidence runId.");
   requireCondition(Number.isFinite(Date.parse(summary.testedAt)) && Number.isFinite(Date.parse(summary.importedAt)), "Invalid public evidence timestamps.");
   requireCondition(summary.target === "local-disposable-postgres17" && summary.postgresMajor === 17, "Public evidence target is not local PostgreSQL 17.");
-  requireCondition(Number.isInteger(summary.workers) && summary.workers >= 2 && summary.workers <= 100, "Invalid public evidence worker count.");
+  requireCondition(Number.isInteger(summary.workers) && summary.workers >= 20 && summary.workers <= 100, "Public C12 evidence requires 20..100 concurrent workers.");
   requireCondition(summary.total === 12 && summary.passed === 12 && summary.failed === 0 && summary.status === "PASS", "Public evidence is not a complete 12/12 PASS.");
   requireCondition(Array.isArray(summary.scenarios) && summary.scenarios.length === 12, "Public evidence must contain exactly twelve scenarios.");
 
@@ -134,6 +134,8 @@ async function main() {
     process.exit(inputPath ? 0 : 2);
   }
 
+  const inputStat = await fs.stat(inputPath);
+  requireCondition(inputStat.isFile() && inputStat.size > 0 && inputStat.size <= 1024 * 1024, "Evidence input must be a regular file between 1 byte and 1 MiB.");
   const raw = await fs.readFile(inputPath);
   let parsed;
   try {
