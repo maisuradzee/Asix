@@ -64,9 +64,13 @@ test("rejects non-PostgreSQL-17 and worker counts outside 2..100", () => {
   wrongVersion.target.serverVersionNum = 160000;
   assert.throws(() => validateAndSummarize(wrongVersion, Buffer.from("{}")), /PostgreSQL 17/);
 
-  const wrongWorkers = validReport();
-  wrongWorkers.workers = 101;
-  assert.throws(() => validateAndSummarize(wrongWorkers, Buffer.from("{}")), /worker count/);
+  const tooFewWorkers = validReport();
+  tooFewWorkers.workers = 19;
+  assert.throws(() => validateAndSummarize(tooFewWorkers, Buffer.from("{}")), /20..100 concurrent workers/);
+
+  const tooManyWorkers = validReport();
+  tooManyWorkers.workers = 101;
+  assert.throws(() => validateAndSummarize(tooManyWorkers, Buffer.from("{}")), /20..100 concurrent workers/);
 });
 
 test("validates restored public summaries and strips unexpected fields", () => {
@@ -84,4 +88,11 @@ test("rejects malformed persisted summaries", () => {
   const generated = validateAndSummarize(report, Buffer.from(JSON.stringify(report)), "2026-11-24T09:00:00.000Z");
   generated.sourceReportSha256 = "invalid";
   assert.throws(() => validatePublicSummary(generated), /SHA-256/);
+});
+
+test("rejects persisted summaries below the C12 concurrency floor", () => {
+  const report = validReport();
+  const generated = validateAndSummarize(report, Buffer.from(JSON.stringify(report)), "2026-11-24T09:00:00.000Z");
+  generated.workers = 19;
+  assert.throws(() => validatePublicSummary(generated), /20..100 concurrent workers/);
 });
