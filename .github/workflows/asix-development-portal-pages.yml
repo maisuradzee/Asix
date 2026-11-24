@@ -56,7 +56,14 @@ jobs:
             echo "Runtime evidence can only be imported from the main branch workflow dispatch."
             exit 1
           fi
-          printf '%s' "$REPORT_GZIP_BASE64" | base64 --decode | gzip -dc > "$RUNNER_TEMP/asix-st8-runtime-report.json"
+          node --input-type=module -e '
+            import fs from "node:fs";
+            import { gunzipSync } from "node:zlib";
+            const encoded = process.env.REPORT_GZIP_BASE64 || "";
+            if (!encoded || encoded.length > 30000) throw new Error("Missing/oversized compressed report input.");
+            const raw = gunzipSync(Buffer.from(encoded, "base64"), { maxOutputLength: 1024 * 1024 });
+            fs.writeFileSync(process.env.RUNNER_TEMP + "/asix-st8-runtime-report.json", raw, { mode: 0o600 });
+          '
           node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" .github/asix-st8-runtime-evidence.json
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
