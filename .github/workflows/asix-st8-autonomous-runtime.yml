@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  contents: read
 
 concurrency:
   group: asix-st8-autonomous-progression
@@ -190,7 +189,6 @@ jobs:
 
       - name: Build sanitized public runtime evidence
         if: steps.archive.outputs.present == 'true'
-        id: evidence
         env:
           REPORT_DIR: ${{ runner.temp }}/asix-st8-concurrency-results
         run: |
@@ -198,10 +196,6 @@ jobs:
           report="$(find "$REPORT_DIR" -maxdepth 1 -type f -name '*.json' | sort | tail -n 1)"
           test -n "$report"
           node tools/import-st8-runtime-evidence.mjs "$report" "$RUNNER_TEMP/asix-st8-public-summary.json"
-          gzip -9 -c "$RUNNER_TEMP/asix-st8-public-summary.json" | base64 -w0 > "$RUNNER_TEMP/asix-st8-public-summary.b64"
-          encoded="$(cat "$RUNNER_TEMP/asix-st8-public-summary.b64")"
-          test "\${#encoded}" -le 30000
-          echo "summary_gzip_base64=$encoded" >> "$GITHUB_OUTPUT"
 
       - name: Upload sanitized runtime evidence for the Pages workflow
         if: steps.archive.outputs.present == 'true'
