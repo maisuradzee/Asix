@@ -6,7 +6,6 @@ on:
     paths:
       - "docs/**"
       - "tools/**"
-      - ".github/asix-st8-runtime-evidence.json"
       - ".github/workflows/asix-development-portal-pages.yml"
   schedule:
     - cron: "17 5 * * *"
@@ -18,7 +17,7 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
   actions: read
   pull-requests: read
   pages: write
@@ -64,15 +63,22 @@ jobs:
             const raw = gunzipSync(Buffer.from(encoded, "base64"), { maxOutputLength: 1024 * 1024 });
             fs.writeFileSync(process.env.RUNNER_TEMP + "/asix-st8-runtime-report.json", raw, { mode: 0o600 });
           '
-          node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" .github/asix-st8-runtime-evidence.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/asix-st8-runtime-evidence.json
-          if ! git diff --cached --quiet; then
-            git commit -m "Record sanitized ASIX ST8 runtime evidence"
-            git push origin HEAD:main
+          mkdir -p docs/data
+          node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" docs/data/runtime-evidence.json
+
+      - name: Restore previously published runtime evidence
+        if: ${{ inputs.report_gzip_base64 == '' }}
+        run: |
+          set -euo pipefail
+          mkdir -p docs/data
+          status_code="$(curl -sS -L --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json" || true)"
+          if [[ "$status_code" == "200" ]]; then
+            node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-evidence.json" docs/data/runtime-evidence.json
+          elif [[ "$status_code" == "404" ]]; then
+            echo "No previously published runtime evidence exists yet."
           else
-            echo "Sanitized evidence is unchanged; no commit required."
+            echo "Could not safely preserve existing runtime evidence (HTTP $status_code)."
+            exit 1
           fi
 
       - name: Configure GitHub Pages
@@ -89,8 +95,8 @@ jobs:
           runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
           pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/3")"
           runtime_evidence="null"
-          if [[ -f .github/asix-st8-runtime-evidence.json ]]; then
-            runtime_evidence="$(cat .github/asix-st8-runtime-evidence.json)"
+          if [[ -f docs/data/runtime-evidence.json ]]; then
+            runtime_evidence="$(cat docs/data/runtime-evidence.json)"
           fi
           jq -n \
             --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
