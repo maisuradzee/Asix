@@ -45,6 +45,22 @@ jobs:
       - name: Test runtime evidence importer
         run: node --test tools/import-st8-runtime-evidence.test.mjs
 
+      - name: Check PowerShell evidence helper syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile(
+            "tools/Submit-ST8-Runtime-Evidence.ps1",
+            [ref]$tokens,
+            [ref]$errors
+          )
+          if ($errors.Count -gt 0) {
+            $errors | ForEach-Object { Write-Error $_ }
+            exit 1
+          }
+          Write-Host "EVIDENCE_SUBMITTER_POWERSHELL_SYNTAX_PASSED"
+
       - name: Import and retain validated runtime evidence
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.summary_gzip_base64 != '' }}
         env:
