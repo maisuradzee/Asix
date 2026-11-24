@@ -67,11 +67,11 @@ jobs:
           node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" docs/data/runtime-evidence.json
 
       - name: Restore previously published runtime evidence
-        if: ${{ inputs.report_gzip_base64 == '' }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.report_gzip_base64 == '' }}
         run: |
           set -euo pipefail
           mkdir -p docs/data
-          status_code="$(curl -sS -L --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json" || true)"
+          status_code="$(curl -sS -L -H "Cache-Control: no-cache" --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json?nocache=$GITHUB_RUN_ID" || true)"
           if [[ "$status_code" == "200" ]]; then
             node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-evidence.json" docs/data/runtime-evidence.json
           elif [[ "$status_code" == "404" ]]; then
