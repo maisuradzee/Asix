@@ -134,27 +134,62 @@ jobs:
           else
             printf 'null\n' > "$RUNNER_TEMP/runtime-evidence.json"
           fi
-          jq -n \
-            --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            --slurpfile runs "$RUNNER_TEMP/st8-runs.json" \
-            --slurpfile pr "$RUNNER_TEMP/st8-pr.json" \
-            --slurpfile runtime_evidence "$RUNNER_TEMP/runtime-evidence.json" \
-            '{
-              generated_at: $generated_at,
-              latest_ci: (
-                [$runs[0].workflow_runs[]? | select(.name == "ASIX ST8 v0.9 Static Validation") | {
-                  name, status, conclusion, html_url, updated_at, head_sha
-                }] | sort_by(.updated_at) | reverse | .[0] // null
-              ),
-              pr3: {
-                state: $pr[0].state,
-                draft: $pr[0].draft,
-                merged: $pr[0].merged,
-                html_url: $pr[0].html_url,
-                updated_at: $pr[0].updated_at
-              },
-              runtime_evidence: $runtime_evidence[0]
-            }' > docs/data/status.json
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+
+          function readJson(file, description) {
+            const raw = fs.readFileSync(file, "utf8");
+            try {
+              return JSON.parse(raw);
+            } catch (error) {
+              throw new Error(`Invalid JSON from ${description} (${file}, ${Buffer.byteLength(raw)} bytes): ${error.message}`);
+            }
+          }
+
+          const runsDocument = readJson(process.env.RUNNER_TEMP + "/st8-runs.json", "GitHub Actions runs API");
+          const pullRequest = readJson(process.env.RUNNER_TEMP + "/st8-pr.json", "PR #3 API");
+          const runtimeEvidence = readJson(process.env.RUNNER_TEMP + "/runtime-evidence.json", "published runtime evidence");
+
+          if (!Array.isArray(runsDocument.workflow_runs)) {
+            throw new Error("GitHub Actions runs API did not return a workflow_runs array.");
+          }
+          if (pullRequest.number !== 3 || typeof pullRequest.state !== "string") {
+            throw new Error("GitHub PR API response is not the expected PR #3 object.");
+          }
+          if (runtimeEvidence !== null && runtimeEvidence.schema !== "asix-st8-v0.9.0-public-runtime-summary/v1") {
+            throw new Error("Published runtime evidence failed the public summary schema check.");
+          }
+
+          const latestCi = runsDocument.workflow_runs
+            .filter((run) => run.name === "ASIX ST8 v0.9 Static Validation")
+            .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))[0] ?? null;
+
+          const status = {
+            generated_at: new Date().toISOString(),
+            latest_ci: latestCi ? {
+              name: latestCi.name,
+              status: latestCi.status,
+              conclusion: latestCi.conclusion,
+              html_url: latestCi.html_url,
+              updated_at: latestCi.updated_at,
+              head_sha: latestCi.head_sha
+            } : null,
+            pr3: {
+              state: pullRequest.state,
+              draft: pullRequest.draft,
+              merged: pullRequest.merged,
+              html_url: pullRequest.html_url,
+              updated_at: pullRequest.updated_at
+            },
+            runtime_evidence: runtimeEvidence
+          };
+
+          fs.writeFileSync("docs/data/status.json", JSON.stringify(status, null, 2) + "\n");
+          console.log("PORTAL_STATUS_JSON_GENERATED");
+          console.log("Static CI record:", latestCi ? latestCi.conclusion ?? latestCi.status : "none");
+          console.log("PR #3 state:", pullRequest.state, "draft:", pullRequest.draft, "merged:", pullRequest.merged);
+          console.log("Runtime evidence:", runtimeEvidence?.status ?? "not yet available");
+          NODE
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
