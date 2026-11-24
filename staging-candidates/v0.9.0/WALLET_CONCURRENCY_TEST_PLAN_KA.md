@@ -80,3 +80,17 @@ Supabase development branch-ის შექმნას აქვს პლა�
 ეს Node runner ამოწმებს მხოლოდ DB-level RPC concurrency-ს. ის არ ამოწმებს ST8-ის რეალურ signature verification-ს, HTTP Gateway-ს ან partner certification-ს.
 
 **v0.9.0 concurrency acceptance გავლილად არ ჩაითვალოს**, სანამ C01–C12 რეალურად არ შესრულდება disposable DB-ზე და evidence არ შეინახება.
+
+
+## v0.9.0 runner-ის შესრულების სტატუსი — 24 ნოემბერი 2026
+
+- მრავალსესიური Node.js runner და PowerShell launcher მზად არის.
+- Runner ყველა RPC call-ს უშვებს `SET LOCAL ROLE service_role`-ის ქვეშ; preflight დამატებით ამოწმებს callback/funding RPC-ების EXECUTE grant-ებს. `anon` და `authenticated`-ს ამ RPC-ებზე EXECUTE არ უნდა ჰქონდეთ.
+- GitHub Actions workflow ამოწმებს Node.js syntax-ს, PowerShell launcher syntax-ს, pinned dependency-სა და service-role execution safety contract-ს.
+- Static workflow run #16 წარმატებით დასრულდა, მაგრამ ის შესრულდა service-role assertion-ის workflow step-ის დამატებამდე. ახალი assertion-ის გაშვებული შედეგი ცალკე უნდა დაფიქსირდეს.
+- Supabase development branch-ის შესაქმნელად მომხმარებელმა საათობრივი ფასი დაადასტურა; API-მ შემდეგ დააბრუნა `Branching is supported only on the Pro plan or above`. Branch არ შექმნილა და ხარჯი არ დარიცხულა.
+- ალტერნატიული local launcher იყენებს მხოლოდ localhost-ზე მიბმულ PostgreSQL 17.12 Docker container-ს და 9 reviewed migration-ს v0.8.0 archive-იდან.
+- მიმდინარე ChatGPT execution გარემოში Docker CLI/daemon და PowerShell არ არის. ამიტომ ამ გარემოში C01–C12 runtime შედეგები არ არსებობს.
+- ადგილობრივი launcher-ის გაშვება შეუძლია Windows-ის გარემოში, სადაც Docker Desktop, Node.js 22.16+ და PowerShell 7 ხელმისაწვდომია.
+
+**სტატუსი უცვლელია: C01–C12 არ არის გავლილი.** Static CI PASS არ ჩაითვალოს concurrency acceptance-ად, ST8 certification-ად ან Production readiness-ად.
