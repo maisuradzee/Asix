@@ -89,21 +89,6 @@ jobs:
           mkdir -p docs/data
           node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-summary.json" docs/data/runtime-evidence.json
 
-      - name: Restore previously published runtime evidence
-        if: ${{ (github.event_name != 'workflow_run' && (github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '')) || (github.event_name == 'workflow_run' && steps.runtime_evidence.outputs.present != 'true') }}
-        run: |
-          set -euo pipefail
-          mkdir -p docs/data
-          status_code="$(curl -sS -L -H "Cache-Control: no-cache" --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json?nocache=$GITHUB_RUN_ID" || true)"
-          if [[ "$status_code" == "200" ]]; then
-            node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-evidence.json" docs/data/runtime-evidence.json
-          elif [[ "$status_code" == "404" ]]; then
-            echo "No previously published runtime evidence exists yet."
-          else
-            echo "Could not safely preserve existing runtime evidence (HTTP $status_code)."
-            exit 1
-          fi
-
       - name: Download sanitized runtime evidence from the completed autopilot run
         if: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' }}
         continue-on-error: true
@@ -128,6 +113,21 @@ jobs:
           else
             echo "present=false" >> "$GITHUB_OUTPUT"
             echo "No new runtime evidence artifact was attached; existing published evidence will be retained."
+          fi
+
+      - name: Restore previously published runtime evidence
+        if: ${{ (github.event_name != 'workflow_run' && (github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '')) || (github.event_name == 'workflow_run' && steps.runtime_evidence.outputs.present != 'true') }}
+        run: |
+          set -euo pipefail
+          mkdir -p docs/data
+          status_code="$(curl -sS -L -H "Cache-Control: no-cache" --max-time 20 -o "$RUNNER_TEMP/asix-st8-public-evidence.json" -w '%{http_code}' "https://maisuradzee.github.io/Asix/data/runtime-evidence.json?nocache=$GITHUB_RUN_ID" || true)"
+          if [[ "$status_code" == "200" ]]; then
+            node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-evidence.json" docs/data/runtime-evidence.json
+          elif [[ "$status_code" == "404" ]]; then
+            echo "No previously published runtime evidence exists yet."
+          else
+            echo "Could not safely preserve existing runtime evidence (HTTP $status_code)."
+            exit 1
           fi
 
       - name: Configure GitHub Pages
