@@ -11,8 +11,8 @@ on:
     - cron: "17 5 * * *"
   workflow_dispatch:
     inputs:
-      report_gzip_base64:
-        description: "Optional gzip+base64 local PostgreSQL 17.12 C01-C12 runner report"
+      summary_gzip_base64:
+        description: "Optional gzip+base64 sanitized C01-C12 public summary (raw report stays local)"
         required: false
         type: string
 
@@ -46,9 +46,9 @@ jobs:
         run: node --test tools/import-st8-runtime-evidence.test.mjs
 
       - name: Import and retain validated runtime evidence
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.report_gzip_base64 != '' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.summary_gzip_base64 != '' }}
         env:
-          REPORT_GZIP_BASE64: ${{ inputs.report_gzip_base64 }}
+          SUMMARY_GZIP_BASE64: ${{ inputs.summary_gzip_base64 }}
         run: |
           set -euo pipefail
           if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
@@ -58,16 +58,16 @@ jobs:
           node --input-type=module -e '
             import fs from "node:fs";
             import { gunzipSync } from "node:zlib";
-            const encoded = process.env.REPORT_GZIP_BASE64 || "";
+            const encoded = process.env.SUMMARY_GZIP_BASE64 || "";
             if (!encoded || encoded.length > 30000) throw new Error("Missing/oversized compressed report input.");
             const raw = gunzipSync(Buffer.from(encoded, "base64"), { maxOutputLength: 1024 * 1024 });
-            fs.writeFileSync(process.env.RUNNER_TEMP + "/asix-st8-runtime-report.json", raw, { mode: 0o600 });
+            fs.writeFileSync(process.env.RUNNER_TEMP + "/asix-st8-public-summary.json", raw, { mode: 0o600 });
           '
           mkdir -p docs/data
-          node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" docs/data/runtime-evidence.json
+          node tools/import-st8-runtime-evidence.mjs --validate-public-summary "$RUNNER_TEMP/asix-st8-public-summary.json" docs/data/runtime-evidence.json
 
       - name: Restore previously published runtime evidence
-        if: ${{ github.event_name != 'workflow_dispatch' || inputs.report_gzip_base64 == '' }}
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.summary_gzip_base64 == '' }}
         run: |
           set -euo pipefail
           mkdir -p docs/data
