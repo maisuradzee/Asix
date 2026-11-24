@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="ASIX-ის განვითარების საჯარო ანგარიში — ეტაპები, ტესტირება და ST8 ინტეგრაციის სტატუსი.">
+<title>ASIX — Development Portal</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d2e;--panel2:#172438;--line:#29384d;--text:#edf3fb;--muted:#a6b5c8;--blue:#7cb7ff;--green:#71d6a0;--amber:#f2c36b;--red:#ff8f8f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% -10%,#1c3556 0,transparent 42%),var(--bg);color:var(--text);font:16px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}.wrap{width:min(1120px,calc(100% - 36px));margin:auto}
+header{padding:28px 0 18px;border-bottom:1px solid var(--line)}.top{display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.12em}.mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(145deg,#5aa8ff,#7668e8);display:grid;place-items:center;color:white;font-weight:900;font-size:20px}
+nav{display:flex;gap:18px;flex-wrap:wrap;font-size:14px;color:var(--muted)}.lang{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:8px 12px;cursor:pointer}
+.hero{padding:58px 0 34px}.eyebrow{color:var(--blue);font-weight:700;text-transform:uppercase;letter-spacing:.13em;font-size:12px}.hero h1{font-size:clamp(34px,6vw,58px);line-height:1.08;letter-spacing:-.04em;margin:12px 0}.lead{max-width:760px;color:var(--muted);font-size:18px}
+.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}.pill{border:1px solid var(--line);border-radius:999px;padding:6px 11px;color:var(--muted);font-size:13px}.pill.live{color:var(--green);border-color:#285d48;background:#143126}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin:18px 0 34px}.card{background:linear-gradient(180deg,var(--panel),#101a29);border:1px solid var(--line);border-radius:17px;padding:22px;min-width:0}.wide{grid-column:span 8}.side{grid-column:span 4}.half{grid-column:span 6}.full{grid-column:1/-1}.card h2{font-size:19px;margin:0 0 14px}.card p{color:var(--muted);margin:8px 0}.metric{font-size:25px;font-weight:800;letter-spacing:-.03em}.small{font-size:13px;color:var(--muted)}.status{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;background:#2d281a;color:var(--amber)}.status.ok{background:#143126;color:var(--green)}.status.block{background:#35221f;color:var(--red)}
+.list{display:grid;gap:12px}.item{padding:14px 0;border-top:1px solid var(--line)}.item:first-child{border-top:0;padding-top:0}.item strong{display:block;margin-bottom:3px}.item p{margin:0}.bar{height:8px;background:#253348;border-radius:99px;overflow:hidden;margin:12px 0}.bar span{display:block;height:100%;width:100%;background:linear-gradient(90deg,#67b5ff,#8d82f2)}
+.links{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}.btn{display:inline-block;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);font-weight:650}.btn.primary{background:#2462a5;border-color:#367dc6;color:white}
+footer{border-top:1px solid var(--line);padding:24px 0 42px;color:var(--muted);font-size:13px}.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+[hidden]{display:none!important}
+@media(max-width:760px){.wide,.side,.half{grid-column:1/-1}.hero{padding-top:38px}.top{align-items:flex-start}.top nav{display:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+<div class="brand"><div class="mark">A</div><span>ASIX <span style="color:var(--muted);font-weight:500">/ DEVELOPMENT</span></span></div>
+<nav><a href="#overview" data-ka="მიმოხილვა" data-en="Overview">მიმოხილვა</a><a href="#progress" data-ka="პროგრესი" data-en="Progress">პროგრესი</a><a href="#testing" data-ka="ტესტირება" data-en="Testing">ტესტირება</a><a href="#roadmap" data-ka="შემდეგი ეტაპები" data-en="Roadmap">შემდეგი ეტაპები</a></nav>
+<button class="lang" id="lang" type="button" aria-label="Switch language">EN</button>
+</div></header>
+<main class="wrap">
+<section class="hero" id="overview">
+<div class="eyebrow" data-ka="საჯარო განვითარების ანგარიში" data-en="Public development report">საჯარო განვითარების ანგარიში</div>
+<h1>ASIX <span style="color:var(--blue)">Development Portal</span></h1>
+<p class="lead" data-ka="პროექტის განვითარების გამჭვირვალე ჟურნალი — ტექნიკური ეტაპები, ინტეგრაციის სტატუსი, შემოწმებები და დადასტურებული შედეგები." data-en="A transparent project log covering engineering milestones, integration status, checks, and verified results.">პროექტის განვითარების გამჭვირვალე ჟურნალი — ტექნიკური ეტაპები, ინტეგრაციის სტატუსი, შემოწმებები და დადასტურებული შედეგები.</p>
+<div class="meta"><span class="pill live" data-ka="● აქტიური განვითარება" data-en="● Active development">● აქტიური განვითარება</span><span class="pill" data-ka="ბოლო გადამოწმება: 24 ნოემბერი, 2026" data-en="Last verified: 24 November 2026">ბოლო გადამოწმება: 24 ნოემბერი, 2026</span><span class="pill">ST8 integration · v0.9.0</span></div>
+</section>
+<section class="grid" id="progress">
+<article class="card wide">
+<h2 data-ka="მიმდინარე ეტაპი" data-en="Current milestone">მიმდინარე ეტაპი</h2>
+<div class="status" data-ka="მიმდინარეობს — runtime ვალიდაცია" data-en="In progress — runtime validation">მიმდინარეობს — runtime ვალიდაცია</div>
+<h3 style="font-size:24px;margin:14px 0 6px" data-ka="Wallet concurrency validation" data-en="Wallet concurrency validation">Wallet concurrency validation</h3>
+<p data-ka="მომზადებულია 12 მრავალსესიანი სცენარის სატესტო runner და ლოკალური PostgreSQL 17.12 გარემოს გამშვები. რეალური DB concurrency ტესტები ჯერ არ გაშვებულა." data-en="A runner for 12 multi-session scenarios and a local PostgreSQL 17.12 launcher are prepared. Real database concurrency tests have not yet been executed.">მომზადებულია 12 მრავალსესიანი სცენარის სატესტო runner და ლოკალური PostgreSQL 17.12 გარემოს გამშვები. რეალური DB concurrency ტესტები ჯერ არ გაშვებულა.</p>
+<div class="bar" aria-label="Preparation complete, runtime pending"><span></span></div>
+<div class="small" data-ka="მომზადების არტეფაქტები შექმნილია; დასრულების პროცენტი არ ქვეყნდება, სანამ შეწონილი საზომი და runtime მტკიცებულება არ გვექნება." data-en="Preparation artifacts exist; no completion percentage is published until a weighted baseline and runtime evidence exist.">მომზადების არტეფაქტები შექმნილია; დასრულების პროცენტი არ ქვეყნდება, სანამ შეწონილი საზომი და runtime მტკიცებულება არ გვექნება.</div>
+</article>
+<article class="card side">
+<h2 data-ka="ინტეგრაციის სტატუსი" data-en="Integration status">ინტეგრაციის სტატუსი</h2>
+<div class="metric">ST8</div><p data-ka="ტექნიკური კანდიდატი v0.9.0" data-en="Technical candidate v0.9.0">ტექნიკური კანდიდატი v0.9.0</p>
+<div class="item"><strong data-ka="GitHub PR #3" data-en="GitHub PR #3">GitHub PR #3</strong><span class="status">Draft · Open</span></div>
+<div class="item"><strong data-ka="Supabase იზოლირებული branch" data-en="Isolated Supabase branch">Supabase იზოლირებული branch</strong><span class="status block" data-ka="Pro გეგმა საჭიროა" data-en="Pro plan required">Pro გეგმა საჭიროა</span></div>
+</article>
+<article class="card half" id="testing">
+<h2 data-ka="დადასტურებული შემოწმებები" data-en="Verified checks">დადასტურებული შემოწმებები</h2>
+<div class="list">
+<div class="item"><strong>74 / 74</strong><p data-ka="Node package tests — PASS" data-en="Node package tests — PASS">Node package tests — PASS</p></div>
+<div class="item"><strong>134 / 134</strong><p data-ka="Python static contract checks — PASS" data-en="Python static contract checks — PASS">Python static contract checks — PASS</p></div>
+<div class="item"><strong>18 / 18</strong><p data-ka="Node syntax checks — PASS" data-en="Node syntax checks — PASS">Node syntax checks — PASS</p></div>
+<div class="item"><strong>22 / 22</strong><p data-ka="Verification checks — PASS" data-en="Verification checks — PASS">Verification checks — PASS</p></div>
+<div class="item"><strong>69 / 69</strong><p data-ka="პაკეტის checksum-ები — PASS" data-en="Package checksums — PASS">პაკეტის checksum-ები — PASS</p></div>
+</div>
+</article>
+<article class="card half">
+<h2 data-ka="ჯერ შეუსრულებელი შემოწმებები" data-en="Not yet executed">ჯერ შეუსრულებელი შემოწმებები</h2>
+<div class="list">
+<div class="item"><strong>C01–C12</strong><span class="status block" data-ka="არ გაშვებულა" data-en="Not run">არ გაშვებულა</span><p data-ka="12 რეალური მრავალსესიანი wallet concurrency სცენარი PostgreSQL runtime-ზე." data-en="12 real multi-session wallet concurrency scenarios against PostgreSQL runtime.">12 რეალური მრავალსესიანი wallet concurrency სცენარი PostgreSQL runtime-ზე.</p></div>
+<div class="item"><strong>Deno-native tests</strong><span class="status" data-ka="გამოტოვებულია" data-en="Skipped">გამოტოვებულია</span><p data-ka="Deno CLI გარემოში არ იყო ხელმისაწვდომი." data-en="Deno CLI was unavailable in the execution environment.">Deno CLI გარემოში არ იყო ხელმისაწვდომი.</p></div>
+<div class="item"><strong>ST8 partner acceptance</strong><span class="status" data-ka="მოლოდინში" data-en="Pending">მოლოდინში</span><p data-ka="პარტნიორის sandbox credentials და Testing Tool წვდომა ჯერ არ არის მიღებული." data-en="Partner sandbox credentials and Testing Tool access have not yet been received.">პარტნიორის sandbox credentials და Testing Tool წვდომა ჯერ არ არის მიღებული.</p></div>
+</div>
+</article>
+<article class="card full" id="roadmap">
+<h2 data-ka="შემდეგი ეტაპები" data-en="Next milestones">შემდეგი ეტაპები</h2>
+<div class="list">
+<div class="item"><strong>01 · Local PostgreSQL runtime</strong><p data-ka="ლოკალური Docker PostgreSQL 17.12 გარემოში C01–C12-ის გაშვება და JSON მტკიცებულებების შენახვა." data-en="Run C01–C12 in disposable local Docker PostgreSQL 17.12 and retain JSON evidence.">ლოკალური Docker PostgreSQL 17.12 გარემოში C01–C12-ის გაშვება და JSON მტკიცებულებების შენახვა.</p></div>
+<div class="item"><strong>02 · Defect remediation</strong><p data-ka="ნებისმიერი ჩავარდნის გამეორება, მიზეზის დადგენა, გამოსწორება და სრული regression." data-en="Reproduce failures, identify root causes, fix them, and rerun regression.">ნებისმიერი ჩავარდნის გამეორება, მიზეზის დადგენა, გამოსწორება და სრული regression.</p></div>
+<div class="item"><strong>03 · ST8 sandbox onboarding</strong><p data-ka="ოპერატორის კოდების, sandbox URL-ების, გასაღებებისა და Testing Tool-ის მიღება." data-en="Obtain operator codes, sandbox URLs, keys, and Testing Tool access.">ოპერატორის კოდების, sandbox URL-ების, გასაღებებისა და Testing Tool-ის მიღება.</p></div>
+<div class="item"><strong>04 · Partner validation</strong><p data-ka="მხოლოდ sandbox გარემოში ინტეგრაციის შესაბამისობისა და პარტნიორის მიღების შემოწმება." data-en="Validate integration compliance and partner acceptance in sandbox only.">მხოლოდ sandbox გარემოში ინტეგრაციის შესაბამისობისა და პარტნიორის მიღების შემოწმება.</p></div>
+</div>
+</article>
+<article class="card full">
+<h2 data-ka="უსაფრთხოების საზღვრები" data-en="Safety boundaries">უსაფრთხოების საზღვრები</h2>
+<p data-ka="Production პროექტი, არსებული player wallet-ები და მონაცემები უცვლელია. ტესტები უნდა შესრულდეს მხოლოდ იზოლირებულ disposable გარემოში. ამ ეტაპზე ST8 live API, callback-ები და რეალური თანხის მოძრაობა გამორთულია." data-en="The production project, existing player wallets, and data remain untouched. Tests must run only in an isolated disposable environment. ST8 live APIs, callbacks, and real-money movement are disabled at this stage.">Production პროექტი, არსებული player wallet-ები და მონაცემები უცვლელია. ტესტები უნდა შესრულდეს მხოლოდ იზოლირებულ disposable გარემოში. ამ ეტაპზე ST8 live API, callback-ები და რეალური თანხის მოძრაობა გამორთულია.</p>
+<div class="links"><a class="btn primary" href="https://github.com/maisuradzee/Asix">GitHub repository ↗</a><a class="btn" href="https://github.com/maisuradzee/Asix/pull/3">ST8 integration PR #3 ↗</a><a class="btn" href="https://github.com/maisuradzee/Asix/actions">CI / workflow results ↗</a><a class="btn" href="https://github.com/maisuradzee/Asix/blob/integration/st8-v0.7.1-alert-ops-hardening/staging-candidates/v0.9.0/WALLET_CONCURRENCY_TEST_PLAN_KA.md">Concurrency test plan ↗</a></div>
+</article>
+</section>
+</main>
+<footer><div class="wrap foot"><span>ASIX Development Portal · Public project status</span><span data-ka="მონაცემები ქვეყნდება მხოლოდ დადასტურებული მტკიცებულებების საფუძველზე." data-en="Status is published only when supported by verifiable evidence.">მონაცემები ქვეყნდება მხოლოდ დადასტურებული მტკიცებულებების საფუძველზე.</span></div></footer>
+<script>
+const button=document.getElementById('lang');let lang='ka';
+button.addEventListener('click',()=>{lang=lang==='ka'?'en':'ka';document.documentElement.lang=lang;document.querySelectorAll('[data-ka]').forEach(el=>{el.textContent=el.dataset[lang]});button.textContent=lang==='ka'?'EN':'ქარ';});
+</script>
+</body></html>
