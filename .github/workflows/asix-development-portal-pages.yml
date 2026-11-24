@@ -5,13 +5,20 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "tools/**"
+      - ".github/asix-st8-runtime-evidence.json"
       - ".github/workflows/asix-development-portal-pages.yml"
   schedule:
     - cron: "17 5 * * *"
   workflow_dispatch:
+    inputs:
+      report_gzip_base64:
+        description: "Optional gzip+base64 local PostgreSQL 17.12 C01-C12 runner report"
+        required: false
+        type: string
 
 permissions:
-  contents: read
+  contents: write
   actions: read
   pull-requests: read
   pages: write
@@ -25,31 +32,68 @@ jobs:
   build:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: \${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.16.0"
+
+      - name: Test runtime evidence importer
+        run: node --test tools/import-st8-runtime-evidence.test.mjs
+
+      - name: Import and retain validated runtime evidence
+        if: \${{ github.event_name == 'workflow_dispatch' && inputs.report_gzip_base64 != '' }}
+        env:
+          REPORT_GZIP_BASE64: \${{ inputs.report_gzip_base64 }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Runtime evidence can only be imported from the main branch workflow dispatch."
+            exit 1
+          fi
+          printf '%s' "$REPORT_GZIP_BASE64" | base64 --decode | gzip -dc > "$RUNNER_TEMP/asix-st8-runtime-report.json"
+          node tools/import-st8-runtime-evidence.mjs "$RUNNER_TEMP/asix-st8-runtime-report.json" .github/asix-st8-runtime-evidence.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/asix-st8-runtime-evidence.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Record sanitized ASIX ST8 runtime evidence"
+            git push origin HEAD:main
+          else
+            echo "Sanitized evidence is unchanged; no commit required."
+          fi
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
+
       - name: Refresh verified GitHub status
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: \${{ github.token }}
         run: |
           set -euo pipefail
           mkdir -p docs/data
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=10")"
-          pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/3")"
+          runs="$(gh api "repos/\${GITHUB_REPOSITORY}/actions/runs?branch=integration%2Fst8-v0.7.1-alert-ops-hardening&per_page=20")"
+          pr="$(gh api "repos/\${GITHUB_REPOSITORY}/pulls/3")"
+          runtime_evidence="null"
+          if [[ -f .github/asix-st8-runtime-evidence.json ]]; then
+            runtime_evidence="$(cat .github/asix-st8-runtime-evidence.json)"
+          fi
           jq -n \
             --arg generated_at "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             --argjson runs "$runs" \
             --argjson pr "$pr" \
+            --argjson runtime_evidence "$runtime_evidence" \
             '{
               generated_at: $generated_at,
               latest_ci: (
-                [$runs.workflow_runs[]? | {
+                [$runs.workflow_runs[]? | select(.name == "ASIX ST8 v0.9 Static Validation") | {
                   name, status, conclusion, html_url, updated_at, head_sha
                 }] | sort_by(.updated_at) | reverse | .[0] // null
               ),
@@ -59,12 +103,15 @@ jobs:
                 merged: $pr.merged,
                 html_url: $pr.html_url,
                 updated_at: $pr.updated_at
-              }
+              },
+              runtime_evidence: $runtime_evidence
             }' > docs/data/status.json
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./docs
+
       - name: Deploy site
         id: deployment
         uses: actions/deploy-pages@v4
