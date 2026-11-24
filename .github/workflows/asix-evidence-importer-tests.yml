@@ -5,7 +5,7 @@ on:
     paths:
       - "tools/import-st8-runtime-evidence.mjs"
       - "tools/import-st8-runtime-evidence.test.mjs"
-      - "tools/Submit-ST8-Runtime-Evidence.ps1"
+      - "tools/Register-ST8-V080-Archive.ps1"
       - "tools/README_ST8_RUNTIME_EVIDENCE_KA.md"
       - ".github/workflows/asix-development-portal-pages.yml"
       - ".github/workflows/asix-evidence-importer-tests.yml"
@@ -29,13 +29,13 @@ jobs:
         run: node --check tools/import-st8-runtime-evidence.mjs
       - name: Run importer unit tests
         run: node --test tools/import-st8-runtime-evidence.test.mjs
-      - name: Check PowerShell helper syntax
+      - name: Check PowerShell archive registration helper syntax
         shell: pwsh
         run: |
           $tokens = $null
           $errors = $null
           [void][System.Management.Automation.Language.Parser]::ParseFile(
-            "tools/Submit-ST8-Runtime-Evidence.ps1",
+            "tools/Register-ST8-V080-Archive.ps1",
             [ref]$tokens,
             [ref]$errors
           )
@@ -43,7 +43,7 @@ jobs:
             $errors | ForEach-Object { Write-Error $_ }
             exit 1
           }
-          Write-Host "EVIDENCE_SUBMITTER_POWERSHELL_SYNTAX_PASSED"
+          Write-Host "ARCHIVE_REGISTRATION_POWERSHELL_SYNTAX_PASSED"
 
       - name: Validate YAML syntax
         run: |
