@@ -144,5 +144,5 @@ test("runtime evidence documentation matches the workflow-only publication bound
   assert.match(guide, /not runtime acceptance/);
   assert.match(guide, /retired `Submit-ST8-Runtime-Evidence\.ps1` helper are not accepted/);
   assert.doesNotMatch(guide, /pwsh -File .*Submit-ST8-Runtime-Evidence\.ps1/);
-  assert.doesNotMatch(guide, /summary_gzip_base64/);
+  assert.match(guide, /former `summary_gzip_base64` dispatch input/);
 });
