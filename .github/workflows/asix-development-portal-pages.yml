@@ -184,7 +184,7 @@ jobs:
             runtime_evidence: runtimeEvidence
           };
 
-          fs.writeFileSync("docs/data/status.json", JSON.stringify(status, null, 2) + "\\n");
+          fs.writeFileSync("docs/data/status.json", JSON.stringify(status, null, 2) + "\n");
           console.log("PORTAL_STATUS_JSON_GENERATED");
           console.log("Static CI record:", latestCi ? latestCi.conclusion ?? latestCi.status : "none");
           console.log("PR #3 state:", pullRequest.state, "draft:", pullRequest.draft, "merged:", pullRequest.merged);
