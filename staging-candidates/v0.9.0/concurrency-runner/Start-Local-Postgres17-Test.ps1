@@ -11,6 +11,8 @@ $containerName = "asix-st8-v090-pg"
 $databasePassword = "LocalOnly-ST8-v090-Postgres17!"
 $port = 55432
 $ack = "YES_I_UNDERSTAND_THIS_IS_A_DISPOSABLE_ST8_TEST_DATABASE"
+$completed = $false
+$tempRoot = $null
 
 function Write-Step([string]$Message) {
   Write-Host ""
@@ -19,6 +21,9 @@ function Write-Step([string]$Message) {
 
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
   throw "Docker CLI not found. Install/start Docker Desktop, then retry."
+}
+if (-not (Get-Command node -ErrorAction SilentlyContinue) -or -not (Get-Command npm -ErrorAction SilentlyContinue)) {
+  throw "Node.js 22.16+ and npm are required."
 }
 if (-not (Test-Path -LiteralPath $MigrationZipPath -PathType Leaf)) {
   throw "Migration ZIP not found: $MigrationZipPath"
@@ -100,7 +105,7 @@ GRANT EXECUTE ON FUNCTION auth.jwt() TO service_role;
   Write-Step "Apply the 9 reviewed ST8 migrations to disposable local PostgreSQL only"
   foreach ($migration in $migrations) {
     Write-Host ("Applying " + $migration.Name)
-    Get-Content -LiteralPath $migration.FullName -Raw |
+    Get-Content -LiteralPath $migration.FullName -Raw -Encoding UTF8 |
       docker exec -i $containerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres
     if ($LASTEXITCODE -ne 0) {
       throw "Migration failed: $($migration.Name). Container retained for diagnosis."
@@ -110,7 +115,7 @@ GRANT EXECUTE ON FUNCTION auth.jwt() TO service_role;
   Write-Step "Install pinned Node.js dependency"
   Push-Location $PSScriptRoot
   try {
-    npm install --ignore-scripts
+    npm install --ignore-scripts --no-package-lock
     if ($LASTEXITCODE -ne 0) { throw "npm install failed." }
 
     Write-Step "Run C01-C12 on independent PostgreSQL pool connections"
@@ -126,18 +131,22 @@ GRANT EXECUTE ON FUNCTION auth.jwt() TO service_role;
     Pop-Location
   }
 
+  $completed = $true
   Write-Step "Concurrency run completed"
-  Write-Host "The database is local-only and disposable. Review the JSON report before deleting the container."
+  Write-Host "The database is local-only and disposable. JSON evidence is in concurrency-results."
 }
 catch {
   Write-Error $_
   throw
 }
 finally {
-  if (-not $KeepContainer -and $LASTEXITCODE -eq 0) {
+  if ($tempRoot -and (Test-Path -LiteralPath $tempRoot)) {
+    Remove-Item -LiteralPath $tempRoot -Recurse -Force
+  }
+  if (-not $KeepContainer -and $completed) {
     Write-Step "Remove disposable PostgreSQL container"
     docker rm -f $containerName
   } else {
-    Write-Host "Container retained: $containerName" -ForegroundColor Yellow
+    Write-Host "Container retained for diagnosis: $containerName" -ForegroundColor Yellow
   }
 }
