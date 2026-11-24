@@ -1,0 +1,9 @@
+{
+  "name": "asix-st8-v090-concurrency-runner",
+  "version": "0.9.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.16.0" },
+  "scripts": { "test:concurrency": "node run-concurrency-tests.mjs" },
+  "dependencies": { "pg": "8.16.3" }
+}
