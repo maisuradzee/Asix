@@ -51,6 +51,7 @@ async function withService(fn) {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query("set local role service_role");
     await client.query("select set_config('request.jwt.claims',$1,true)", [JSON.stringify({ role: "service_role" })]);
     const result = await fn(client);
     await client.query("commit");
@@ -150,11 +151,21 @@ async function preflight() {
   const f = await pool.query(
     "select current_database() as db,current_setting('server_version_num')::int as version_num," +
     "to_regprocedure('public.st8_process_wallet_callback(text,text,text,text,text,text,text,bigint,bytea,text,text,text,text,bytea,jsonb)') is not null as callback_ok," +
-    "to_regprocedure('public.st8_credit_wallet_from_trusted_source(uuid,bigint,text,text,text,jsonb)') is not null as funding_ok"
+    "to_regprocedure('public.st8_credit_wallet_from_trusted_source(uuid,bigint,text,text,text,jsonb)') is not null as funding_ok," +
+    "has_function_privilege('service_role',to_regprocedure('public.st8_process_wallet_callback(text,text,text,text,text,text,text,bigint,bytea,text,text,text,text,bytea,jsonb)'),'EXECUTE') as service_callback_exec," +
+    "has_function_privilege('anon',to_regprocedure('public.st8_process_wallet_callback(text,text,text,text,text,text,text,bigint,bytea,text,text,text,text,bytea,jsonb)'),'EXECUTE') as anon_callback_exec," +
+    "has_function_privilege('authenticated',to_regprocedure('public.st8_process_wallet_callback(text,text,text,text,text,text,text,bigint,bytea,text,text,text,text,bytea,jsonb)'),'EXECUTE') as authenticated_callback_exec," +
+    "has_function_privilege('service_role',to_regprocedure('public.st8_credit_wallet_from_trusted_source(uuid,bigint,text,text,text,jsonb)'),'EXECUTE') as service_funding_exec," +
+    "has_function_privilege('anon',to_regprocedure('public.st8_credit_wallet_from_trusted_source(uuid,bigint,text,text,text,jsonb)'),'EXECUTE') as anon_funding_exec," +
+    "has_function_privilege('authenticated',to_regprocedure('public.st8_credit_wallet_from_trusted_source(uuid,bigint,text,text,text,jsonb)'),'EXECUTE') as authenticated_funding_exec"
   );
   const info = f.rows[0];
   assert(info.version_num >= 170000 && info.version_num < 180000, "PostgreSQL 17.x required.");
   assert(info.callback_ok && info.funding_ok, "ST8 RPC functions missing.");
+  assert(info.service_callback_exec && info.service_funding_exec, "service_role must have EXECUTE on both wallet RPCs.");
+  assert(!info.anon_callback_exec && !info.authenticated_callback_exec &&
+    !info.anon_funding_exec && !info.authenticated_funding_exec,
+    "Wallet RPC EXECUTE must be denied to anon and authenticated roles.");
   const p = (await pool.query(
     "select count(*)::int as tables,count(*) filter(where c.relrowsecurity)::int as rls," +
     "count(*) filter(where c.relforcerowsecurity)::int as force_rls," +
