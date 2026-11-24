@@ -36,12 +36,12 @@ if ($existing -eq $containerName) {
   throw "Container $containerName already exists. Inspect it, then remove it manually before retrying."
 }
 
-Write-Step "Pull PostgreSQL 17 image"
-docker pull postgres:17
+Write-Step "Pull PostgreSQL 17.12 image"
+docker pull postgres:17.12
 if ($LASTEXITCODE -ne 0) { throw "docker pull failed." }
 
-Write-Step "Start isolated local-only PostgreSQL container"
-docker run --name $containerName --detach --publish "127.0.0.1:$($port):5432" --env "POSTGRES_PASSWORD=$databasePassword" --env "POSTGRES_DB=postgres" postgres:17
+Write-Step "Start isolated local-only PostgreSQL 17.12 container"
+docker run --name $containerName --detach --publish "127.0.0.1:$($port):5432" --env "POSTGRES_PASSWORD=$databasePassword" --env "POSTGRES_DB=postgres" postgres:17.12
 if ($LASTEXITCODE -ne 0) { throw "Could not start the disposable PostgreSQL container." }
 
 try {
