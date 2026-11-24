@@ -48,6 +48,25 @@ jobs:
           }
           Write-Host "LOCAL_POSTGRES_LAUNCHER_SYNTAX_PASSED"
 
+      - name: Check service-role execution boundary
+        run: |
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const s = fs.readFileSync("staging-candidates/v0.9.0/concurrency-runner/run-concurrency-tests.mjs", "utf8");
+            for (const token of [
+              "set local role service_role",
+              "service_callback_exec",
+              "service_funding_exec",
+              "anon_callback_exec",
+              "authenticated_callback_exec",
+              "anon_funding_exec",
+              "authenticated_funding_exec"
+            ]) {
+              if (!s.includes(token)) throw new Error("Missing service-role safety contract: " + token);
+            }
+            console.log("SERVICE_ROLE_EXECUTION_BOUNDARY_PASSED");
+          '
+
       - name: Verify pinned dependency and package metadata
         run: |
           node --input-type=module -e '
