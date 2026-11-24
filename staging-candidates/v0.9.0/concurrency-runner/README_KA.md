@@ -14,11 +14,19 @@
 - Node.js 22.16+ და npm;
 - v0.8.0-ის ზუსტად გადამოწმებული archive: `ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip`.
 
+## მომზადება Windows-ზე
+```powershell
+git clone --branch integration/st8-v0.7.1-alert-ops-hardening --single-branch https://github.com/maisuradzee/Asix.git
+cd Asix
+```
+
+ჩამოტვირთეთ ზუსტად გადამოწმებული v0.8.0 archive ChatGPT-ის მოწოდებული ფაილიდან და შეინახეთ, მაგალითად, `$HOME\Downloads\ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip`.
+
 ## ერთსაფეხურიანი ლოკალური გაშვება — PowerShell
-გადმოწერეთ v0.8.0 archive და შეინახეთ მისამართი. შემდეგ გაუშვით repository root-იდან:
+გაუშვით repository root-იდან:
 
 ```powershell
-pwsh -File .\staging-candidates\v0.9.0\concurrency-runner\Start-Local-Postgres17-Test.ps1 -MigrationZipPath "C:\path\to\ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip" -Workers 20
+pwsh -File .\staging-candidates\v0.9.0\concurrency-runner\Start-Local-Postgres17-Test.ps1 -MigrationZipPath "$HOME\Downloads\ASIX_ST8_Integration_Candidate_v0.8.0_Asix2_Staging.zip" -Workers 20
 ```
 
 Launcher:
