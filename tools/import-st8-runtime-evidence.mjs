@@ -17,7 +17,7 @@ function requireCondition(condition, message) {
 export function validateAndSummarize(report, rawBytes, importedAt = new Date().toISOString()) {
   requireCondition(report && typeof report === "object" && !Array.isArray(report), "Evidence must be a JSON object.");
   requireCondition(report.schema === EXPECTED_SCHEMA, "Unsupported runner report schema.");
-  requireCondition(typeof report.runId === "string" && /^\\d{17}-[a-f0-9]{8}$/.test(report.runId), "Invalid runner runId.");
+  requireCondition(typeof report.runId === "string" && /^\d{17}-[a-f0-9]{8}$/.test(report.runId), "Invalid runner runId.");
   requireCondition(typeof report.createdAt === "string" && Number.isFinite(Date.parse(report.createdAt)), "Invalid report createdAt timestamp.");
   requireCondition(report.target && typeof report.target === "object", "Missing database target metadata.");
 
@@ -82,7 +82,7 @@ async function main() {
   const inputPath = process.argv[2];
   const outputPath = process.argv[3] || ".github/asix-st8-runtime-evidence.json";
   if (!inputPath || inputPath === "--help" || inputPath === "-h") {
-    process.stdout.write("Usage: node tools/import-st8-runtime-evidence.mjs <runner-report.json> [output.json]\\n");
+    process.stdout.write("Usage: node tools/import-st8-runtime-evidence.mjs <runner-report.json> [output.json]\n");
     process.exit(inputPath ? 0 : 2);
   }
 
@@ -95,15 +95,15 @@ async function main() {
   }
   const summary = validateAndSummarize(report, raw);
   await fs.mkdir(path.dirname(path.resolve(outputPath)), { recursive: true });
-  await fs.writeFile(outputPath, JSON.stringify(summary, null, 2) + "\\n", { mode: 0o644 });
-  process.stdout.write("ST8 runtime evidence accepted: C01–C12 12/12 PASS (structural validation only).\\n");
-  process.stdout.write("Sanitized summary: " + path.resolve(outputPath) + "\\n");
-  process.stdout.write("Raw report SHA-256: " + summary.sourceReportSha256 + "\\n");
+  await fs.writeFile(outputPath, JSON.stringify(summary, null, 2) + "\n", { mode: 0o644 });
+  process.stdout.write("ST8 runtime evidence accepted: C01–C12 12/12 PASS (structural validation only).\n");
+  process.stdout.write("Sanitized summary: " + path.resolve(outputPath) + "\n");
+  process.stdout.write("Raw report SHA-256: " + summary.sourceReportSha256 + "\n");
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch(error => {
-    process.stderr.write("Evidence import rejected: " + error.message + "\\n");
+    process.stderr.write("Evidence import rejected: " + error.message + "\n");
     process.exitCode = 1;
   });
 }
