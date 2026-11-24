@@ -55,4 +55,4 @@ Ledger და audit append-only-ია, ამიტომ fixture rows ავ�
 ეს runner ამოწმებს მხოლოდ DB-level RPC concurrency-ს. ის არ ამოწმებს ST8-ის რეალურ signature verification-ს, HTTP Gateway-ს, provider callbacks-ს ან პარტნიორის Testing Tool-ს. PASS არ ნიშნავს ST8 certification-ს ან Production readiness-ს.
 
 ## Supabase branch-ის მიმდინარე შეზღუდვა
-Supabase branch creation API-მ დააბრუნა `Branching is supported only on the Pro plan or above`. ამიტომ development branch არ შექმნილა და საათობრივი გადასახადი არ დარიცხულა. ლოკალური Docker გზა ამ გეგმურ შეზღუდვას გვერდს უვლის და მონაცემებს მხოლოდ მომხმარებლის კომპიუტერზე ინახავს.
+Supabase branch creation API-მ დააბრუნა `Branching is supported only on the Pro plan or above`. მიუხედავად მომხმარებლის მიერ ხარჯის დადასტურებისა, development branch არ შექმნილა და საათობრივი გადასახადი არ დარიცხულა. ლოკალური Docker გზა ამ გეგმურ შეზღუდვას გვერდს უვლის და მონაცემებს მხოლოდ მომხმარებლის კომპიუტერზე ინახავს. მიმდინარე ChatGPT execution გარემოში Docker/PowerShell არ არის, ამიტომ ტესტების runtime შესრულება აქ ვერ მოხდა; GitHub static CI წარმატებით ამოწმებს runner-ის Node და PowerShell სინტაქსს.
