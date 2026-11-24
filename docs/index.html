@@ -87,6 +87,14 @@ footer{border-top:1px solid var(--line);padding:24px 0 42px;color:var(--muted);f
 <footer><div class="wrap foot"><span>ASIX Development Portal · Public project status</span><span data-ka="მონაცემები ქვეყნდება მხოლოდ დადასტურებული მტკიცებულებების საფუძველზე." data-en="Status is published only when supported by verifiable evidence.">მონაცემები ქვეყნდება მხოლოდ დადასტურებული მტკიცებულებების საფუძველზე.</span></div></footer>
 <script>
 const button=document.getElementById('lang');let lang='ka';
-button.addEventListener('click',()=>{lang=lang==='ka'?'en':'ka';document.documentElement.lang=lang;document.querySelectorAll('[data-ka]').forEach(el=>{el.textContent=el.dataset[lang]});button.textContent=lang==='ka'?'EN':'ქარ';});\nfetch('data/status.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('status unavailable');return r.json()}).then(data=>{\n  const stamp=new Date(data.generated_at);\n  if(!Number.isNaN(stamp.getTime())){const d=stamp.toLocaleString(lang==='ka'?'ka-GE':'en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'});document.getElementById('verifiedAt').textContent=(lang==='ka'?'ბოლო გადამოწმება: ':'Last verified: ')+d+' UTC';}\n  if(data.pr3){const p=data.pr3;document.getElementById('pr3Status').textContent=p.merged?'Merged':(p.draft?'Draft · Open':p.state);}\n  const ci=document.getElementById('latestCiStatus');\n  if(data.latest_ci){const c=data.latest_ci;ci.textContent=(lang==='ka'?'ბოლო CI: ':'Latest CI: ')+c.name+' — '+(c.status==='completed'?(c.conclusion||'completed'):c.status);}\n  else{ci.textContent=lang==='ka'?'CI გაშვება ჯერ არ მოიძებნა':'No CI run found yet';}\n}).catch(()=>{document.getElementById('latestCiStatus').textContent=lang==='ka'?'ცოცხალი სტატუსი დროებით მიუწვდომელია':'Live status temporarily unavailable';});
+button.addEventListener('click',()=>{lang=lang==='ka'?'en':'ka';document.documentElement.lang=lang;document.querySelectorAll('[data-ka]').forEach(el=>{el.textContent=el.dataset[lang]});button.textContent=lang==='ka'?'EN':'ქარ';});
+fetch('data/status.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('status unavailable');return r.json()}).then(data=>{
+  const stamp=new Date(data.generated_at);
+  if(!Number.isNaN(stamp.getTime())){const d=stamp.toLocaleString(lang==='ka'?'ka-GE':'en-GB',{dateStyle:'medium',timeStyle:'short',timeZone:'UTC'});document.getElementById('verifiedAt').textContent=(lang==='ka'?'ბოლო გადამოწმება: ':'Last verified: ')+d+' UTC';}
+  if(data.pr3){const p=data.pr3;document.getElementById('pr3Status').textContent=p.merged?'Merged':(p.draft?'Draft · Open':p.state);}
+  const ci=document.getElementById('latestCiStatus');
+  if(data.latest_ci){const c=data.latest_ci;ci.textContent=(lang==='ka'?'ბოლო CI: ':'Latest CI: ')+c.name+' — '+(c.status==='completed'?(c.conclusion||'completed'):c.status);}
+  else{ci.textContent=lang==='ka'?'CI გაშვება ჯერ არ მოიძებნა':'No CI run found yet';}
+}).catch(()=>{document.getElementById('latestCiStatus').textContent=lang==='ka'?'ცოცხალი სტატუსი დროებით მიუწვდომელია':'Live status temporarily unavailable';});
 </script>
 </body></html>
