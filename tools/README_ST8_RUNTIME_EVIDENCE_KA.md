@@ -27,7 +27,7 @@ The helper gzip-compresses the report and starts the portal workflow on main. It
 
 ## 3. What is published
 
-Only the following sanitized fields are retained in .github/asix-st8-runtime-evidence.json:
+Only the following sanitized fields are retained in docs/data/runtime-evidence.json inside the published Pages artifact. Later deployments restore this file from the previous public Pages deployment:
 
 - run timestamp and opaque runner run ID;
 - PostgreSQL major version and worker count;
