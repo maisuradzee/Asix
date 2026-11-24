@@ -8,7 +8,7 @@ Use the integration/st8-v0.7.1-alert-ops-hardening branch and follow:
 
 - staging-candidates/v0.9.0/concurrency-runner/README_KA.md
 
-The runner must finish with **12/12 PASS**. Its raw JSON report is written to:
+The runner must finish with **12/12 PASS**. The submission helper revalidates that raw report locally before preparing the public summary. Its raw JSON report is written to:
 
 staging-candidates/v0.9.0/concurrency-runner/concurrency-results/<runId>.json
 
@@ -23,7 +23,7 @@ gh auth status
 pwsh -File .\tools\Submit-ST8-Runtime-Evidence.ps1 -ReportPath "C:\path\to\concurrency-results\<runId>.json"
 ~~~
 
-The helper gzip-compresses the report and starts the portal workflow on main. It does not print the report or its encoded payload.
+The helper first runs the importer on your computer, producing the sanitized summary in a temporary file. It then gzip-compresses and submits only that summary to the portal workflow on main. The raw report never leaves your computer and is not printed.
 
 ## 3. What is published
 
